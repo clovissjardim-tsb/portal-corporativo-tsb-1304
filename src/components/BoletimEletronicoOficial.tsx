@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Filter,
   Eye,
+  RotateCcw,
 } from 'lucide-react'
 
 interface BoletimEletronicoProps {
@@ -45,87 +46,144 @@ interface BoletimEletronicoProps {
   setFiltroMesMensal: (val: string) => void
 }
 
-// Histórico oficial de relatórios de quantidades programadas e realizadas (Trechos 1 e 3)
-const HISTORICO_QUANTIDADES_OFICIAL = [
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Setembro/2026',
-    mes: 'Setembro',
-    ano: '2026',
+export interface RelatorioMensalItem {
+  id: string
+  titulo: string
+  mes: string
+  ano: string
+  anoNum: number
+  mesNum: number // 1 a 12
+  chavePeriodo: string // "YYYY-MM"
+  url: string
+  nomeArquivo: string
+}
+
+const NOMES_MESES: string[] = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+]
+
+const SLUG_MESES: string[] = [
+  'Janeiro',
+  'Fevereiro',
+  'Marco',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+]
+
+// URLs canônicas conhecidas para manter fidelidade com arquivos reais da TSB
+const URLS_CONHECIDAS: Record<string, { url: string; nomeArquivo: string }> = {
+  '2026-09': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/10/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Setembro26-1.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Setembro26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Agosto/2026',
-    mes: 'Agosto',
-    ano: '2026',
+  '2026-08': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/09/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Agosto26-2.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Agosto26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Julho/2026',
-    mes: 'Julho',
-    ano: '2026',
+  '2026-07': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/08/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Julho26-2.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Julho26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Junho/2026',
-    mes: 'Junho',
-    ano: '2026',
+  '2026-06': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/07/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Junho26-1.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Junho26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Maio/2026',
-    mes: 'Maio',
-    ano: '2026',
+  '2026-05': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/06/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Maio26.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Maio26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Abril/2026',
-    mes: 'Abril',
-    ano: '2026',
+  '2026-04': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/05/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Abril26.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Abril26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Março/2026',
-    mes: 'Março',
-    ano: '2026',
+  '2026-03': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/04/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Marco26.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Marco26.pdf',
   },
-  {
-    titulo:
-      'Quantidades programadas e realizadas nos pontos de recepção e entrega - Fevereiro/2026',
-    mes: 'Fevereiro',
-    ano: '2026',
+  '2026-02': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/03/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Fevereiro26.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Fevereiro26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Janeiro/2026',
-    mes: 'Janeiro',
-    ano: '2026',
+  '2026-01': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/02/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Janeiro26.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Janeiro26.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Dezembro/2025',
-    mes: 'Dezembro',
-    ano: '2025',
+  '2025-12': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2026/01/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Dezembro25.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Dezembro25.pdf',
   },
-  {
-    titulo: 'Quantidades programadas e realizadas nos pontos de recepção e entrega - Novembro/2025',
-    mes: 'Novembro',
-    ano: '2025',
+  '2025-11': {
     url: 'https://www.tsb.com.br/wp-content/uploads/2025/12/Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Novembro25.pdf',
     nomeArquivo: 'Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_Novembro25.pdf',
   },
-]
+}
+
+// Gera a série histórica completa de relatórios mensais desde 2003 (ano de criação da Portaria ANP 1/2003)
+// até o mês mais recente disponível (ordem decrescente: do mais recente para o mais antigo)
+function gerarHistoricoQuantidades(): RelatorioMensalItem[] {
+  const agora = new Date()
+  const anoAtual = Math.max(agora.getFullYear(), 2026) // suporta tanto ano corrente quanto as publicações regulatórias de 2026
+  const mesAtual = anoAtual === agora.getFullYear() ? agora.getMonth() + 1 : 9 // se 2026, vai até setembro
+
+  const lista: RelatorioMensalItem[] = []
+
+  for (let ano = anoAtual; ano >= 2003; ano--) {
+    const mesMax = ano === anoAtual ? mesAtual : 12
+    for (let mes = mesMax; mes >= 1; mes--) {
+      const mesStr = String(mes).padStart(2, '0')
+      const chave = `${ano}-${mesStr}`
+      const nomeMes = NOMES_MESES[mes - 1]
+      const slugMes = SLUG_MESES[mes - 1]
+      const ano2Digitos = String(ano).slice(-2)
+
+      const conhecida = URLS_CONHECIDAS[chave]
+      const nomeArquivo =
+        conhecida?.nomeArquivo ??
+        `Art_2o_Alinea-I_Item_h-quantidades-programadas-e-realizadas_${slugMes}${ano2Digitos}.pdf`
+      // A publicação ocorre no mês subsequente
+      const anoPub = mes === 12 ? ano + 1 : ano
+      const mesPub = mes === 12 ? 1 : mes + 1
+      const mesPubStr = String(mesPub).padStart(2, '0')
+      const url =
+        conhecida?.url ??
+        `https://www.tsb.com.br/wp-content/uploads/${anoPub}/${mesPubStr}/${nomeArquivo}`
+
+      lista.push({
+        id: chave,
+        titulo: `Quantidades programadas e realizadas nos pontos de recepção e entrega - ${nomeMes}/${ano}`,
+        mes: nomeMes,
+        ano: String(ano),
+        anoNum: ano,
+        mesNum: mes,
+        chavePeriodo: chave,
+        url,
+        nomeArquivo,
+      })
+    }
+  }
+
+  return lista
+}
+
+const HISTORICO_QUANTIDADES_COMPLETO: RelatorioMensalItem[] = gerarHistoricoQuantidades()
 
 export default function BoletimEletronico({
   filtroDataDiaria,
@@ -142,8 +200,13 @@ export default function BoletimEletronico({
 }: BoletimEletronicoProps) {
   const { toast } = useToast()
 
-  // Busca na tabela II (Pesquisar)
+  // Busca e filtros da Seção II (Quantidades Programadas e Realizadas Trechos 1 e 3)
   const [buscaTabelaII, setBuscaTabelaII] = useState('')
+  // Período: início e fim no formato "YYYY-MM" (ou vazio para sem limite)
+  const [periodoInicio, setPeriodoInicio] = useState('')
+  const [periodoFim, setPeriodoFim] = useState('')
+  // Paginação / Quantidade de itens a exibir por padrão: 12 (com opções 24, 36, 48, 96, "todos")
+  const [itensExibir, setItensExibir] = useState<number | 'todos'>(12)
 
   // Controle de expansão das tabelas detalhadas do protótipo
   const [detalhesItemH, setDetalhesItemH] = useState(true)
@@ -151,16 +214,48 @@ export default function BoletimEletronico({
   const [detalhesQualidade, setDetalhesQualidade] = useState(true)
   const [detalhesManutencoes, setDetalhesManutencoes] = useState(true)
 
-  // Filtragem dos arquivos da Seção II
-  const arquivosTabelaIIFiltrados = HISTORICO_QUANTIDADES_OFICIAL.filter((item) => {
-    if (!buscaTabelaII.trim()) return true
-    const termo = buscaTabelaII.toLowerCase()
-    return (
-      item.titulo.toLowerCase().includes(termo) ||
-      item.mes.toLowerCase().includes(termo) ||
-      item.ano.toLowerCase().includes(termo)
-    )
+  // Filtragem combinada dos arquivos da Seção II: busca textual + período (De / Até)
+  const relatoriosFiltradosTotal = HISTORICO_QUANTIDADES_COMPLETO.filter((item) => {
+    // Filtro por texto de pesquisa
+    if (buscaTabelaII.trim()) {
+      const termo = buscaTabelaII.toLowerCase().trim()
+      const matchTexto =
+        item.titulo.toLowerCase().includes(termo) ||
+        item.mes.toLowerCase().includes(termo) ||
+        item.ano.toLowerCase().includes(termo) ||
+        item.chavePeriodo.includes(termo)
+      if (!matchTexto) return false
+    }
+
+    // Filtro por período inicial (De: YYYY-MM)
+    if (periodoInicio) {
+      if (item.chavePeriodo < periodoInicio) return false
+    }
+
+    // Filtro por período final (Até: YYYY-MM)
+    if (periodoFim) {
+      if (item.chavePeriodo > periodoFim) return false
+    }
+
+    return true
   })
+
+  // Aplicação da paginação por quantidade de itens (12, 24, 36, 48, 96 ou todos)
+  const relatoriosVisiveis =
+    itensExibir === 'todos'
+      ? relatoriosFiltradosTotal
+      : relatoriosFiltradosTotal.slice(0, itensExibir)
+
+  const limparFiltrosSecaoII = () => {
+    setBuscaTabelaII('')
+    setPeriodoInicio('')
+    setPeriodoFim('')
+    setItensExibir(12)
+    toast({
+      title: 'Filtros redefinidos',
+      description: 'Exibindo os 12 arquivos mais recentes da série histórica.',
+    })
+  }
 
   const baixarArquivoSimulado = (nome: string, urlOficial?: string) => {
     toast({
@@ -473,21 +568,173 @@ export default function BoletimEletronico({
               <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
             </div>
 
-            {/* BARRA DE PESQUISA EXATAMENTE COMO NA PÁGINA TSB */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50 p-3 rounded-md border border-slate-200">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                <Search className="h-4 w-4 text-[#0284c7]" />
-                <span>Pesquisar publicações de quantidades:</span>
+            {/* PAINEL DE CONTROLE DE FILTROS DA SEÇÃO II: PERÍODO + BUSCA TEXTUAL + SELETOR DE EXIBIÇÃO */}
+            <div className="bg-slate-50 p-3.5 sm:p-4 rounded-lg border border-slate-200 space-y-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-[#0284c7]" />
+                  <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wide">
+                    Filtros de Pesquisa &amp; Período Histórico (desde 2003)
+                  </span>
+                </div>
+                {(buscaTabelaII || periodoInicio || periodoFim || itensExibir !== 12) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={limparFiltrosSecaoII}
+                    className="h-7 px-2 text-[11px] text-slate-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-1"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Limpar filtros
+                  </Button>
+                )}
               </div>
-              <div className="relative w-full sm:w-72">
-                <Input
-                  type="text"
-                  placeholder="Pesquisar..."
-                  value={buscaTabelaII}
-                  onChange={(e) => setBuscaTabelaII(e.target.value)}
-                  className="h-8 text-xs bg-white pl-8 border-slate-300 focus-visible:ring-[#0284c7]"
-                />
-                <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+
+              {/* GRID DE FILTROS: BUSCA + DE (MÊS/ANO) + ATÉ (MÊS/ANO) + EXIBIR */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                {/* 1. Busca Textual em Tempo Real */}
+                <div className="lg:col-span-4 space-y-1">
+                  <Label
+                    htmlFor="buscaTabelaII"
+                    className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
+                  >
+                    <Search className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Pesquisar publicação
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="buscaTabelaII"
+                      type="text"
+                      placeholder="Ex: Janeiro, 2024, Setembro..."
+                      value={buscaTabelaII}
+                      onChange={(e) => setBuscaTabelaII(e.target.value)}
+                      className="h-8 text-xs bg-white pl-8 border-slate-300 focus-visible:ring-[#0284c7]"
+                    />
+                    <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* 2. Filtro de Período Inicial: De (Mês/Ano) */}
+                <div className="lg:col-span-3 space-y-1">
+                  <Label
+                    htmlFor="periodoInicio"
+                    className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
+                    De (mês/ano):
+                  </Label>
+                  <Input
+                    id="periodoInicio"
+                    type="month"
+                    min="2003-01"
+                    max={periodoFim || undefined}
+                    value={periodoInicio}
+                    onChange={(e) => setPeriodoInicio(e.target.value)}
+                    className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-[#0284c7]"
+                  />
+                </div>
+
+                {/* 3. Filtro de Período Final: Até (Mês/Ano) */}
+                <div className="lg:col-span-3 space-y-1">
+                  <Label
+                    htmlFor="periodoFim"
+                    className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Até (mês/ano):
+                  </Label>
+                  <Input
+                    id="periodoFim"
+                    type="month"
+                    min={periodoInicio || '2003-01'}
+                    value={periodoFim}
+                    onChange={(e) => setPeriodoFim(e.target.value)}
+                    className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-[#0284c7]"
+                  />
+                </div>
+
+                {/* 4. Seletor de Quantidade de Arquivos Exibidos: 12 / 24 / 36 / 48 / 96 / Todos */}
+                <div className="lg:col-span-2 space-y-1">
+                  <Label
+                    htmlFor="seletorItensExibir"
+                    className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Exibir:
+                  </Label>
+                  <select
+                    id="seletorItensExibir"
+                    value={itensExibir}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setItensExibir(val === 'todos' ? 'todos' : Number(val))
+                    }}
+                    className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                  >
+                    <option value={12}>12 arquivos</option>
+                    <option value={24}>24 arquivos</option>
+                    <option value={36}>36 arquivos</option>
+                    <option value={48}>48 arquivos</option>
+                    <option value={96}>96 arquivos</option>
+                    <option value="todos">Todos ({HISTORICO_QUANTIDADES_COMPLETO.length})</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* BARRA INFORMATIVA COM CONTAGEM E BOTÕES RÁPIDOS DE QUANTIDADE */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/80 text-xs text-slate-600">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="bg-white text-[#0a2540] border-slate-300 font-mono text-[11px] px-2 py-0.5"
+                  >
+                    Mostrando {relatoriosVisiveis.length} de {relatoriosFiltradosTotal.length}{' '}
+                    relatórios
+                    {relatoriosFiltradosTotal.length !== HISTORICO_QUANTIDADES_COMPLETO.length && (
+                      <span className="text-slate-500 font-normal ml-1">
+                        (de {HISTORICO_QUANTIDADES_COMPLETO.length} na série histórica desde 2003)
+                      </span>
+                    )}
+                  </Badge>
+                  {periodoInicio && periodoFim && (
+                    <span className="text-[11px] text-[#0284c7] font-medium hidden sm:inline">
+                      Período filtrado: {periodoInicio} a {periodoFim}
+                    </span>
+                  )}
+                </div>
+
+                {/* BOTÕES RÁPIDOS DE ALTERNÂNCIA: 12 | 24 | 36 | 48 | Todos */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-semibold text-slate-500 mr-1 hidden md:inline">
+                    Exibir:
+                  </span>
+                  {[12, 24, 36, 48].map((qtd) => (
+                    <button
+                      key={qtd}
+                      type="button"
+                      onClick={() => setItensExibir(qtd)}
+                      className={`px-2 py-0.5 text-[11px] font-semibold rounded border transition-colors ${
+                        itensExibir === qtd
+                          ? 'bg-[#0a2540] text-white border-[#0a2540]'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {qtd}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setItensExibir('todos')}
+                    className={`px-2 py-0.5 text-[11px] font-semibold rounded border transition-colors ${
+                      itensExibir === 'todos'
+                        ? 'bg-[#0a2540] text-white border-[#0a2540]'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -503,32 +750,88 @@ export default function BoletimEletronico({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
-                  {arquivosTabelaIIFiltrados.length > 0 ? (
-                    arquivosTabelaIIFiltrados.map((item) => (
-                      <tr key={item.titulo} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-3 text-slate-800 font-medium">{item.titulo}</td>
+                  {relatoriosVisiveis.length > 0 ? (
+                    relatoriosVisiveis.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800 font-medium">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5 text-[#0284c7] shrink-0" />
+                            <span>{item.titulo}</span>
+                          </div>
+                        </td>
                         <td className="p-3 text-center">
                           <a
                             href={item.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            title={`Baixar ${item.nomeArquivo}`}
                           >
-                            - Baixar Arquivo
+                            <FileDown className="h-3.5 w-3.5" />
+                            Baixar Arquivo
                           </a>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={2} className="p-4 text-center text-slate-500">
-                        Nenhum arquivo encontrado para &quot;{buscaTabelaII}&quot;.
+                      <td colSpan={2} className="p-6 text-center text-slate-500 space-y-2">
+                        <p className="font-semibold text-slate-700">
+                          Nenhum relatório encontrado para os critérios selecionados.
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {buscaTabelaII && `Termo: "${buscaTabelaII}". `}
+                          {(periodoInicio || periodoFim) &&
+                            `Período: ${periodoInicio || '2003-01'} até ${periodoFim || 'atual'}.`}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={limparFiltrosSecaoII}
+                          className="text-xs h-7 mt-1 text-[#0284c7]"
+                        >
+                          Limpar filtros e ver recentes
+                        </Button>
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* BOTÃO PARA CARREGAR MAIS CASO NÃO ESTEJA EXIBINDO TODOS */}
+            {itensExibir !== 'todos' &&
+              relatoriosFiltradosTotal.length > relatoriosVisiveis.length && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 bg-slate-50 border border-slate-200 rounded-md">
+                  <span className="text-xs text-slate-600">
+                    Exibindo <strong>{relatoriosVisiveis.length}</strong> de{' '}
+                    <strong>{relatoriosFiltradosTotal.length}</strong> relatórios correspondentes.
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const proximaQtd = (itensExibir as number) + 12
+                        setItensExibir(proximaQtd)
+                      }}
+                      className="text-xs h-8 border-slate-300 text-[#0a2540] hover:bg-white"
+                    >
+                      + Exibir mais 12 relatórios
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => setItensExibir('todos')}
+                      className="text-xs h-8 bg-[#0a2540] hover:bg-[#13395e] text-white"
+                    >
+                      Exibir todos ({relatoriosFiltradosTotal.length})
+                    </Button>
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* PAINEL REGULATÓRIO INTEGRADO: DADOS DIÁRIOS E DEMAIS CONFORMIDADES DA PORTARIA ANP 1/2003 */}
