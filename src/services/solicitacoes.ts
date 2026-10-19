@@ -73,7 +73,7 @@ export async function notificarSolicitacaoPorEmail(
 /**
  * Dispara um e-mail de teste real através da rota de teste no backend.
  */
-export async function testarEnvioSmtp(destinatario: string = 'tsb@tsb.com.br'): Promise<{
+export async function testarEnvioSmtp(destinatario: string = 'clovissjardim@gmail.com'): Promise<{
   success: boolean
   message?: string
   error?: string

@@ -31,7 +31,7 @@ onRecordCreate((e) => {
       $os.getenv('SMTP_FROM_ADDRESS') ||
       $os.getenv('SMTP_SENDER') ||
       e.app.settings().meta.senderAddress ||
-      'tsb@tsb.com.br'
+      'site@tsb.com.br'
     const senderName =
       $os.getenv('SMTP_FROM_NAME') ||
       e.app.settings().meta.senderName ||
@@ -122,7 +122,7 @@ onRecordCreate((e) => {
           <tr>
             <td style="background-color:#0a2540;padding:20px 32px;color:#94a3b8;font-size:11px;line-height:16px;">
               <p style="margin:0 0 6px 0;color:#e2e8f0;font-weight:600;">Transportadora Sulbrasileira de Gás S.A. - TSB</p>
-              <p style="margin:0 0 6px 0;">Contato institucional: <a href="mailto:tsb@tsb.com.br" style="color:#38bdf8;text-decoration:none;">tsb@tsb.com.br</a> | Portal Corporativo</p>
+              <p style="margin:0 0 6px 0;">Contato institucional: <a href="mailto:${senderAddress}" style="color:#38bdf8;text-decoration:none;">${senderAddress}</a> | Portal Corporativo</p>
               <p style="margin:0;color:#64748b;">Este é um e-mail automático gerado pelo sistema de acesso público dutoviário em conformidade com a regulamentação setorial da ANP.</p>
             </td>
           </tr>
@@ -155,7 +155,7 @@ onRecordCreate((e) => {
 
 // 2. Rota de teste SMTP corporativo
 routerAdd('POST', '/backend/v1/test-smtp', (c) => {
-  let to = 'tsb@tsb.com.br'
+  let to = 'clovissjardim@gmail.com'
   try {
     const body = c.requestInfo().body
     if (body && body.to) {
@@ -167,7 +167,7 @@ routerAdd('POST', '/backend/v1/test-smtp', (c) => {
     $os.getenv('SMTP_FROM_ADDRESS') ||
     $os.getenv('SMTP_SENDER') ||
     c.app.settings().meta.senderAddress ||
-    'tsb@tsb.com.br'
+    'site@tsb.com.br'
   const senderName =
     $os.getenv('SMTP_FROM_NAME') ||
     c.app.settings().meta.senderName ||
