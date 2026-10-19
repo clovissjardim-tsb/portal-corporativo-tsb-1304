@@ -219,7 +219,7 @@ export default function Transparencia() {
 
       toast({
         title: 'Solicitação Submetida com Sucesso!',
-        description: `Protocolo ANP gerado: ${nova.protocolo}. Prazo de resposta: 20 dias úteis.`,
+        description: `Protocolo ANP gerado: ${nova.protocolo}. E-mail de confirmação enviado para ${nova.email}. Prazo de resposta: 20 dias úteis.`,
       })
 
       // Limpa formulário

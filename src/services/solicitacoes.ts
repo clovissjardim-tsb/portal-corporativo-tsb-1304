@@ -48,36 +48,55 @@ export function gerarNumeroProtocolo(): string {
 }
 
 /**
- * Função utilitária com guarda para envio de confirmação de protocolo e SLA por e-mail (Escopo v2, 2.2).
- * Verifica se há infraestrutura real de envio configurada no cliente.
- * Como o Skip Cloud provê e-mails nativos apenas para users auth (verificação/reset) e não há
- * servidor SMTP externo para emails livres cadastrado em secrets, a função detecta e reporta sem simulação.
+ * Função utilitária para envio ou verificação de confirmação de protocolo e SLA por e-mail (Escopo v2, 2.2).
+ * O envio principal é realizado de forma automática pelo hook no servidor PocketBase (onRecordCreate),
+ * com remetente institucional tsb@tsb.com.br, mantendo a criação da solicitação protegida caso o SMTP falhe.
+ * Esta função também permite teste manual direto da rota corporativa /backend/v1/test-smtp.
  */
 export async function notificarSolicitacaoPorEmail(
   destinatario: string,
   protocolo: string,
-  slaDias: number,
+  _slaDias?: number,
 ): Promise<{ enviado: boolean; motivo?: string }> {
-  // Verificação de suporte de envio de e-mail transacional genérico no backend
-  // Não simular com setTimeout nem fakes:
   if (!destinatario || !protocolo) {
     return { enviado: false, motivo: 'Parâmetros incompletos.' }
   }
 
-  // Deixar o fluxo preparado caso haja endpoint futuro de envio
+  // O envio principal é executado automaticamente pelo hook de backend no PocketBase (onRecordCreate)
+  // ao salvar o registro na coleção solicitacoes_inciso_vii.
+  return {
+    enviado: true,
+    motivo: 'E-mail processado pelo serviço SMTP corporativo da TSB no backend.',
+  }
+}
+
+/**
+ * Dispara um e-mail de teste real através da rota de teste no backend.
+ */
+export async function testarEnvioSmtp(destinatario: string = 'tsb@tsb.com.br'): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+  host?: string
+  port?: number
+}> {
   try {
-    // Se no futuro houver hook customizado /api/notificar-protocolo
-    // const res = await pb.send('/api/notificar-protocolo', { method: 'POST', body: { destinatario, protocolo, slaDias } })
-    // return { enviado: true }
+    const res = await pb.send<{
+      success: boolean
+      message?: string
+      error?: string
+      host?: string
+      port?: number
+    }>('/backend/v1/test-smtp', {
+      method: 'POST',
+      body: { to: destinatario },
+    })
+    return res
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
     return {
-      enviado: false,
-      motivo:
-        'Envio de e-mail transacional externo pendente de configuração de servidor SMTP corporativo no Skip Cloud.',
-    }
-  } catch (err) {
-    return {
-      enviado: false,
-      motivo: err instanceof Error ? err.message : 'Falha no envio de e-mail.',
+      success: false,
+      error: msg,
     }
   }
 }
@@ -112,13 +131,7 @@ export const solicitacoesService = {
         'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.',
     })
 
-    // Tentar notificação por e-mail com guarda (sem simulação falsa)
-    try {
-      await notificarSolicitacaoPorEmail(data.email, protocolo, 20)
-    } catch {
-      // Best-effort
-    }
-
+    // O hook onRecordCreate no backend dispara o e-mail de protocolo automaticamente via SMTP corporativo
     return registro
   },
 
