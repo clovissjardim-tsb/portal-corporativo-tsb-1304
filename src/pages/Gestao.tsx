@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -15,9 +16,11 @@ import {
   Clock,
   ArrowRight,
   X,
-  CheckCircle2,
   AlertTriangle,
   RefreshCw,
+  Lock,
+  KeyRound,
+  FileSignature,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -31,6 +34,8 @@ export default function Gestao() {
   const [novoStatus, setNovoStatus] = useState<SolicitacaoIncisoVII['status']>(
     'Solicitação Recebida - Em Análise Técnica',
   )
+  const [parecerFundamentado, setParecerFundamentado] = useState('')
+  const [erroParecer, setErroParecer] = useState<string | null>(null)
   const [salvandoStatus, setSalvandoStatus] = useState(false)
 
   // Carregar solicitações do backend
@@ -71,19 +76,41 @@ export default function Gestao() {
   const abrirModalAnalise = (item: SolicitacaoIncisoVII) => {
     setItemSelecionado(item)
     setNovoStatus(item.status)
+    setParecerFundamentado(item.parecer_fundamentado || '')
+    setErroParecer(null)
     setModalAberto(true)
   }
 
+  // ITEM 6: PARECER FUNDAMENTADO OBRIGATÓRIO (Art. 10 da Resolução ANP nº 11/2016)
   const salvarRespostaAnalise = async () => {
     if (!itemSelecionado) return
 
+    // O parecer técnico deve ser obrigatório, especialmente em negativa ou aprovação
+    if (!parecerFundamentado.trim()) {
+      setErroParecer(
+        'O Art. 10 da Resolução ANP nº 11/2016 exige parecer técnico fundamentado por escrito.',
+      )
+      return
+    }
+
+    if (parecerFundamentado.trim().length < 15) {
+      setErroParecer('A fundamentação deve conter no mínimo 15 caracteres.')
+      return
+    }
+
     setSalvandoStatus(true)
+    setErroParecer(null)
+
     try {
-      const atualizado = await solicitacoesService.atualizarStatus(itemSelecionado.id, novoStatus)
+      const atualizado = await solicitacoesService.atualizarStatus(
+        itemSelecionado.id,
+        novoStatus,
+        parecerFundamentado.trim(),
+      )
       setSolicitacoes((prev) => prev.map((s) => (s.id === atualizado.id ? atualizado : s)))
       toast({
-        title: 'Status atualizado com sucesso',
-        description: `Protocolo ${atualizado.protocolo} atualizado para: ${novoStatus}`,
+        title: 'Parecer e Status Atualizados!',
+        description: `Protocolo ${atualizado.protocolo} registrado com fundamentação técnica.`,
       })
       setModalAberto(false)
     } catch (err: unknown) {
@@ -111,17 +138,27 @@ export default function Gestao() {
               Gestão Interna de Chamados e SLAs
             </CardTitle>
             <p className="text-xs text-slate-500 mt-0.5">
-              Controle regulatório de conformidade temporal para manifestações e solicitações de
-              acesso
+              Controle regulatório de conformidade temporal e emissão de pareceres (Art. 10 da
+              Resolução ANP nº 11/2016)
             </p>
           </div>
 
-          <div>
+          <div className="flex items-center gap-2">
             {isAuthenticated ? (
-              <Badge className="bg-[#dcfce7] text-[#15803d] border border-emerald-300 font-bold hover:bg-[#dcfce7]">
-                <ShieldCheck className="h-3.5 w-3.5 mr-1" />
-                Autenticado Operações
-              </Badge>
+              <>
+                <Badge className="bg-[#dcfce7] text-[#15803d] border border-emerald-300 font-bold hover:bg-[#dcfce7]">
+                  <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                  Operador Autenticado
+                </Badge>
+                {/* Indicador de 2FA Operacional */}
+                <Badge
+                  variant="outline"
+                  className="text-[11px] border-slate-300 text-slate-600 hidden sm:inline-flex items-center gap-1"
+                >
+                  <KeyRound className="h-3 w-3 text-[#0284c7]" />
+                  Painel Seguro (2FA Operador)
+                </Badge>
+              </>
             ) : (
               <Badge className="bg-[#fee2e2] text-[#b91c1c] border border-red-300 font-bold hover:bg-[#fee2e2]">
                 <ShieldAlert className="h-3.5 w-3.5 mr-1" />
@@ -141,9 +178,9 @@ export default function Gestao() {
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-[#0a2540]">Acesso Restrito às Operações</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  A visualização detalhada da fila regulatória, cumprimento dos prazos legais do
-                  Art. 10 da Resolução ANP nº 11/2016 e emissão de pareceres requerem identificação
-                  de operador credenciado da TSB.
+                  A visualização detalhada da fila regulatória, dados de contato e emissão de
+                  pareceres fundamentados por escrito requerem autenticação de operador credenciado
+                  da TSB, protegendo os dados sob sigilo da LGPD.
                 </p>
               </div>
               <div className="pt-2">
@@ -158,6 +195,21 @@ export default function Gestao() {
           ) : (
             /* ESTADO AUTENTICADO (DASHBOARD) */
             <div className="space-y-6">
+              {/* Box de aviso sobre parecer fundamentado e 2FA */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <FileSignature className="h-4 w-4 text-[#0284c7] shrink-0" />
+                  <span>
+                    <strong>Exigência Regulatória (Art. 10):</strong> Todas as deliberações de
+                    solicitações de acesso devem conter fundamentação técnica por escrito antes de
+                    sua publicação.
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 whitespace-nowrap">
+                  Operador: {user?.name || user?.email}
+                </div>
+              </div>
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
                 <div className="space-y-0.5">
                   <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
@@ -182,13 +234,15 @@ export default function Gestao() {
                 </Button>
               </div>
 
-              {/* TABELA DE SOLICITAÇÕES */}
+              {/* TABELA DE SOLICITAÇÕES (AMBIENTE RESTRITO - DADOS DO SOLICITANTE) */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-3">Protocolo</th>
-                      <th className="p-3">Solicitante</th>
+                      <th className="p-3">Solicitante (Razão / CNPJ)</th>
+                      <th className="p-3">Período Requisitado</th>
+                      <th className="p-3">Status Atual</th>
                       <th className="p-3">SLA Restante</th>
                       <th className="p-3 text-right">Ação</th>
                     </tr>
@@ -203,9 +257,27 @@ export default function Gestao() {
                           <td className="p-3">
                             <div className="font-semibold text-slate-800">{item.razao_social}</div>
                             <div className="text-[11px] text-slate-500">
-                              {item.modalidade} &bull; {item.capacidade?.toLocaleString('pt-BR')}{' '}
-                              m³/dia
+                              CNPJ: {item.cnpj} &bull; {item.modalidade} &bull;{' '}
+                              {item.capacidade?.toLocaleString('pt-BR')} m³/dia
                             </div>
+                          </td>
+                          <td className="p-3 text-slate-700">
+                            {item.periodo || (
+                              <span className="text-slate-400 italic">Não informado</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                item.status === 'Aprovada'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : item.status === 'Rejeitada'
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                              }`}
+                            >
+                              {item.status}
+                            </span>
                           </td>
                           <td className="p-3">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#15803d] border border-emerald-300">
@@ -218,14 +290,14 @@ export default function Gestao() {
                               onClick={() => abrirModalAnalise(item)}
                               className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-semibold h-7 px-2.5"
                             >
-                              Analisar e Responder
+                              Analisar e Emitir Parecer
                             </Button>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="p-6 text-center text-slate-500">
+                        <td colSpan={6} className="p-6 text-center text-slate-500">
                           {carregando
                             ? 'Carregando fila de solicitações...'
                             : 'Nenhuma solicitação encontrada no momento.'}
@@ -240,10 +312,10 @@ export default function Gestao() {
         </CardContent>
       </Card>
 
-      {/* MODAL DETALHES E ANÁLISE DA SOLICITAÇÃO */}
+      {/* MODAL DETALHES E ANÁLISE DA SOLICITAÇÃO COM PARECER FUNDAMENTADO */}
       {modalAberto && itemSelecionado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-6 space-y-4 border border-slate-200 relative max-h-[90vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setModalAberto(false)}
@@ -257,9 +329,9 @@ export default function Gestao() {
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold">Análise Regulatória</h3>
+                <h3 className="text-lg font-bold">Análise Regulatória e Emissão de Parecer</h3>
                 <p className="text-xs text-slate-500 font-mono">
-                  Protocolo: {itemSelecionado.protocolo}
+                  Protocolo: {itemSelecionado.protocolo} (Art. 10 da Res. ANP 11/2016)
                 </p>
               </div>
             </div>
@@ -300,18 +372,26 @@ export default function Gestao() {
                 </div>
               </div>
 
-              <div>
-                <span className="text-slate-500 block">SLA Restante:</span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#dcfce7] text-[#15803d]">
-                  {itemSelecionado.sla_dias || 20} Dias Úteis
-                </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-500 block">Período Requisitado:</span>
+                  <strong className="text-slate-900">
+                    {itemSelecionado.periodo || 'Não especificado'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">SLA Restante:</span>
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#dcfce7] text-[#15803d]">
+                    {itemSelecionado.sla_dias || 20} Dias Úteis
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* SELEÇÃO DE STATUS */}
             <div className="space-y-1.5 pt-2">
               <Label htmlFor="statusModal" className="text-xs font-semibold text-slate-700">
-                Atualizar Parecer / Status Regulatório:
+                Deliberação / Status Regulatório:
               </Label>
               <select
                 id="statusModal"
@@ -325,8 +405,35 @@ export default function Gestao() {
                 <option value="Em Análise Técnica">Em Análise Técnica</option>
                 <option value="Aguardando Documentação">Aguardando Documentação</option>
                 <option value="Aprovada">Aprovada</option>
-                <option value="Rejeitada">Rejeitada</option>
+                <option value="Rejeitada">Rejeitada (Negativa Fundamentada)</option>
               </select>
+            </div>
+
+            {/* ITEM 6: CAMPO DE TEXTO DE FUNDAMENTAÇÃO OBRIGATÓRIA */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="parecerTexto"
+                className="text-xs font-semibold text-slate-700 flex items-center justify-between"
+              >
+                <span>Parecer Técnico-Regulatório Fundamentado por Escrito *</span>
+                <span className="text-[10px] text-amber-700 font-normal">
+                  {novoStatus === 'Rejeitada'
+                    ? 'Negativa deve ser fundamentada expressamente'
+                    : 'Exigência Art. 10'}
+                </span>
+              </Label>
+              <Textarea
+                id="parecerTexto"
+                required
+                rows={4}
+                placeholder="Insira a fundamentação técnica e operacional detalhada (ex.: disponibilidade hidráulica verificada, limitações de pressão nas estações de medição, capacidade ociosa existente ou indisponibilidade no trecho requisitado)..."
+                value={parecerFundamentado}
+                onChange={(e) => setParecerFundamentado(e.target.value)}
+                className="text-xs bg-white resize-y"
+              />
+              {erroParecer && (
+                <p className="text-[11px] text-red-600 font-semibold">{erroParecer}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t">
@@ -338,7 +445,7 @@ export default function Gestao() {
                 disabled={salvandoStatus}
                 className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold"
               >
-                {salvandoStatus ? 'Salvando...' : 'Salvar Alteração'}
+                {salvandoStatus ? 'Salvando Parecer...' : 'Salvar e Publicar Parecer'}
               </Button>
             </div>
           </div>

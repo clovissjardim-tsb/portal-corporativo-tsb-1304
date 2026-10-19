@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T14:11:32.211Z",
+  "generatedAt": "2026-10-19T22:26:45.789Z",
   "collections": [
     {
       "name": "users",
@@ -49,9 +49,9 @@
       "type": "base",
       "apiRules": {
         "list": "",
-        "view": null,
+        "view": "",
         "create": "",
-        "update": null,
+        "update": "@request.auth.id != ''",
         "delete": null
       },
       "fields": [
@@ -130,11 +130,97 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "periodo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "parecer_fundamentado",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_solicitacoes_protocolo ON solicitacoes_inciso_vii (protocolo)",
         "CREATE INDEX idx_solicitacoes_status_created ON solicitacoes_inciso_vii (status, created DESC)"
+      ]
+    },
+    {
+      "name": "ofertas_cessao_inciso_viii",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "cedente",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "trecho",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "capacidade_ociosa",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "periodo_contratual",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "contato",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["Disponível", "Em Negociação", "Concluída", "Cancelada"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_cessoes_status_created ON ofertas_cessao_inciso_viii (status, created DESC)",
+        "CREATE INDEX idx_cessoes_trecho ON ofertas_cessao_inciso_viii (trecho)"
       ]
     }
   ]

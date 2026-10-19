@@ -14,6 +14,10 @@ import {
   ArrowRight,
   Send,
   Lock,
+  FileCheck,
+  HelpCircle,
+  AlertCircle,
+  Flame,
 } from 'lucide-react'
 
 export default function POC() {
@@ -36,13 +40,49 @@ export default function POC() {
       {/* BANNER INFORMATIVO AZUL */}
       <div className="p-4 bg-[#eff6ff] border-l-4 border-l-[#0284c7] border border-blue-200 rounded-r-lg space-y-1">
         <h2 className="text-sm font-bold text-[#0284c7] flex items-center gap-2">
-          Processo Oferta de Capacidade (POC/POCC): Resolução ANP nº 961/2023.
+          Processo de Oferta de Capacidade (POC/POCC): Resolução ANP nº 961/2023.
         </h2>
         <p className="text-xs text-slate-700 leading-relaxed">
-          Etapas formais de contratação de capacidade de transporte no sistema dutoviário da TSB.
-          Garantia de concorrência, transparência e eficiência alocativa aos carregadores de gás
-          natural.
+          Etapas formais e regulatórias de contratação de capacidade de transporte no sistema
+          dutoviário da TSB (Arts. 37-A e 38-A). Garantia de concorrência, transparência e
+          eficiência alocativa aos carregadores de gás natural.
         </p>
+      </div>
+
+      {/* ITEM 5: REQUISITOS REGULATÓRIOS DO POC (Art. 8º - AUTORIZAÇÃO PRÉVIA ANP e Art. 8º-A - SERVIÇO DE CURTO PRAZO) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Box Art. 8º: Requisito de Autorização Prévia da ANP */}
+        <Card className="border-l-4 border-l-amber-500 border border-slate-200 bg-amber-50/30 shadow-sm">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
+              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+              Requisito Obrigatório: Autorização Prévia da ANP (Art. 8º)
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Conforme o <strong>Art. 8º da Resolução ANP nº 961/2023</strong>, constitui requisito
+              e condição indispensável para a participação de qualquer carregador no ciclo POC/POCC
+              a obtenção prévia de autorização de carregador emitida pela ANP, além de regularidade
+              cadastral e fiscal no momento da submissão da manifestação de interesse.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Box Art. 8º-A: Serviço de Curto Prazo via Contrato Master */}
+        <Card className="border-l-4 border-l-[#0284c7] border border-slate-200 bg-sky-50/30 shadow-sm">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 text-[#0a2540] font-bold text-xs uppercase tracking-wider">
+              <Flame className="h-4 w-4 text-[#0284c7] shrink-0" />
+              Serviço de Curto Prazo via Contrato Master (Art. 8º-A)
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Nos termos do <strong>Art. 8º-A da Resolução ANP nº 961/2023</strong>, o Serviço de
+              Curto Prazo (produtos trimestrais, mensais, diários ou intradiários) é contratado
+              diretamente via <em>Contrato Master</em> na plataforma eletrônica do transportador,
+              assegurando flexibilidade operacional e precificação baseada em tarifas reguladas de
+              referência.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* CARD DO CICLO POCC */}
@@ -176,20 +216,21 @@ export default function POC() {
         </CardContent>
       </Card>
 
-      {/* CONTEÚDO PÚBLICO: DOCUMENTAÇÃO DO CICLO */}
+      {/* ITEM 4: DOCUMENTAÇÃO POCC COMPLETA (Art. 37-A, §2º da Resolução ANP nº 961/2023) */}
       <Card className="border border-slate-200 shadow-sm bg-white">
         <CardHeader className="pb-3 border-b border-slate-100">
           <CardTitle className="text-lg font-bold text-[#0a2540] flex items-center gap-2">
             <FileText className="h-5 w-5 text-[#0284c7]" />
-            Documentação Pública do Ciclo Vigente
+            Documentação Pública Completa do Ciclo Vigente (Art. 37-A, §2º)
           </CardTitle>
           <p className="text-xs text-slate-500">
-            Minutas, cronogramas e instrumentos convocatórios disponíveis para download e consulta
-            livre
+            Regulamento, editais, minutas, proposta tarifária, procedimentos operacionais,
+            comunicados e FAQ regulatório para consulta irrestrita.
           </p>
         </CardHeader>
         <CardContent className="p-6">
           <ul className="space-y-3">
+            {/* 1. Edital */}
             <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
                 <span className="text-base">📄</span>
@@ -209,6 +250,27 @@ export default function POC() {
               </button>
             </li>
 
+            {/* 2. Regulamento do POCC */}
+            <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+              <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
+                <span className="text-base">📘</span>
+                Regulamento do POCC — Regras Gerais e Critérios de Alocação (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: 'Regulamento do POCC',
+                    description: 'Download do Regulamento Geral do POCC simulado com sucesso.',
+                  })
+                }
+                className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
+              >
+                Visualizar PDF
+              </button>
+            </li>
+
+            {/* 3. Minuta do Contrato Master */}
             <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
                 <span className="text-base">📄</span>
@@ -219,7 +281,7 @@ export default function POC() {
                 onClick={() =>
                   toast({
                     title: 'Minuta Contratual Master',
-                    description: 'Download da minuta contratual simulado com sucesso.',
+                    description: 'Download da minuta contratual master simulado com sucesso.',
                   })
                 }
                 className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
@@ -228,10 +290,52 @@ export default function POC() {
               </button>
             </li>
 
+            {/* 4. Proposta Tarifária / Tarifas de Referência */}
             <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
-                <span className="text-base">📄</span>
-                Cronograma Detalhado do POCC (PDF)
+                <span className="text-base">📊</span>
+                Proposta Tarifária e Tarifas de Referência Homologadas pela ANP (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: 'Proposta Tarifária de Referência',
+                    description:
+                      'Download da planilha e tarifas de referência simulado com sucesso.',
+                  })
+                }
+                className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
+              >
+                Visualizar PDF
+              </button>
+            </li>
+
+            {/* 5. Procedimentos Operacionais */}
+            <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+              <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
+                <span className="text-base">⚙️</span>
+                Procedimentos Operacionais e Regras de Indicação/Nomeação de Capacidade (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: 'Procedimentos Operacionais',
+                    description: 'Download dos procedimentos operacionais simulado com sucesso.',
+                  })
+                }
+                className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
+              >
+                Visualizar PDF
+              </button>
+            </li>
+
+            {/* 6. Cronograma Detalhado */}
+            <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+              <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
+                <span className="text-base">📅</span>
+                Cronograma Detalhado do POCC e Prazos Preclusivos (PDF)
               </span>
               <button
                 type="button"
@@ -239,6 +343,46 @@ export default function POC() {
                   toast({
                     title: 'Cronograma POCC',
                     description: 'Download do cronograma detalhado de etapas simulado.',
+                  })
+                }
+                className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
+              >
+                Visualizar PDF
+              </button>
+            </li>
+
+            {/* 7. Comunicados Oficiais */}
+            <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+              <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
+                <span className="text-base">📢</span>
+                Comunicados Oficiais, Esclarecimentos da Comissão e Circulares do Ciclo (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: 'Comunicados Oficiais',
+                    description: 'Download do caderno de comunicados oficiais simulado.',
+                  })
+                }
+                className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
+              >
+                Visualizar PDF
+              </button>
+            </li>
+
+            {/* 8. FAQ */}
+            <li className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+              <span className="text-xs sm:text-sm font-medium text-slate-800 flex items-center gap-2">
+                <span className="text-base">❓</span>
+                Perguntas Frequentes (FAQ) — Resolução ANP nº 961/2023 (PDF)
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  toast({
+                    title: 'FAQ do POCC',
+                    description: 'Download do FAQ regulatório oficial simulado.',
                   })
                 }
                 className="text-xs font-semibold text-[#0284c7] hover:underline shrink-0 ml-2"
@@ -339,7 +483,8 @@ export default function POC() {
               Ao confirmar, sua empresa declarará formalmente interesse em contratar capacidade de
               transporte firme no gasoduto TSB para o horizonte contratual 2026/2027,
               comprometendo-se com as regras e prazos previstos no Edital regulamentado pela
-              Resolução ANP nº 961/2023.
+              Resolução ANP nº 961/2023, declarando expressamente possuir a necessária{' '}
+              <strong>autorização prévia de carregador outorgada pela ANP</strong> (Art. 8º).
             </p>
 
             <div className="p-3 bg-slate-50 rounded border text-xs text-slate-700 space-y-1">

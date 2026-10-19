@@ -1,11 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { solicitacoesService, type SolicitacaoIncisoVII } from '@/services/solicitacoes'
+import {
+  solicitacoesService,
+  type SolicitacaoIncisoVII,
+  type ResumoPublicoSolicitacao,
+} from '@/services/solicitacoes'
+import { cessoesService, type OfertaCessaoIncisoVIII } from '@/services/cessoes'
 import {
   FileText,
   Radio,
@@ -19,6 +24,12 @@ import {
   XCircle,
   FileDown,
   Info,
+  Building2,
+  TrendingUp,
+  FileCheck2,
+  PlusCircle,
+  ShieldCheck,
+  RefreshCw,
 } from 'lucide-react'
 
 export default function Transparencia() {
@@ -27,9 +38,9 @@ export default function Transparencia() {
   // Pilar ativo: 'boletim' | 'plataforma'
   const [activePilar, setActivePilar] = useState<'boletim' | 'plataforma'>('boletim')
 
-  // Sub-abas do Boletim: 'diaria' | 'mensal' | 'manutencoes' | 'qualidade'
+  // Sub-abas do Boletim: 'diaria' | 'mensal' | 'manutencoes' | 'qualidade' | 'contratos' | 'documentos'
   const [subAbaBoletim, setSubAbaBoletim] = useState<
-    'diaria' | 'mensal' | 'manutencoes' | 'qualidade'
+    'diaria' | 'mensal' | 'manutencoes' | 'qualidade' | 'contratos' | 'documentos'
   >('diaria')
 
   // Sub-abas da Plataforma: 'i_vi' | 'vii' | 'viii'
@@ -47,7 +58,10 @@ export default function Transparencia() {
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
   const [filtroMesMensal, setFiltroMesMensal] = useState('Setembro')
 
-  // Formulário do Inciso VII
+  // Visualização de capacidades detalhadas do Inciso III (fluxo oposto e previsões rolantes)
+  const [modalIncisoIIIAberto, setModalIncisoIIIAberto] = useState(false)
+
+  // Formulário do Inciso VII (com campo Período obrigatório - Art. 10, II)
   const [formVII, setFormVII] = useState({
     razao_social: '',
     cnpj: '',
@@ -55,6 +69,7 @@ export default function Transparencia() {
     modalidade: '' as '' | 'Firme Ordinário' | 'Interruptível',
     capacidade: '',
     trecho: '',
+    periodo: '',
   })
   const [submetendoVII, setSubmetendoVII] = useState(false)
   const [erroFormVII, setErroFormVII] = useState<string | null>(null)
@@ -67,6 +82,59 @@ export default function Transparencia() {
     encontrado: boolean
     dados?: SolicitacaoIncisoVII
   } | null>(null)
+
+  // Resumo público agregado do Inciso VII (Art. 9º, VII - sem dados pessoais)
+  const [resumoPublicoVII, setResumoPublicoVII] = useState<ResumoPublicoSolicitacao[]>([])
+  const [carregandoResumoVII, setCarregandoResumoVII] = useState(false)
+
+  // Ofertas de Cessão do Inciso VIII
+  const [ofertasCessao, setOfertasCessao] = useState<OfertaCessaoIncisoVIII[]>([])
+  const [carregandoCessoes, setCarregandoCessoes] = useState(false)
+  const [mostrarFormCessao, setMostrarFormCessao] = useState(false)
+  const [formCessao, setFormCessao] = useState({
+    cedente: '',
+    trecho: '',
+    capacidade_ociosa: '',
+    periodo_contratual: '',
+    contato: '',
+    observacoes: '',
+  })
+  const [submetendoCessao, setSubmetendoCessao] = useState(false)
+  const [erroFormCessao, setErroFormCessao] = useState<string | null>(null)
+
+  // Carregar dados de resumo público do Inciso VII
+  const carregarResumoVII = useCallback(async () => {
+    setCarregandoResumoVII(true)
+    try {
+      const dados = await solicitacoesService.obterResumoPublico()
+      setResumoPublicoVII(dados)
+    } catch {
+      // Ignora erro
+    } finally {
+      setCarregandoResumoVII(false)
+    }
+  }, [])
+
+  // Carregar ofertas de cessão do Inciso VIII
+  const carregarOfertasCessao = useCallback(async () => {
+    setCarregandoCessoes(true)
+    try {
+      const lista = await cessoesService.listar()
+      setOfertasCessao(lista)
+    } catch {
+      // Ignora erro
+    } finally {
+      setCarregandoCessoes(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activePilar === 'plataforma' && subAbaPlataforma === 'vii') {
+      carregarResumoVII()
+    } else if (activePilar === 'plataforma' && subAbaPlataforma === 'viii') {
+      carregarOfertasCessao()
+    }
+  }, [activePilar, subAbaPlataforma, carregarResumoVII, carregarOfertasCessao])
 
   // Filtragem da Programação Diária
   const handleFiltrarDiaria = (e: React.FormEvent) => {
@@ -110,7 +178,7 @@ export default function Transparencia() {
     return false
   })
 
-  // Submissão do Inciso VII
+  // Submissão do Inciso VII (com período obrigatório)
   const handleSubmeterVII = async (e: React.FormEvent) => {
     e.preventDefault()
     setErroFormVII(null)
@@ -121,9 +189,12 @@ export default function Transparencia() {
       !formVII.email ||
       !formVII.modalidade ||
       !formVII.capacidade ||
-      !formVII.trecho
+      !formVII.trecho ||
+      !formVII.periodo
     ) {
-      setErroFormVII('Por favor, preencha todos os campos obrigatórios marcados com *.')
+      setErroFormVII(
+        'Por favor, preencha todos os campos obrigatórios marcados com *, incluindo o período requisitado.',
+      )
       return
     }
 
@@ -143,11 +214,12 @@ export default function Transparencia() {
         modalidade: formVII.modalidade as 'Firme Ordinário' | 'Interruptível',
         capacidade: capacidadeNum,
         trecho: formVII.trecho.trim(),
+        periodo: formVII.periodo.trim(),
       })
 
       toast({
         title: 'Solicitação Submetida com Sucesso!',
-        description: `Protocolo ANP gerado: ${nova.protocolo}`,
+        description: `Protocolo ANP gerado: ${nova.protocolo}. Prazo de resposta: 20 dias úteis.`,
       })
 
       // Limpa formulário
@@ -158,9 +230,11 @@ export default function Transparencia() {
         modalidade: '',
         capacidade: '',
         trecho: '',
+        periodo: '',
       })
 
-      // Preenche campo de busca e já exibe resultado da consulta
+      // Atualiza o resumo agregado e a consulta
+      carregarResumoVII()
       setConsultaProtocolo(nova.protocolo)
       setResultadoConsulta({
         buscado: true,
@@ -205,6 +279,62 @@ export default function Transparencia() {
     }
   }
 
+  // Submissão do Formulário de Cessão (Inciso VIII)
+  const handleSubmeterCessao = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErroFormCessao(null)
+
+    if (
+      !formCessao.cedente ||
+      !formCessao.trecho ||
+      !formCessao.capacidade_ociosa ||
+      !formCessao.periodo_contratual ||
+      !formCessao.contato
+    ) {
+      setErroFormCessao('Por favor, preencha todos os campos obrigatórios da oferta de cessão.')
+      return
+    }
+
+    const capacidadeNum = Number(formCessao.capacidade_ociosa)
+    if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
+      setErroFormCessao('A capacidade ociosa deve ser um número positivo.')
+      return
+    }
+
+    setSubmetendoCessao(true)
+    try {
+      await cessoesService.criar({
+        cedente: formCessao.cedente.trim(),
+        trecho: formCessao.trecho.trim(),
+        capacidade_ociosa: capacidadeNum,
+        periodo_contratual: formCessao.periodo_contratual.trim(),
+        contato: formCessao.contato.trim(),
+        observacoes: formCessao.observacoes.trim() || undefined,
+      })
+
+      toast({
+        title: 'Oferta de Cessão Publicada com Sucesso!',
+        description: 'A oferta já está visível no painel público do Inciso VIII.',
+      })
+
+      setFormCessao({
+        cedente: '',
+        trecho: '',
+        capacidade_ociosa: '',
+        periodo_contratual: '',
+        contato: '',
+        observacoes: '',
+      })
+      setMostrarFormCessao(false)
+      carregarOfertasCessao()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao registrar oferta de cessão.'
+      setErroFormCessao(msg)
+    } finally {
+      setSubmetendoCessao(false)
+    }
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CABEÇALHO DO MÓDULO */}
@@ -241,7 +371,8 @@ export default function Transparencia() {
             Boletim Eletrônico
           </h3>
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Programação diária e mensal, manutenções programadas e qualidade do gás natural.
+            Programação diária e mensal, manutenções, qualidade do gás, contratos de transporte e
+            modelos regulatórios.
           </p>
         </button>
 
@@ -268,7 +399,8 @@ export default function Transparencia() {
             Plataforma Eletrônica
           </h3>
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Incisos I a VIII: capacidades, fluxos físicos, tarifas, solicitação de acesso e cessão.
+            Incisos I a VIII: fluxos físicos, fluxo oposto, previsões rolantes, resumo agregado,
+            solicitação de acesso e ofertas de cessão.
           </p>
         </button>
       </div>
@@ -285,13 +417,13 @@ export default function Transparencia() {
                   Boletim Eletrônico de Transporte de Gás Natural
                 </CardTitle>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Em conformidade com as diretrizes da Portaria ANP nº 1/2003
+                  Em conformidade com as diretrizes do Art. 2º da Portaria ANP nº 1/2003
                 </p>
               </div>
               <Badge className="bg-[#0284c7] text-white">Portaria ANP nº 1/2003</Badge>
             </div>
 
-            {/* SUB-ABAS BOLETIM */}
+            {/* SUB-ABAS BOLETIM (INCLUINDO SEÇÕES AUSENTES: CONTRATOS E DOCUMENTAÇÃO/MODELOS) */}
             <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200/60 mt-3">
               <button
                 type="button"
@@ -336,6 +468,28 @@ export default function Transparencia() {
                 }`}
               >
                 Qualidade do Gás Natural
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubAbaBoletim('contratos')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+                  subAbaBoletim === 'contratos'
+                    ? 'bg-[#0a2540] text-white shadow-sm'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                Contratos de Serviço de Transporte
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubAbaBoletim('documentos')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+                  subAbaBoletim === 'documentos'
+                    ? 'bg-[#0a2540] text-white shadow-sm'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                Documentação e Modelos
               </button>
             </div>
           </CardHeader>
@@ -610,6 +764,307 @@ export default function Transparencia() {
                 </div>
               </div>
             )}
+
+            {/* SUB-ABA 5: CONTRATOS DE SERVIÇO DE TRANSPORTE (Art. 2º da Portaria 1/2003) */}
+            {subAbaBoletim === 'contratos' && (
+              <div className="space-y-6">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex items-start gap-2.5">
+                  <Building2 className="h-4 w-4 text-[#0a2540] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    Relação pública consolidada dos Contratos de Serviço de Transporte vigentes e
+                    celebrados pela TSB, em cumprimento estrito ao{' '}
+                    <strong>Art. 2º da Portaria ANP nº 1/2003</strong>. Informações sobre tipo de
+                    serviço, vigência, capacidades contratadas, tarifas, eventuais descontos e
+                    declaração de relação acionária.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
+                      <tr>
+                        <th className="p-3">Carregador</th>
+                        <th className="p-3">Tipo de Serviço</th>
+                        <th className="p-3">Início</th>
+                        <th className="p-3">Término</th>
+                        <th className="p-3 text-right">Evolução Capacidade (m³/dia)</th>
+                        <th className="p-3 text-right">Tarifa / Desconto</th>
+                        <th className="p-3 text-center">Relação Acionária</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-semibold text-[#0a2540]">
+                          Carregador A — Gás Sul Distribuição S.A.
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            Firme Ordinário
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono">01/01/2024</td>
+                        <td className="p-3 font-mono">31/12/2028</td>
+                        <td className="p-3 text-right font-mono">
+                          <div>2024-2025: 1.800.000</div>
+                          <div className="text-slate-500 text-[11px]">2026-2028: 2.200.000</div>
+                        </td>
+                        <td className="p-3 text-right font-mono">
+                          <div className="font-semibold text-slate-800">R$ 0,4250 / m³</div>
+                          <div className="text-[11px] text-emerald-700">
+                            Tarifa ANP (sem desconto)
+                          </div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
+                            Sem vínculo societário
+                          </span>
+                        </td>
+                      </tr>
+
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-semibold text-[#0a2540]">
+                          Carregador B — Comercializadora Pampa S.A.
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Interruptível
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono">01/06/2025</td>
+                        <td className="p-3 font-mono">31/05/2027</td>
+                        <td className="p-3 text-right font-mono">
+                          <div>Até 600.000 (ociosa)</div>
+                        </td>
+                        <td className="p-3 text-right font-mono">
+                          <div className="font-semibold text-slate-800">R$ 0,3825 / m³</div>
+                          <div className="text-[11px] text-sky-700">Desconto sazonal: 10%</div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
+                            Sem vínculo societário
+                          </span>
+                        </td>
+                      </tr>
+
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-semibold text-[#0a2540]">
+                          Carregador C — Térmica Fronteira Oeste Ltda.
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                            Serviço de Curto Prazo (POCC)
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono">01/01/2026</td>
+                        <td className="p-3 font-mono">31/12/2026</td>
+                        <td className="p-3 text-right font-mono">
+                          <div>400.000</div>
+                        </td>
+                        <td className="p-3 text-right font-mono">
+                          <div className="font-semibold text-slate-800">R$ 0,4420 / m³</div>
+                          <div className="text-[11px] text-slate-500">
+                            Tarifa Curto Prazo (Res. 961)
+                          </div>
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            Acionista minoritário (5%)
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-ABA 6: DOCUMENTAÇÃO E MODELOS (Art. 2º da Portaria 1/2003) */}
+            {subAbaBoletim === 'documentos' && (
+              <div className="space-y-6">
+                <div className="p-4 bg-[#eff6ff] border-l-4 border-l-[#0284c7] border border-blue-200 rounded-r-lg space-y-1">
+                  <div className="flex items-center gap-2 text-[#0284c7] font-bold text-sm">
+                    <FileCheck2 className="h-4 w-4" />
+                    Modelos Contratuais e Acordos Operacionais (Portaria ANP nº 1/2003)
+                  </div>
+                  <p className="text-xs text-slate-700 leading-relaxed">
+                    Minutas padrão, acordos regulatórios e representação cartográfica das
+                    instalações e projetos de ampliação da transportadora, de acesso livre e
+                    irrestrito.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Card 1 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Termos e Condições Gerais de Prestação de Serviço</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Normas gerais de relacionamento técnico, operacional e comercial entre a TSB
+                        e os carregadores de gás natural.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Termos e Condições Gerais',
+                            description: 'Download simulado: Termos_Condicoes_Gerais_TSB.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar PDF Oficial
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 2 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Modelo de Contrato de Serviço de Transporte</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Minuta padronizada de contrato de transporte firme e interruptível aprovada
+                        pela ANP.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Modelo Contratual',
+                            description: 'Download simulado: Minuta_Contrato_Transporte_TSB.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar PDF Oficial
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 3 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Modelo de Acordo de Conexão</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Instrumento que estabelece as condições de interligação física de pontos de
+                        recepção e de entrega à rede de dutos.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Acordo de Conexão',
+                            description: 'Download simulado: Modelo_Acordo_Conexao_TSB.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar PDF Oficial
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 4 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Modelo de Acordo Operativo de Alocação de Quantidades</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Critérios e procedimentos para rateio e alocação de volumes medidos entre
+                        múltiplos carregadores em pontos de entrega compartilhados.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Acordo de Alocação de Quantidades',
+                            description: 'Download simulado: Modelo_Acordo_Operativo_Alocacao.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar PDF Oficial
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 5 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Mapa das Instalações de Transporte</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Representação cartográfica georreferenciada da malha existente (trechos
+                        Uruguaiana, Triunfo e interconexões operacionais).
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Mapa das Instalações',
+                            description: 'Download simulado: Mapa_Instalacoes_TSB_Geo.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar Mapa Oficial (PDF)
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card 6 */}
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                        <span>Ampliações Planejadas do Sistema</span>
+                        <FileDown className="h-4 w-4 text-[#0284c7]" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-1 space-y-2 text-xs text-slate-600">
+                      <p>
+                        Planejamento de expansão física do sistema de transporte da TSB e novas
+                        estações de compressão e medição.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toast({
+                            title: 'Ampliações Planejadas',
+                            description:
+                              'Download simulado: Relatorio_Ampliacoes_Planejadas_TSB.pdf',
+                          })
+                        }
+                        className="text-xs font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                      >
+                        Visualizar Plano de Expansão (PDF)
+                      </button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -669,9 +1124,9 @@ export default function Transparencia() {
           </CardHeader>
 
           <CardContent className="p-6">
-            {/* SUB-ABA 1: INCISOS I A VI */}
+            {/* SUB-ABA 1: INCISOS I A VI (COM INCISO III EXPANDIDO: FLUXO OPOSTO E PREVISÕES ROLANTES) */}
             {subAbaPlataforma === 'i_vi' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <p className="text-xs text-slate-600">
                   Abaixo constam as informações públicas mandatórias e seus respectivos relatórios
                   periódicos estabelecidos pelos Incisos I a VI do Art. 9º da Resolução ANP nº
@@ -685,7 +1140,7 @@ export default function Transparencia() {
                         <th className="p-3 w-28">Inciso</th>
                         <th className="p-3">Exigência Legal (Res. ANP 11/2016)</th>
                         <th className="p-3 w-32">Frequência</th>
-                        <th className="p-3 w-40 text-center">Acesso</th>
+                        <th className="p-3 w-44 text-center">Acesso</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
@@ -741,32 +1196,36 @@ export default function Transparencia() {
                           </button>
                         </td>
                       </tr>
-                      <tr className="hover:bg-slate-50 transition-colors">
-                        <td className="p-3 font-bold text-[#0a2540]">Inciso III</td>
+
+                      {/* INCISO III COMPLETO COM DESTAQUE CONFORME ITEM 9 */}
+                      <tr className="bg-sky-50/40 hover:bg-sky-50 transition-colors">
+                        <td className="p-3 font-bold text-[#0a2540]">
+                          Inciso III
+                          <span className="block text-[10px] text-[#0284c7] font-normal">
+                            (Fluxo Oposto &amp; Previsões)
+                          </span>
+                        </td>
                         <td className="p-3 text-slate-800">
-                          Capacidade disponível e ociosa do gasoduto
+                          Capacidade disponível, ociosa, <strong>capacidade em fluxo oposto</strong>{' '}
+                          e <strong>previsões rolantes de capacidade</strong> (7 anos firme / 2 anos
+                          não-firme)
                         </td>
                         <td className="p-3">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-semibold">
-                            Mensal
+                          <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 text-[11px] font-semibold">
+                            Mensal / Rolante
                           </span>
                         </td>
                         <td className="p-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toast({
-                                title: 'Inciso III',
-                                description:
-                                  'Consulta à Matriz de Capacidades Disponíveis e Ociosas TSB.',
-                              })
-                            }
-                            className="text-[#0284c7] font-semibold hover:underline inline-flex items-center gap-1"
+                          <Button
+                            size="sm"
+                            onClick={() => setModalIncisoIIIAberto(true)}
+                            className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1"
                           >
-                            <Search className="h-3.5 w-3.5" /> Consultar Tabela
-                          </button>
+                            <TrendingUp className="h-3.5 w-3.5" /> Consultar Matriz
+                          </Button>
                         </td>
                       </tr>
+
                       <tr className="hover:bg-slate-50 transition-colors">
                         <td className="p-3 font-bold text-[#0a2540]">Inciso IV</td>
                         <td className="p-3 text-slate-800">
@@ -848,10 +1307,257 @@ export default function Transparencia() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* MODAL DETALHADO DO INCISO III (FLUXO OPOSTO E PREVISÕES ROLANTES) */}
+                {modalIncisoIIIAberto && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6 space-y-6 border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-[#0284c7]" />
+                          <h3 className="text-lg font-bold text-[#0a2540]">
+                            Inciso III — Capacidades, Fluxo Oposto e Previsões Rolantes
+                          </h3>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setModalIncisoIIIAberto(false)}
+                          className="text-xs"
+                        >
+                          Fechar
+                        </Button>
+                      </div>
+
+                      {/* TABELA 1: CAPACIDADE ATUAL E FLUXO OPOSTO (BACKHAUL / VIRTUAL REVERSAL) */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                          <span>
+                            1. Capacidade Operacional e Capacidade em Fluxo Oposto (m³/dia)
+                          </span>
+                          <Badge className="bg-[#0284c7] text-white text-[10px]">
+                            Art. 9º, Inciso III
+                          </Badge>
+                        </h4>
+                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                          <table className="w-full text-xs text-left border-collapse">
+                            <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
+                              <tr>
+                                <th className="p-2.5">Trecho de Duto</th>
+                                <th className="p-2.5">Sentido Físico</th>
+                                <th className="p-2.5 text-right">Capacidade Técnica Total</th>
+                                <th className="p-2.5 text-right">Capacidade Contratada</th>
+                                <th className="p-2.5 text-right">Capacidade Disponível / Ociosa</th>
+                                <th className="p-2.5 text-right bg-sky-50 text-[#0284c7]">
+                                  Capacidade em Fluxo Oposto (Backhaul)
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 bg-white">
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-semibold text-[#0a2540]">
+                                  Gasoduto Uruguaiana - Triunfo (Trecho I)
+                                </td>
+                                <td className="p-2.5 text-slate-600">Uruguaiana &rarr; Triunfo</td>
+                                <td className="p-2.5 text-right font-mono">2.800.000</td>
+                                <td className="p-2.5 text-right font-mono">2.200.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  600.000
+                                </td>
+                                <td className="p-2.5 text-right font-mono font-bold bg-sky-50 text-[#0284c7]">
+                                  1.800.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-semibold text-[#0a2540]">
+                                  Ramal Triunfo - Polo Petroquímico
+                                </td>
+                                <td className="p-2.5 text-slate-600">
+                                  Triunfo &rarr; Entrega Polo
+                                </td>
+                                <td className="p-2.5 text-right font-mono">1.500.000</td>
+                                <td className="p-2.5 text-right font-mono">1.200.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  300.000
+                                </td>
+                                <td className="p-2.5 text-right font-mono font-bold bg-sky-50 text-[#0284c7]">
+                                  800.000
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* TABELA 2: PREVISÕES ROLANTES (7 ANOS FIRME E 2 ANOS NÃO-FIRME) */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-[#0a2540] flex items-center justify-between">
+                          <span>
+                            2. Previsões Rolantes de Capacidade (7 Anos Firme / 2 Anos Não-Firme)
+                          </span>
+                          <span className="text-xs text-slate-500 font-normal">
+                            Unidade: m³/dia
+                          </span>
+                        </h4>
+                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                          <table className="w-full text-xs text-left border-collapse">
+                            <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
+                              <tr>
+                                <th className="p-2.5">Horizonte</th>
+                                <th className="p-2.5">Ano</th>
+                                <th className="p-2.5">Modalidade</th>
+                                <th className="p-2.5 text-right">Capacidade Técnica Projetada</th>
+                                <th className="p-2.5 text-right">Comprometimento Contratual</th>
+                                <th className="p-2.5 text-right text-emerald-800">
+                                  Disponibilidade Ociosa Prevista
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 bg-white">
+                              {/* 7 Anos Firme */}
+                              <tr className="hover:bg-slate-50">
+                                <td
+                                  rowSpan={7}
+                                  className="p-2.5 font-bold text-slate-700 bg-slate-50/70 border-r"
+                                >
+                                  7 Anos Rolantes
+                                  <span className="block text-[10px] text-slate-500 font-normal">
+                                    Serviço Firme
+                                  </span>
+                                </td>
+                                <td className="p-2.5 font-mono">2026 (Ano 1)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">2.800.000</td>
+                                <td className="p-2.5 text-right font-mono">2.200.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  600.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2027 (Ano 2)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">2.800.000</td>
+                                <td className="p-2.5 text-right font-mono">2.200.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  600.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2028 (Ano 3)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">2.800.000</td>
+                                <td className="p-2.5 text-right font-mono">2.000.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  800.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2029 (Ano 4)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">3.200.000*</td>
+                                <td className="p-2.5 text-right font-mono">1.500.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  1.700.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2030 (Ano 5)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">3.200.000*</td>
+                                <td className="p-2.5 text-right font-mono">1.000.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  2.200.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2031 (Ano 6)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">3.200.000*</td>
+                                <td className="p-2.5 text-right font-mono">800.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  2.400.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono">2032 (Ano 7)</td>
+                                <td className="p-2.5 text-blue-700 font-semibold">
+                                  Firme Ordinário
+                                </td>
+                                <td className="p-2.5 text-right font-mono">3.200.000*</td>
+                                <td className="p-2.5 text-right font-mono">0</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  3.200.000
+                                </td>
+                              </tr>
+
+                              {/* 2 Anos Não-Firme */}
+                              <tr className="hover:bg-slate-50 bg-amber-50/20">
+                                <td
+                                  rowSpan={2}
+                                  className="p-2.5 font-bold text-amber-900 bg-amber-50/50 border-r"
+                                >
+                                  2 Anos Rolantes
+                                  <span className="block text-[10px] text-amber-700 font-normal">
+                                    Não-Firme (Interruptível)
+                                  </span>
+                                </td>
+                                <td className="p-2.5 font-mono">2026 (Ano 1)</td>
+                                <td className="p-2.5 text-amber-700 font-semibold">
+                                  Interruptível
+                                </td>
+                                <td className="p-2.5 text-right font-mono">600.000</td>
+                                <td className="p-2.5 text-right font-mono">250.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  350.000
+                                </td>
+                              </tr>
+                              <tr className="hover:bg-slate-50 bg-amber-50/20">
+                                <td className="p-2.5 font-mono">2027 (Ano 2)</td>
+                                <td className="p-2.5 text-amber-700 font-semibold">
+                                  Interruptível
+                                </td>
+                                <td className="p-2.5 text-right font-mono">600.000</td>
+                                <td className="p-2.5 text-right font-mono">100.000</td>
+                                <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                                  500.000
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          * Capacidade técnica a partir de 2029 considera ampliação planejada de
+                          compressão na EMED Triunfo.
+                        </p>
+                      </div>
+
+                      <div className="flex justify-end pt-2">
+                        <Button
+                          onClick={() => setModalIncisoIIIAberto(false)}
+                          className="bg-[#0a2540] text-white text-xs"
+                        >
+                          Fechar Visualização
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* SUB-ABA 2: INCISO VII (SOLICITAÇÃO DE ACESSO) */}
+            {/* SUB-ABA 2: INCISO VII (SOLICITAÇÃO DE ACESSO + RESUMO PÚBLICO AGREGADO + SLA) */}
             {subAbaPlataforma === 'vii' && (
               <div className="space-y-8">
                 {/* BANNER INFORMATIVO VERDE */}
@@ -863,11 +1569,95 @@ export default function Transparencia() {
                   <p className="text-xs text-slate-700 leading-relaxed">
                     Envio direto sem necessidade de login prévio. Gera protocolo automático com
                     prazo legal de resposta de até 20 dias úteis para manifestação técnica e
-                    comercial da transportadora.
+                    comercial fundamentada por escrito da transportadora.
                   </p>
                 </div>
 
-                {/* FORMULÁRIO */}
+                {/* ITEM 2: RESUMO PÚBLICO DAS SOLICITAÇÕES DE ACESSO (Art. 9º, VII - SEM DADOS PESSOAIS / LGPD) */}
+                <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0a2540] flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                        Resumo Público das Solicitações de Acesso por Ponto Relevante
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Publicação agregada e anonimizada da demanda solicitada no sistema (Art. 9º,
+                        VII da Resolução ANP nº 11/2016 e conformidade com a LGPD).
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarResumoVII}
+                      disabled={carregandoResumoVII}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoResumoVII ? 'animate-spin' : ''}`}
+                      />
+                      Atualizar
+                    </Button>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
+                        <tr>
+                          <th className="p-3">Ponto / Trecho Relevante</th>
+                          <th className="p-3">Modalidade</th>
+                          <th className="p-3 text-center">Nº de Solicitações</th>
+                          <th className="p-3 text-right">Capacidade Total Demandada (m³/dia)</th>
+                          <th className="p-3">Período(s) Requisitado(s)</th>
+                          <th className="p-3">Status Predominante</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {resumoPublicoVII.length > 0 ? (
+                          resumoPublicoVII.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3">
+                                <div className="font-semibold text-[#0a2540]">
+                                  {item.pontoRelevante}
+                                </div>
+                                <div className="text-[11px] text-slate-500">{item.trecho}</div>
+                              </td>
+                              <td className="p-3">
+                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-800">
+                                  {item.modalidade}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center font-bold font-mono">
+                                {item.totalSolicitacoes}
+                              </td>
+                              <td className="p-3 text-right font-mono font-bold text-slate-900">
+                                {item.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
+                              </td>
+                              <td className="p-3 text-slate-700 text-[11px]">
+                                {item.periodosDemandados.join(', ')}
+                              </td>
+                              <td className="p-3">
+                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                  {item.statusPredominante}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-slate-500">
+                              {carregandoResumoVII
+                                ? 'Consolidando resumo regulatório...'
+                                : 'Nenhuma demanda de acesso registrada até o momento.'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* ITEM 1: FORMULÁRIO DO INCISO VII COM CAMPO PERÍODO (Art. 10, II) */}
                 <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg">
                   <h3 className="text-base font-bold text-[#0a2540] mb-4 flex items-center gap-2">
                     <FileText className="h-4 w-4 text-[#0284c7]" />
@@ -996,8 +1786,33 @@ export default function Transparencia() {
                         >
                           <option value="">Selecione o trecho...</option>
                           <option value="Uruguaiana -> Triunfo">Uruguaiana -&gt; Triunfo</option>
+                          <option value="EMED Triunfo -> Polo Petroquímico">
+                            EMED Triunfo -&gt; Polo Petroquímico
+                          </option>
                         </select>
                       </div>
+                    </div>
+
+                    {/* CAMPO PERÍODO OBRIGATÓRIO (Art. 10, Inciso II da Resolução ANP nº 11/2016) */}
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="periodo"
+                        className="text-xs font-semibold text-slate-700 flex items-center justify-between"
+                      >
+                        <span>Período(s) em que o serviço será requisitado *</span>
+                        <span className="text-[10px] text-[#0284c7]">
+                          Exigência legal: Art. 10, II da Res. 11/2016
+                        </span>
+                      </Label>
+                      <Input
+                        id="periodo"
+                        required
+                        placeholder="Ex: 01/01/2027 a 31/12/2027 ou Período Safra Out/2026 a Mar/2027"
+                        value={formVII.periodo}
+                        onChange={(e) => setFormVII({ ...formVII, periodo: e.target.value })}
+                        className="text-xs bg-white"
+                        disabled={submetendoVII}
+                      />
                     </div>
 
                     <Button
@@ -1012,11 +1827,11 @@ export default function Transparencia() {
                   </form>
                 </div>
 
-                {/* CONSULTA DE PROTOCOLO E SLA */}
+                {/* CONSULTA DE PROTOCOLO E SLA (COM PARECER FUNDAMENTADO PÚBLICO SE HOUVER) */}
                 <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
                   <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
                     <Search className="h-4 w-4 text-[#0284c7]" />
-                    Consulta Pública de Protocolo &amp; SLA
+                    Consulta Pública de Protocolo, SLA e Parecer Fundamentado
                   </h3>
                   <p className="text-xs text-slate-600">
                     Acompanhe o andamento regulatório da sua manifestação técnica pelo número de
@@ -1036,7 +1851,7 @@ export default function Transparencia() {
                       disabled={consultandoSLA || !consultaProtocolo.trim()}
                       className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold shrink-0"
                     >
-                      {consultandoSLA ? 'Buscando...' : 'Verificar SLA'}
+                      {consultandoSLA ? 'Buscando...' : 'Verificar Protocolo'}
                     </Button>
                   </form>
 
@@ -1044,7 +1859,7 @@ export default function Transparencia() {
                   {resultadoConsulta && resultadoConsulta.buscado && (
                     <div className="animate-fade-in pt-2">
                       {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
-                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-950 space-y-2">
+                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-950 space-y-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className="font-bold text-sm flex items-center gap-1.5 text-emerald-800">
                               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -1054,26 +1869,41 @@ export default function Transparencia() {
                               SLA Restante: {resultadoConsulta.dados.sla_dias} Dias Úteis
                             </span>
                           </div>
-                          <div className="text-xs space-y-1 text-emerald-900/90 pt-1 border-t border-emerald-200">
-                            <div>
-                              <strong>Solicitante:</strong> {resultadoConsulta.dados.razao_social}{' '}
-                              (CNPJ: {resultadoConsulta.dados.cnpj})
-                            </div>
+
+                          <div className="text-xs space-y-1.5 text-emerald-900/90 pt-1 border-t border-emerald-200">
                             <div>
                               <strong>Modalidade / Trecho:</strong>{' '}
                               {resultadoConsulta.dados.modalidade} |{' '}
                               {resultadoConsulta.dados.trecho}
                             </div>
                             <div>
-                              <strong>Capacidade:</strong>{' '}
+                              <strong>Capacidade Solicitada:</strong>{' '}
                               {resultadoConsulta.dados.capacidade.toLocaleString('pt-BR')} m³/dia
                             </div>
+                            {resultadoConsulta.dados.periodo && (
+                              <div>
+                                <strong>Período Requisitado:</strong>{' '}
+                                {resultadoConsulta.dados.periodo}
+                              </div>
+                            )}
                             <div>
-                              <strong>Status:</strong>{' '}
-                              <span className="font-semibold text-emerald-800">
+                              <strong>Status Regulatório:</strong>{' '}
+                              <span className="font-semibold text-emerald-900">
                                 {resultadoConsulta.dados.status}
                               </span>
                             </div>
+
+                            {/* PARECER FUNDAMENTADO POR ESCRITO (Art. 10 da Resolução ANP nº 11/2016) */}
+                            {resultadoConsulta.dados.parecer_fundamentado && (
+                              <div className="mt-3 p-3 bg-white/80 rounded border border-emerald-300">
+                                <span className="font-bold text-emerald-950 block mb-1">
+                                  Parecer Técnico-Regulatório Fundamentado (Art. 10, Res. 11/2016):
+                                </span>
+                                <p className="text-slate-800 leading-relaxed italic">
+                                  "{resultadoConsulta.dados.parecer_fundamentado}"
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -1095,7 +1925,7 @@ export default function Transparencia() {
               </div>
             )}
 
-            {/* SUB-ABA 3: INCISO VIII (CESSÃO DE CAPACIDADE) */}
+            {/* SUB-ABA 3: INCISO VIII (CESSÃO DE CAPACIDADE: TABELA + FORMULÁRIO PÚBLICO) */}
             {subAbaPlataforma === 'viii' && (
               <div className="space-y-6">
                 {/* BANNER INFORMATIVO AZUL */}
@@ -1107,10 +1937,186 @@ export default function Transparencia() {
                   <p className="text-xs text-slate-700 leading-relaxed">
                     Mecanismo de divulgação de ofertas de capacidade ociosa para cessão entre
                     carregadores, promovendo o aproveitamento eficiente e secundário da malha
-                    dutoviária da TSB.
+                    dutoviária da TSB. Consulta e envio livres de login.
                   </p>
                 </div>
 
+                {/* BOTÃO PARA ABRIR FORMULÁRIO DE NOVA OFERTA */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="text-sm font-bold text-[#0a2540]">
+                    Ofertas Ativas de Cessão de Capacidade
+                  </h3>
+                  <Button
+                    onClick={() => setMostrarFormCessao(!mostrarFormCessao)}
+                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold h-8"
+                  >
+                    <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+                    {mostrarFormCessao ? 'Fechar Formulário' : 'Publicar Oferta de Cessão'}
+                  </Button>
+                </div>
+
+                {/* ITEM 3: FORMULÁRIO PÚBLICO DE COMUNICAÇÃO DE CESSÃO (Inciso VIII) */}
+                {mostrarFormCessao && (
+                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-4 animate-fade-in">
+                    <h4 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-[#0284c7]" />
+                      Formulário de Comunicação de Cessão de Capacidade (Inciso VIII)
+                    </h4>
+
+                    {erroFormCessao && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
+                        <XCircle className="h-4 w-4 shrink-0" />
+                        <span>{erroFormCessao}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSubmeterCessao} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="cedente" className="text-xs font-semibold text-slate-700">
+                            Carregador Cedente *
+                          </Label>
+                          <Input
+                            id="cedente"
+                            required
+                            placeholder="Ex: Carregador Industrial Sul S.A."
+                            value={formCessao.cedente}
+                            onChange={(e) =>
+                              setFormCessao({ ...formCessao, cedente: e.target.value })
+                            }
+                            className="text-xs bg-white"
+                            disabled={submetendoCessao}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="trechoCessao"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Trecho do Gasoduto *
+                          </Label>
+                          <select
+                            id="trechoCessao"
+                            required
+                            value={formCessao.trecho}
+                            onChange={(e) =>
+                              setFormCessao({ ...formCessao, trecho: e.target.value })
+                            }
+                            className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                            disabled={submetendoCessao}
+                          >
+                            <option value="">Selecione o trecho...</option>
+                            <option value="Uruguaiana -> Triunfo">Uruguaiana -&gt; Triunfo</option>
+                            <option value="EMED Triunfo -> Polo Petroquímico">
+                              EMED Triunfo -&gt; Polo Petroquímico
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="capacidadeCessao"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Capacidade Ociosa (m³/dia) *
+                          </Label>
+                          <Input
+                            id="capacidadeCessao"
+                            type="number"
+                            min="1"
+                            required
+                            placeholder="Ex: 25000"
+                            value={formCessao.capacidade_ociosa}
+                            onChange={(e) =>
+                              setFormCessao({ ...formCessao, capacidade_ociosa: e.target.value })
+                            }
+                            className="text-xs bg-white font-mono"
+                            disabled={submetendoCessao}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="periodoCessao"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Período Contratual *
+                          </Label>
+                          <Input
+                            id="periodoCessao"
+                            required
+                            placeholder="Ex: Nov/2026 a Fev/2027"
+                            value={formCessao.periodo_contratual}
+                            onChange={(e) =>
+                              setFormCessao({ ...formCessao, periodo_contratual: e.target.value })
+                            }
+                            className="text-xs bg-white"
+                            disabled={submetendoCessao}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="contatoCessao"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Contato Comercial *
+                          </Label>
+                          <Input
+                            id="contatoCessao"
+                            required
+                            placeholder="comercial@empresa.com.br"
+                            value={formCessao.contato}
+                            onChange={(e) =>
+                              setFormCessao({ ...formCessao, contato: e.target.value })
+                            }
+                            className="text-xs bg-white"
+                            disabled={submetendoCessao}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="obsCessao" className="text-xs font-semibold text-slate-700">
+                          Observações Adicionais (opcional)
+                        </Label>
+                        <Input
+                          id="obsCessao"
+                          placeholder="Ex: Disponibilidade para cessão parcial ou total."
+                          value={formCessao.observacoes}
+                          onChange={(e) =>
+                            setFormCessao({ ...formCessao, observacoes: e.target.value })
+                          }
+                          className="text-xs bg-white"
+                          disabled={submetendoCessao}
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setMostrarFormCessao(false)}
+                          className="text-xs"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={submetendoCessao}
+                          className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold"
+                        >
+                          {submetendoCessao ? 'Publicando...' : 'Publicar Oferta de Cessão'}
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* TABELA DE OFERTAS DE CESSÃO */}
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
@@ -1120,27 +2126,54 @@ export default function Transparencia() {
                         <th className="p-3 text-right">Capacidade Ociosa</th>
                         <th className="p-3">Período Contratual</th>
                         <th className="p-3">Contato</th>
+                        <th className="p-3 text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      <tr className="hover:bg-slate-50 transition-colors">
-                        <td className="p-3 font-semibold text-[#0a2540]">
-                          Carregador Exemplo S.A.
-                        </td>
-                        <td className="p-3 text-slate-700">Uruguaiana -&gt; Triunfo</td>
-                        <td className="p-3 text-right font-mono font-bold text-slate-900">
-                          20.000 m³/dia
-                        </td>
-                        <td className="p-3 text-slate-700">Out/2026 a Dez/2026</td>
-                        <td className="p-3">
-                          <a
-                            href="mailto:comercial@carregadorexemplo.com.br"
-                            className="text-[#0284c7] font-medium hover:underline"
-                          >
-                            comercial@carregadorexemplo.com.br
-                          </a>
-                        </td>
-                      </tr>
+                      {ofertasCessao.length > 0 ? (
+                        ofertasCessao.map((oferta) => (
+                          <tr key={oferta.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-3">
+                              <div className="font-semibold text-[#0a2540]">{oferta.cedente}</div>
+                              {oferta.observacoes && (
+                                <div className="text-[11px] text-slate-500">
+                                  {oferta.observacoes}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-700">{oferta.trecho}</td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">
+                              {oferta.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
+                            </td>
+                            <td className="p-3 text-slate-700">{oferta.periodo_contratual}</td>
+                            <td className="p-3">
+                              {oferta.contato.includes('@') ? (
+                                <a
+                                  href={`mailto:${oferta.contato}`}
+                                  className="text-[#0284c7] font-medium hover:underline"
+                                >
+                                  {oferta.contato}
+                                </a>
+                              ) : (
+                                <span className="text-slate-800">{oferta.contato}</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {oferta.status || 'Disponível'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="p-6 text-center text-slate-500">
+                            {carregandoCessoes
+                              ? 'Carregando ofertas de cessão...'
+                              : 'Nenhuma oferta de cessão cadastrada no momento.'}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
