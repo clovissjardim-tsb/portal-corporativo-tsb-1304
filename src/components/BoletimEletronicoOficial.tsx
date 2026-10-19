@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast'
 import {
   FileText,
   FileDown,
-  Search,
   ExternalLink,
   Calendar,
   Layers,
@@ -22,6 +21,9 @@ import {
   Filter,
   Eye,
   RotateCcw,
+  ArrowUpDown,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
 } from 'lucide-react'
 
 interface BoletimEletronicoProps {
@@ -200,13 +202,22 @@ export default function BoletimEletronico({
 }: BoletimEletronicoProps) {
   const { toast } = useToast()
 
-  // Busca e filtros da Seção II (Quantidades Programadas e Realizadas Trechos 1 e 3)
-  const [buscaTabelaII, setBuscaTabelaII] = useState('')
-  // Período: início e fim no formato "YYYY-MM" (ou vazio para sem limite)
+  // Filtros da Seção II (Quantidades Programadas e Realizadas Trechos 1 e 3)
+  // Filtro por ano (série histórica desde 2003 até o mais recente)
+  const [filtroAnoSecaoII, setFiltroAnoSecaoII] = useState<string>('todos')
+  // Período: início no formato "YYYY-MM" (campo "De (mês/ano)")
   const [periodoInicio, setPeriodoInicio] = useState('')
-  const [periodoFim, setPeriodoFim] = useState('')
-  // Paginação / Quantidade de itens a exibir por padrão: 12 (com opções 24, 36, 48, 96, "todos")
+  // Ordenação da lista: 'desc' = mais novo para mais velho (padrão), 'asc' = mais velho para mais novo
+  const [ordemSecaoII, setOrdemSecaoII] = useState<'desc' | 'asc'>('desc')
+  // Paginação / Quantidade de itens a exibir por padrão: 12 (com opções 24, 36, 48, "todos")
   const [itensExibir, setItensExibir] = useState<number | 'todos'>(12)
+
+  // Lista dos anos da série histórica (de 2026/ano mais recente até 2003)
+  const anosDisponiveis = React.useMemo(() => {
+    const anosSet = new Set<number>()
+    HISTORICO_QUANTIDADES_COMPLETO.forEach((item) => anosSet.add(item.anoNum))
+    return Array.from(anosSet).sort((a, b) => b - a)
+  }, [])
 
   // Controle de expansão das tabelas detalhadas do protótipo
   const [detalhesItemH, setDetalhesItemH] = useState(true)
@@ -214,42 +225,53 @@ export default function BoletimEletronico({
   const [detalhesQualidade, setDetalhesQualidade] = useState(true)
   const [detalhesManutencoes, setDetalhesManutencoes] = useState(true)
 
-  // Filtragem combinada dos arquivos da Seção II: busca textual + período (De / Até)
-  const relatoriosFiltradosTotal = HISTORICO_QUANTIDADES_COMPLETO.filter((item) => {
-    // Filtro por texto de pesquisa
-    if (buscaTabelaII.trim()) {
-      const termo = buscaTabelaII.toLowerCase().trim()
-      const matchTexto =
-        item.titulo.toLowerCase().includes(termo) ||
-        item.mes.toLowerCase().includes(termo) ||
-        item.ano.toLowerCase().includes(termo) ||
-        item.chavePeriodo.includes(termo)
-      if (!matchTexto) return false
-    }
+  // Filtragem combinada dos arquivos da Seção II: Ano + De (mês/ano) + Ordenação
+  const relatoriosFiltradosTotal = React.useMemo(() => {
+    const filtrados = HISTORICO_QUANTIDADES_COMPLETO.filter((item) => {
+      // Filtro por Ano
+      if (filtroAnoSecaoII !== 'todos' && String(item.anoNum) !== filtroAnoSecaoII) {
+        return false
+      }
 
-    // Filtro por período inicial (De: YYYY-MM)
-    if (periodoInicio) {
-      if (item.chavePeriodo < periodoInicio) return false
-    }
+      // Filtro por período inicial (De: YYYY-MM)
+      if (periodoInicio) {
+        if (item.chavePeriodo < periodoInicio) return false
+      }
 
-    // Filtro por período final (Até: YYYY-MM)
-    if (periodoFim) {
-      if (item.chavePeriodo > periodoFim) return false
-    }
+      return true
+    })
 
-    return true
-  })
+    // Aplicação da ordenação: 'desc' (mais novo para mais velho) ou 'asc' (mais velho para mais novo)
+    return filtrados.sort((a, b) => {
+      if (ordemSecaoII === 'asc') {
+        return a.chavePeriodo.localeCompare(b.chavePeriodo)
+      }
+      return b.chavePeriodo.localeCompare(a.chavePeriodo)
+    })
+  }, [filtroAnoSecaoII, periodoInicio, ordemSecaoII])
 
-  // Aplicação da paginação por quantidade de itens (12, 24, 36, 48, 96 ou todos)
+  // Aplicação da paginação por quantidade de itens (12, 24, 36, 48 ou todos)
   const relatoriosVisiveis =
     itensExibir === 'todos'
       ? relatoriosFiltradosTotal
       : relatoriosFiltradosTotal.slice(0, itensExibir)
 
+  const toggleOrdemSecaoII = () => {
+    const novaOrdem = ordemSecaoII === 'desc' ? 'asc' : 'desc'
+    setOrdemSecaoII(novaOrdem)
+    toast({
+      title: 'Ordenação alterada',
+      description:
+        novaOrdem === 'desc'
+          ? 'Exibindo do MAIS NOVO PARA O MAIS VELHO.'
+          : 'Exibindo do MAIS VELHO PARA O MAIS NOVO.',
+    })
+  }
+
   const limparFiltrosSecaoII = () => {
-    setBuscaTabelaII('')
+    setFiltroAnoSecaoII('todos')
     setPeriodoInicio('')
-    setPeriodoFim('')
+    setOrdemSecaoII('desc')
     setItensExibir(12)
     toast({
       title: 'Filtros redefinidos',
@@ -568,16 +590,19 @@ export default function BoletimEletronico({
               <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
             </div>
 
-            {/* PAINEL DE CONTROLE DE FILTROS DA SEÇÃO II: PERÍODO + BUSCA TEXTUAL + SELETOR DE EXIBIÇÃO */}
+            {/* PAINEL DE CONTROLE DE FILTROS DA SEÇÃO II: ANO + DE (MÊS/ANO) + ORDENAÇÃO + SELETOR DE EXIBIÇÃO */}
             <div className="bg-slate-50 p-3.5 sm:p-4 rounded-lg border border-slate-200 space-y-3.5">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-[#0284c7]" />
                   <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wide">
-                    Filtros de Pesquisa &amp; Período Histórico (desde 2003)
+                    Filtros de Período Histórico &amp; Ordenação (desde 2003)
                   </span>
                 </div>
-                {(buscaTabelaII || periodoInicio || periodoFim || itensExibir !== 12) && (
+                {(filtroAnoSecaoII !== 'todos' ||
+                  periodoInicio ||
+                  ordemSecaoII !== 'desc' ||
+                  itensExibir !== 12) && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -591,28 +616,32 @@ export default function BoletimEletronico({
                 )}
               </div>
 
-              {/* GRID DE FILTROS: BUSCA + DE (MÊS/ANO) + ATÉ (MÊS/ANO) + EXIBIR */}
+              {/* GRID DE FILTROS: ANO + DE (MÊS/ANO) + BOTÃO DE ORDENAÇÃO + EXIBIR */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-                {/* 1. Busca Textual em Tempo Real */}
-                <div className="lg:col-span-4 space-y-1">
+                {/* 1. Filtro por Ano (2003 até o ano mais recente) */}
+                <div className="lg:col-span-3 space-y-1">
                   <Label
-                    htmlFor="buscaTabelaII"
+                    htmlFor="seletorAnoSecaoII"
                     className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
                   >
-                    <Search className="h-3.5 w-3.5 text-[#0284c7]" />
-                    Pesquisar publicação
+                    <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Ano:
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="buscaTabelaII"
-                      type="text"
-                      placeholder="Ex: Janeiro, 2024, Setembro..."
-                      value={buscaTabelaII}
-                      onChange={(e) => setBuscaTabelaII(e.target.value)}
-                      className="h-8 text-xs bg-white pl-8 border-slate-300 focus-visible:ring-[#0284c7]"
-                    />
-                    <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
-                  </div>
+                  <select
+                    id="seletorAnoSecaoII"
+                    value={filtroAnoSecaoII}
+                    onChange={(e) => setFiltroAnoSecaoII(e.target.value)}
+                    className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                  >
+                    <option value="todos">
+                      Todos os anos (2003 - {anosDisponiveis[0] || 'atual'})
+                    </option>
+                    {anosDisponiveis.map((ano) => (
+                      <option key={ano} value={String(ano)}>
+                        {ano}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* 2. Filtro de Período Inicial: De (Mês/Ano) */}
@@ -628,34 +657,49 @@ export default function BoletimEletronico({
                     id="periodoInicio"
                     type="month"
                     min="2003-01"
-                    max={periodoFim || undefined}
                     value={periodoInicio}
                     onChange={(e) => setPeriodoInicio(e.target.value)}
                     className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-[#0284c7]"
                   />
                 </div>
 
-                {/* 3. Filtro de Período Final: Até (Mês/Ano) */}
+                {/* 3. Botão de Alternância de Ordenação */}
                 <div className="lg:col-span-3 space-y-1">
-                  <Label
-                    htmlFor="periodoFim"
-                    className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
-                  >
-                    <Calendar className="h-3.5 w-3.5 text-[#0284c7]" />
-                    Até (mês/ano):
+                  <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                    <ArrowUpDown className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Ordenação:
                   </Label>
-                  <Input
-                    id="periodoFim"
-                    type="month"
-                    min={periodoInicio || '2003-01'}
-                    value={periodoFim}
-                    onChange={(e) => setPeriodoFim(e.target.value)}
-                    className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-[#0284c7]"
-                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={toggleOrdemSecaoII}
+                    title="Alternar entre mais novo primeiro e mais velho primeiro"
+                    className="w-full h-8 px-2.5 text-xs bg-white border-slate-300 text-[#0a2540] hover:bg-slate-100 hover:text-[#0284c7] font-semibold flex items-center justify-between shadow-xs transition-colors"
+                  >
+                    <span className="truncate flex items-center gap-1.5">
+                      {ordemSecaoII === 'desc' ? (
+                        <>
+                          <ArrowDownWideNarrow className="h-3.5 w-3.5 text-[#0284c7] shrink-0" />
+                          <span>Mais novo para mais velho</span>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpNarrowWide className="h-3.5 w-3.5 text-[#0284c7] shrink-0" />
+                          <span>Mais velho para mais novo</span>
+                        </>
+                      )}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0 bg-slate-100 text-slate-600"
+                    >
+                      {ordemSecaoII === 'desc' ? 'Recentes' : 'Antigos'}
+                    </Badge>
+                  </Button>
                 </div>
 
-                {/* 4. Seletor de Quantidade de Arquivos Exibidos: 12 / 24 / 36 / 48 / 96 / Todos */}
-                <div className="lg:col-span-2 space-y-1">
+                {/* 4. Seletor de Quantidade de Arquivos Exibidos: 12 / 24 / 36 / 48 / Todos */}
+                <div className="lg:col-span-3 space-y-1">
                   <Label
                     htmlFor="seletorItensExibir"
                     className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"
@@ -672,19 +716,18 @@ export default function BoletimEletronico({
                     }}
                     className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
                   >
-                    <option value={12}>12 arquivos</option>
-                    <option value={24}>24 arquivos</option>
-                    <option value={36}>36 arquivos</option>
-                    <option value={48}>48 arquivos</option>
-                    <option value={96}>96 arquivos</option>
-                    <option value="todos">Todos ({HISTORICO_QUANTIDADES_COMPLETO.length})</option>
+                    <option value={12}>12 relatórios</option>
+                    <option value={24}>24 relatórios</option>
+                    <option value={36}>36 relatórios</option>
+                    <option value={48}>48 relatórios</option>
+                    <option value="todos">Todos ({relatoriosFiltradosTotal.length})</option>
                   </select>
                 </div>
               </div>
 
               {/* BARRA INFORMATIVA COM CONTAGEM E BOTÕES RÁPIDOS DE QUANTIDADE */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/80 text-xs text-slate-600">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     variant="outline"
                     className="bg-white text-[#0a2540] border-slate-300 font-mono text-[11px] px-2 py-0.5"
@@ -697,11 +740,24 @@ export default function BoletimEletronico({
                       </span>
                     )}
                   </Badge>
-                  {periodoInicio && periodoFim && (
-                    <span className="text-[11px] text-[#0284c7] font-medium hidden sm:inline">
-                      Período filtrado: {periodoInicio} a {periodoFim}
+                  {filtroAnoSecaoII !== 'todos' && (
+                    <span className="text-[11px] text-[#0284c7] font-semibold">
+                      Ano: {filtroAnoSecaoII}
                     </span>
                   )}
+                  {periodoInicio && (
+                    <span className="text-[11px] text-[#0284c7] font-medium hidden sm:inline">
+                      A partir de: {periodoInicio}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-slate-500 hidden md:inline">
+                    • Ordem:{' '}
+                    <strong className="text-[#0a2540]">
+                      {ordemSecaoII === 'desc'
+                        ? 'Mais novo para mais velho'
+                        : 'Mais velho para mais novo'}
+                    </strong>
+                  </span>
                 </div>
 
                 {/* BOTÕES RÁPIDOS DE ALTERNÂNCIA: 12 | 24 | 36 | 48 | Todos */}
@@ -780,9 +836,8 @@ export default function BoletimEletronico({
                           Nenhum relatório encontrado para os critérios selecionados.
                         </p>
                         <p className="text-xs text-slate-500">
-                          {buscaTabelaII && `Termo: "${buscaTabelaII}". `}
-                          {(periodoInicio || periodoFim) &&
-                            `Período: ${periodoInicio || '2003-01'} até ${periodoFim || 'atual'}.`}
+                          {filtroAnoSecaoII !== 'todos' && `Ano: ${filtroAnoSecaoII}. `}
+                          {periodoInicio && `A partir de: ${periodoInicio}.`}
                         </p>
                         <Button
                           type="button"
