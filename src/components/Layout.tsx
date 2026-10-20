@@ -192,34 +192,152 @@ export default function Layout({ children }: LayoutProps) {
       <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 my-8">{children}</main>
 
       {/* FOOTER */}
-      <footer className="bg-[#0a2540] text-[#94a3b8] py-8 border-t border-white/10 mt-auto">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-          <div>
-            <h4 className="text-white font-bold text-base mb-2">
+      <footer className="bg-[#0a2540] text-[#94a3b8] py-10 border-t border-white/10 mt-auto">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+          {/* COLUNA 1: INSTITUCIONAL TSB */}
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-black tracking-tight text-white">TSB</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#0284c7] text-white shadow-sm">
+                Transportadora
+              </span>
+            </div>
+            <h4 className="text-white font-bold text-base">
               TSB — Transportadora Sulbrasileira de Gás S.A.
             </h4>
-            <p className="text-xs leading-relaxed text-slate-400">
+            <p className="text-xs leading-relaxed text-slate-400 max-w-md">
               Concessionária de Transporte Dutoviário de Gás Natural. Informações regulatórias
               disponibilizadas em estrita observância à Portaria ANP nº 1/2003, Resolução ANP nº
               11/2016 e Resolução ANP nº 961/2023.
             </p>
-          </div>
-          <div className="md:text-right">
-            <h4 className="text-white font-bold text-base mb-2">Conformidade e Dados</h4>
-            <p className="text-xs leading-relaxed text-slate-400">
-              Transparência, integridade regulatória e conformidade com a LGPD (Lei nº 13.709/2018).
-            </p>
-            <div className="mt-2">
+            <div className="pt-1">
               <Link
                 to="/"
-                className="text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4"
+                className="text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4 transition-colors inline-block"
               >
                 Canal LGPD &amp; Encarregado de Proteção de Dados (DPO)
               </Link>
             </div>
           </div>
+
+          {/* COLUNA 2: GRUPO LINKS */}
+          <div>
+            <h4 className="text-white font-bold text-sm tracking-wide uppercase mb-3">Links</h4>
+            <ul className="space-y-2 text-xs">
+              <li>
+                <a
+                  href="https://www.tsb.com.br/a-tsb/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  A TSB
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/gas-natural/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Gás Natural
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/o-gasoduto/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  O Gasoduto
+                </a>
+              </li>
+              <li>
+                <Link
+                  to="/transparencia"
+                  className="hover:text-white transition-colors font-medium text-sky-300 hover:text-sky-200"
+                  title="Boletim Eletrônico no portal interno de Transparência ANP"
+                >
+                  Boletim Eletrônico
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/fale-conosco/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Fale Conosco
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/wp-content/uploads/2026/05/RELATORIO-DAS-DEMONSTRACOES-FINANCEIRAS-2025-TSB.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Relatório das Demonstrações Financeiras 2025
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* COLUNA 3: GRUPO COMPLIANCE */}
+          <div>
+            <h4 className="text-white font-bold text-sm tracking-wide uppercase mb-3">
+              COMPLIANCE
+            </h4>
+            <ul className="space-y-2 text-xs">
+              <li>
+                <a
+                  href="https://www.tsb.com.br/wp-content/uploads/2025/03/Politica-de-Contratacao-de-Fornecedores-e-Parceiros-TSB-REv.-07.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Política de Contratação Fornecedores e Parceiros
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/wp-content/uploads/2025/03/Codigo_de_Integridade_e_Compliance_TSB.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Código de Integridade e Compliance
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/politica-de-privacidade/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Políticas de Privacidade
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.tsb.com.br/politica-de-cookies/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Politica de Cookies
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mt-6 pt-4 border-t border-white/10 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+
+        {/* BARRA INFERIOR DE COPYRIGHT */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mt-8 pt-4 border-t border-white/10 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>&copy; {new Date().getFullYear()} TSB — Todos os direitos reservados.</span>
           <span>Portal Corporativo e Regulatório Integrado</span>
         </div>
