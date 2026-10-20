@@ -9,6 +9,7 @@ import {
   transparenciaService,
   resolverUrlDocumento,
   resolverUrlSecundaria,
+  CABECALHOS_FALLBACK,
   type ItemTransparencia,
 } from '@/services/transparencia'
 import {
@@ -172,6 +173,12 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   }, [carregarItensTransparencia])
 
   // Mapas rápidos por chave e seção para itens do backend
+  const cabecalhosBdMap = useMemo(() => {
+    const map = new Map<string, ItemTransparencia>()
+    itensBd.filter((it) => it.secao === 'cabecalho').forEach((it) => map.set(it.chave, it))
+    return map
+  }, [itensBd])
+
   const masterBd = useMemo(() => {
     return itensBd.find((it) => it.secao === 'boletim_master' && it.chave === 'contrato_master')
   }, [itensBd])
@@ -185,6 +192,62 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   const secao2Bd = useMemo(() => {
     return itensBd.filter((it) => it.secao === 'boletim_secao2')
   }, [itensBd])
+
+  // Resolução dinâmica de cabeçalhos com fallback oficial canônico
+  // Boletim Topo
+  const headerBoletimTopo = useMemo(() => {
+    const item = cabecalhosBdMap.get('boletim_topo')
+    const fallback = CABECALHOS_FALLBACK.boletim_topo
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [cabecalhosBdMap])
+
+  // Bloco Master Cabeçalho
+  const headerMaster = useMemo(() => {
+    const item = cabecalhosBdMap.get('boletim_master_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_master_header
+    return {
+      titulo:
+        item?.ativo !== false && item?.titulo ? item.titulo : masterBd?.titulo || fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao
+          ? item.descricao
+          : masterBd?.descricao || fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [cabecalhosBdMap, masterBd])
+
+  // Bloco Seção I Cabeçalho
+  const headerSecao1 = useMemo(() => {
+    const item = cabecalhosBdMap.get('boletim_secao1_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_secao1_header
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [cabecalhosBdMap])
+
+  // Bloco Seção II Cabeçalho
+  const headerSecao2 = useMemo(() => {
+    const item = cabecalhosBdMap.get('boletim_secao2_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_secao2_header
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [cabecalhosBdMap])
 
   // Mesclagem da série histórica com registros editados/adicionados no BD
   const historicoComBd = useMemo(() => {
@@ -319,30 +382,68 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
               Portaria ANP nº 1/2003 • Art. 2º
             </Badge>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-display">
-            Boletim Eletrônico
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
-            Estabelece os procedimentos para o envio das informações referentes às atividades de
-            transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência
-            Nacional do Petróleo - ANP.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-display">
+                {headerBoletimTopo.titulo}
+              </h1>
+              {headerBoletimTopo.descricao && (
+                <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
+                  {headerBoletimTopo.descricao}
+                </p>
+              )}
+            </div>
+            {(() => {
+              if (!headerBoletimTopo.item) return null
+              const doc = resolverUrlDocumento(headerBoletimTopo.item, '')
+              if (!doc.url) return null
+              return (
+                <a
+                  href={doc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-colors border border-white/20 self-start"
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  {doc.nomeExibicao || 'Anexo do Boletim'}
+                </a>
+              )
+            })()}
+          </div>
         </div>
 
         <div className="p-6 sm:p-8 space-y-10">
           {/* ITEM 1 & 2: MODELO DE CONTRATO MASTER DE TRANSPORTE FIRME */}
-          {(!masterBd || masterBd.ativo) && (
+          {(!masterBd || masterBd.ativo) && headerMaster.ativo && (
             <div className="space-y-3">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
-                  {masterBd?.titulo ||
-                    'Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais'}
-                </h2>
-                <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  {masterBd?.descricao ||
-                    'Estabelece os procedimentos para o envio das informações referentes às atividades de transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência Nacional do Petróleo - ANP.'}
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex-1">
+                  <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
+                    {headerMaster.titulo}
+                  </h2>
+                  <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
+                  {headerMaster.descricao && (
+                    <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                      {headerMaster.descricao}
+                    </p>
+                  )}
+                </div>
+                {(() => {
+                  if (!headerMaster.item) return null
+                  const docHeader = resolverUrlDocumento(headerMaster.item, '')
+                  if (!docHeader.url) return null
+                  return (
+                    <a
+                      href={docHeader.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 text-xs font-semibold shrink-0 transition-colors border border-sky-200 self-start mt-1"
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                      {docHeader.nomeExibicao || 'Anexo do Cabeçalho'}
+                    </a>
+                  )
+                })()}
               </div>
 
               {/* TABELA: NOME DO DOCUMENTO | ARQUIVO */}
@@ -368,6 +469,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                         <tr className="hover:bg-slate-50 transition-colors">
                           <td className="p-3 text-slate-800 font-medium">
                             {masterBd?.titulo ||
+                              headerMaster.titulo ||
                               'Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais'}
                           </td>
                           <td className="p-3 text-center">
@@ -393,10 +495,35 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           {/* ITEM 3: SEÇÃO I - INSTALAÇÕES DE TRANSPORTE E SERVIÇOS PRESTADOS */}
           <div className="space-y-4">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
-                I - Instalações de Transporte e Serviços Prestados, atualizadas permanentemente
-              </h2>
-              <div className="w-full h-px bg-slate-200 mt-2" />
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex-1">
+                  <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
+                    {headerSecao1.titulo}
+                  </h2>
+                  <div className="w-full h-px bg-slate-200 mt-2 mb-2" />
+                  {headerSecao1.descricao && (
+                    <p className="text-xs text-slate-600 mb-2 leading-relaxed">
+                      {headerSecao1.descricao}
+                    </p>
+                  )}
+                </div>
+                {(() => {
+                  if (!headerSecao1.item) return null
+                  const doc = resolverUrlDocumento(headerSecao1.item, '')
+                  if (!doc.url) return null
+                  return (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 text-xs font-semibold shrink-0 transition-colors border border-sky-200 self-start mt-1"
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                      {doc.nomeExibicao || 'Anexo da Seção I'}
+                    </a>
+                  )
+                })()}
+              </div>
             </div>
 
             <div className="overflow-x-auto border border-slate-200 rounded-md">
@@ -726,10 +853,35 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           {/* ITEM 4: SEÇÃO II - QUANTIDADES PROGRAMADAS E REALIZADAS NOS TRECHOS 1 E 3 */}
           <div id="secao-ii-quantidades" className="space-y-4 scroll-mt-6">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
-                II - Quantidades Programadas e realizadas nos Trechos 1 e 3
-              </h2>
-              <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="flex-1">
+                  <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
+                    {headerSecao2.titulo}
+                  </h2>
+                  <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
+                  {headerSecao2.descricao && (
+                    <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+                      {headerSecao2.descricao}
+                    </p>
+                  )}
+                </div>
+                {(() => {
+                  if (!headerSecao2.item) return null
+                  const doc = resolverUrlDocumento(headerSecao2.item, '')
+                  if (!doc.url) return null
+                  return (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 text-xs font-semibold shrink-0 transition-colors border border-sky-200 self-start mt-1"
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                      {doc.nomeExibicao || 'Anexo da Seção II'}
+                    </a>
+                  )
+                })()}
+              </div>
             </div>
 
             {/* PAINEL DE BUSCA & FILTROS DA SEÇÃO II */}

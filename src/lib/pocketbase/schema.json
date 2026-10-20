@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T02:27:50.986Z",
+  "generatedAt": "2026-10-20T10:54:26.142Z",
   "collections": [
     {
       "name": "users",
@@ -455,7 +455,8 @@
             "boletim_master",
             "boletim_secao1",
             "boletim_secao2",
-            "plataforma_inciso"
+            "plataforma_inciso",
+            "cabecalho"
           ]
         },
         {

@@ -21,6 +21,7 @@ import {
   transparenciaService,
   resolverUrlDocumento,
   resolverUrlSecundaria,
+  CABECALHOS_FALLBACK,
   type ItemTransparencia,
 } from '@/services/transparencia'
 import type {
@@ -145,8 +146,11 @@ export default function PlataformaEletronica({
 
   const carregarItensPlataforma = useCallback(async () => {
     try {
-      const itens = await transparenciaService.listarPorSecao('plataforma_inciso')
-      setItensBd(itens)
+      const [itensIncisos, itensCabecalhos] = await Promise.all([
+        transparenciaService.listarPorSecao('plataforma_inciso'),
+        transparenciaService.listarPorSecao('cabecalho'),
+      ])
+      setItensBd([...itensIncisos, ...itensCabecalhos])
     } catch (e) {
       console.warn('[PlataformaEletronica] Usando dados canônicos como fallback:', e)
     }
@@ -161,6 +165,51 @@ export default function PlataformaEletronica({
     itensBd.forEach((it) => map.set(it.chave, it))
     return map
   }, [itensBd])
+
+  // Resolução dinâmica de cabeçalhos da Plataforma Eletrônica
+  const headerPlataformaTopo = useMemo(() => {
+    const item = incisosBdMap.get('plataforma_topo')
+    const fallback = CABECALHOS_FALLBACK.plataforma_topo
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      url_externa:
+        item?.ativo !== false && item?.url_externa ? item.url_externa : fallback.url_externa || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [incisosBdMap])
+
+  const headerIncisos1a6 = useMemo(() => {
+    const item = incisosBdMap.get('plataforma_incisos_i_vi_header')
+    const fallback = CABECALHOS_FALLBACK.plataforma_incisos_i_vi_header
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [incisosBdMap])
+
+  const headerIncisoVII = useMemo(() => {
+    const item = incisosBdMap.get('plataforma_inciso_vii_header')
+    const fallback = CABECALHOS_FALLBACK.plataforma_inciso_vii_header
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      url_externa:
+        item?.ativo !== false && item?.url_externa ? item.url_externa : fallback.url_externa || '',
+      nome_arquivo_custom:
+        item?.ativo !== false && item?.nome_arquivo_custom
+          ? item.nome_arquivo_custom
+          : fallback.nome_arquivo_custom || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [incisosBdMap])
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -181,22 +230,47 @@ export default function PlataformaEletronica({
               Resolução ANP nº 11/2016 • Art. 9º
             </Badge>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 font-display">
-            <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-sky-300" />
-            Plataforma Eletrônica
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
-            <a
-              href="https://www.tsb.com.br/wp-content/uploads/2023/08/Artigo-9o-RESOLUCAO-11-2016docx.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#38bdf8] hover:text-white underline inline-flex items-center gap-1 font-medium transition-colors"
-            >
-              Conforme estabelecido pelo Art. 9º da Resolução ANP nº 11 de 16/03/2016, publicado no
-              DOU em 18/03/2016.
-              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-            </a>
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 font-display">
+                <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-sky-300" />
+                {headerPlataformaTopo.titulo}
+              </h1>
+              {headerPlataformaTopo.descricao && (
+                <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
+                  {headerPlataformaTopo.url_externa ? (
+                    <a
+                      href={headerPlataformaTopo.url_externa}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#38bdf8] hover:text-white underline inline-flex items-center gap-1 font-medium transition-colors"
+                    >
+                      {headerPlataformaTopo.descricao}
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    </a>
+                  ) : (
+                    headerPlataformaTopo.descricao
+                  )}
+                </p>
+              )}
+            </div>
+            {(() => {
+              if (!headerPlataformaTopo.item) return null
+              const doc = resolverUrlDocumento(headerPlataformaTopo.item, '')
+              if (!doc.url) return null
+              return (
+                <a
+                  href={doc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-colors border border-white/20 self-start"
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  {doc.nomeExibicao || 'Anexo da Plataforma'}
+                </a>
+              )
+            })()}
+          </div>
 
           {/* SUB-ABAS / SELETOR DE NAVEGAÇÃO DA PLATAFORMA */}
           <div className="flex flex-wrap gap-2 pt-6 mt-4 border-t border-slate-700/60">
@@ -244,16 +318,35 @@ export default function PlataformaEletronica({
           {subAba === 'i_vi' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
-                  Exigências Legais do Art. 9º da Resolução ANP nº 11/2016
-                </h2>
-                <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
-                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                  Documentação oficial e estudos técnicos disponibilizados pela Transportadora
-                  Sulbrasileira de Gás - TSB em atendimento aos incisos I a VI do Art. 9º da
-                  Resolução ANP nº 11/2016. Clique nos botões correspondentes para baixar os
-                  arquivos ou consultar os estudos oficiais.
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                      {headerIncisos1a6.titulo}
+                    </h2>
+                    <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
+                    {headerIncisos1a6.descricao && (
+                      <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                        {headerIncisos1a6.descricao}
+                      </p>
+                    )}
+                  </div>
+                  {(() => {
+                    if (!headerIncisos1a6.item) return null
+                    const doc = resolverUrlDocumento(headerIncisos1a6.item, '')
+                    if (!doc.url) return null
+                    return (
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 text-xs font-semibold shrink-0 transition-colors border border-sky-200 self-start mt-1"
+                      >
+                        <FileDown className="h-3.5 w-3.5" />
+                        {doc.nomeExibicao || 'Anexo'}
+                      </a>
+                    )
+                  })()}
+                </div>
               </div>
 
               {/* TABELA PRINCIPAL NO MESMO PADRÃO DO BOLETIM ELETRÔNICO OFICIAL */}
@@ -595,30 +688,56 @@ export default function PlataformaEletronica({
               {/* BANNER COM AMPARO LEGAL E LINK AO SISTEMA OFICIAL */}
               {(() => {
                 const itemVII = incisosBdMap.get('inciso_vii')
-                const linkLegado = itemVII?.url_externa || 'http://tsb.com.br:8443/Home/Solicitacao'
+                const linkLegado =
+                  headerIncisoVII.url_externa ||
+                  itemVII?.url_externa ||
+                  'http://tsb.com.br:8443/Home/Solicitacao'
                 const nomeLinkLegado =
-                  itemVII?.nome_arquivo_custom || 'Acessar sistema oficial alternativo TSB (:8443)'
+                  headerIncisoVII.nome_arquivo_custom ||
+                  itemVII?.nome_arquivo_custom ||
+                  'Acessar sistema oficial alternativo TSB (:8443)'
                 const textoIntro =
+                  headerIncisoVII.descricao ||
                   itemVII?.descricao ||
                   'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.'
+                const tituloBanner =
+                  headerIncisoVII.titulo ||
+                  itemVII?.titulo ||
+                  'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016'
+
+                const docHeader = headerIncisoVII.item
+                  ? resolverUrlDocumento(headerIncisoVII.item, '')
+                  : null
 
                 return (
                   <div className="p-4 bg-[#f0fdf4] border-l-4 border-l-[#059669] border border-emerald-200 rounded-r-lg space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-[#059669] font-bold text-sm">
                         <Info className="h-4 w-4" />
-                        {itemVII?.titulo ||
-                          'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016'}
+                        {tituloBanner}
                       </div>
-                      <a
-                        href={linkLegado}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
-                      >
-                        {nomeLinkLegado}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        {docHeader && docHeader.url && (
+                          <a
+                            href={docHeader.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
+                          >
+                            <FileDown className="h-3 w-3" />
+                            {docHeader.nomeExibicao || 'Anexo Regulatório'}
+                          </a>
+                        )}
+                        <a
+                          href={linkLegado}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
+                        >
+                          {nomeLinkLegado}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
                     </div>
                     <p className="text-xs text-slate-700 leading-relaxed">{textoIntro}</p>
                   </div>

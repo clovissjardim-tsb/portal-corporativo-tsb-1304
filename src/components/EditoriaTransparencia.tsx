@@ -50,8 +50,8 @@ const MESES = [
 export function EditoriaTransparencia() {
   const { toast } = useToast()
 
-  // Seletor de módulo: 'boletim_master' | 'boletim_secao1' | 'boletim_secao2' | 'plataforma_inciso'
-  const [subSecaoAtiva, setSubSecaoAtiva] = useState<SecaoTransparencia>('boletim_master')
+  // Seletor de módulo: 'cabecalho' | 'boletim_master' | 'boletim_secao1' | 'boletim_secao2' | 'plataforma_inciso'
+  const [subSecaoAtiva, setSubSecaoAtiva] = useState<SecaoTransparencia>('cabecalho')
 
   const [itens, setItens] = useState<ItemTransparencia[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -319,6 +319,7 @@ export function EditoriaTransparencia() {
   // Contadores por seção
   const contagens = useMemo(() => {
     return {
+      cabecalho: itens.filter((i) => i.secao === 'cabecalho').length,
       boletim_master: itens.filter((i) => i.secao === 'boletim_master').length,
       boletim_secao1: itens.filter((i) => i.secao === 'boletim_secao1').length,
       boletim_secao2: itens.filter((i) => i.secao === 'boletim_secao2').length,
@@ -353,6 +354,25 @@ export function EditoriaTransparencia() {
 
       {/* SUB-ABAS DA EDITORIA */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          type="button"
+          onClick={() => {
+            setSubSecaoAtiva('cabecalho')
+            setFiltroPesquisa('')
+          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            subSecaoAtiva === 'cabecalho'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          <Edit3 className="h-3.5 w-3.5 text-sky-400" />
+          Títulos &amp; Cabeçalhos
+          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-200 text-[#0a2540] font-bold">
+            {contagens.cabecalho}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => {
@@ -597,17 +617,16 @@ export function EditoriaTransparencia() {
                           Editar
                         </Button>
 
-                        {subSecaoAtiva === 'boletim_secao2' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleExcluir(item)}
-                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Excluir relatório"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        {/* Todos os itens suportam exclusão com fallback seguro ao oficial */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleExcluir(item)}
+                          className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Excluir item (retorna ao texto oficial original)"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -890,8 +909,10 @@ export function EditoriaTransparencia() {
                 </div>
               </div>
 
-              {/* DOCUMENTO SECUNDÁRIO (QUANDO APLICÁVEL, EX: ITEM f OU V) */}
-              {(subSecaoAtiva === 'boletim_secao1' || subSecaoAtiva === 'plataforma_inciso') && (
+              {/* DOCUMENTO SECUNDÁRIO (QUANDO APLICÁVEL, EX: ITEM f, V OU CABEÇALHO COM ANEXO EXTRA) */}
+              {(subSecaoAtiva === 'boletim_secao1' ||
+                subSecaoAtiva === 'plataforma_inciso' ||
+                subSecaoAtiva === 'cabecalho') && (
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#0a2540]">

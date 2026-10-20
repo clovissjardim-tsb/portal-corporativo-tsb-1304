@@ -1,10 +1,71 @@
 import pb from '@/lib/pocketbase/client'
 
 export type SecaoTransparencia =
+  | 'cabecalho'
   | 'boletim_master'
   | 'boletim_secao1'
   | 'boletim_secao2'
   | 'plataforma_inciso'
+
+/**
+ * Textos canônicos e oficiais para fallback de títulos e cabeçalhos
+ * Garantem que a página nunca fique vazia mesmo se um cabeçalho for excluído no BD.
+ */
+export const CABECALHOS_FALLBACK: Record<
+  string,
+  {
+    titulo: string
+    descricao?: string
+    url_externa?: string
+    nome_arquivo_custom?: string
+  }
+> = {
+  boletim_topo: {
+    titulo: 'Boletim Eletrônico',
+    descricao:
+      'Estabelece os procedimentos para o envio das informações referentes às atividades de transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência Nacional do Petróleo - ANP.',
+  },
+  boletim_master_header: {
+    titulo: 'Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais',
+    descricao:
+      'Estabelece os procedimentos para o envio das informações referentes às atividades de transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência Nacional do Petróleo - ANP.',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
+    nome_arquivo_custom: 'Baixar Arquivo',
+  },
+  boletim_secao1_header: {
+    titulo: 'I - Instalações de Transporte e Serviços Prestados, atualizadas permanentemente',
+    descricao:
+      'Informações sobre instalações de transporte dutoviário, modelos contratuais, mapas e termos gerais de serviço.',
+  },
+  boletim_secao2_header: {
+    titulo: 'II - Quantidades Programadas e realizadas nos Trechos 1 e 3',
+    descricao:
+      'Série histórica e demonstrativos mensais de quantidades programadas e realizadas de gás natural nos pontos de recepção e entrega.',
+    url_externa: 'https://www.tsb.com.br/boletim-eletronico/',
+    nome_arquivo_custom: 'Consultar no Site Oficial',
+  },
+  plataforma_topo: {
+    titulo: 'Plataforma Eletrônica',
+    descricao:
+      'Conforme estabelecido pelo Art. 9º da Resolução ANP nº 11 de 16/03/2016, publicado no DOU em 18/03/2016.',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2023/08/Artigo-9o-RESOLUCAO-11-2016docx.pdf',
+    nome_arquivo_custom: 'Ver Resolução ANP nº 11/2016',
+  },
+  plataforma_incisos_i_vi_header: {
+    titulo: 'Exigências Legais do Art. 9º da Resolução ANP nº 11/2016',
+    descricao:
+      'Documentação oficial e estudos técnicos disponibilizados pela Transportadora Sulbrasileira de Gás - TSB em atendimento aos incisos I a VI do Art. 9º da Resolução ANP nº 11/2016. Clique nos botões correspondentes para baixar os arquivos ou consultar os estudos oficiais.',
+  },
+  plataforma_inciso_vii_header: {
+    titulo: 'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016',
+    descricao:
+      'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.',
+    url_externa: 'http://tsb.com.br:8443/Home/Solicitacao',
+    nome_arquivo_custom: 'Acessar sistema oficial alternativo TSB (:8443)',
+  },
+}
 
 export interface ItemTransparencia {
   id: string
