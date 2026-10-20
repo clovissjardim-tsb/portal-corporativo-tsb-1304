@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -6,16 +6,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import {
+  transparenciaService,
+  resolverUrlDocumento,
+  resolverUrlSecundaria,
+  type ItemTransparencia,
+} from '@/services/transparencia'
+import {
   FileText,
   FileDown,
   ExternalLink,
+  Search,
   Calendar,
-  RotateCcw,
   ArrowUpDown,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   Eye,
-  Search,
+  RotateCcw,
 } from 'lucide-react'
 
 export interface BoletimEletronicoProps {
@@ -149,24 +155,95 @@ const HISTORICO_QUANTIDADES_COMPLETO: RelatorioMensalItem[] = gerarHistoricoQuan
 export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   const { toast } = useToast()
 
+  // Conteúdos editáveis vindos do PocketBase
+  const [itensBd, setItensBd] = useState<ItemTransparencia[]>([])
+
+  const carregarItensTransparencia = useCallback(async () => {
+    try {
+      const todos = await transparenciaService.listarTodos()
+      setItensBd(todos)
+    } catch (e) {
+      console.warn('[BoletimEletronico] Usando dados canônicos como fallback:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    carregarItensTransparencia()
+  }, [carregarItensTransparencia])
+
+  // Mapas rápidos por chave e seção para itens do backend
+  const masterBd = useMemo(() => {
+    return itensBd.find((it) => it.secao === 'boletim_master' && it.chave === 'contrato_master')
+  }, [itensBd])
+
+  const secao1BdMap = useMemo(() => {
+    const map = new Map<string, ItemTransparencia>()
+    itensBd.filter((it) => it.secao === 'boletim_secao1').forEach((it) => map.set(it.chave, it))
+    return map
+  }, [itensBd])
+
+  const secao2Bd = useMemo(() => {
+    return itensBd.filter((it) => it.secao === 'boletim_secao2')
+  }, [itensBd])
+
+  // Mesclagem da série histórica com registros editados/adicionados no BD
+  const historicoComBd = useMemo(() => {
+    // Mapa dos canônicos indexados por chavePeriodo
+    const mapHistorico = new Map<string, RelatorioMensalItem>()
+    HISTORICO_QUANTIDADES_COMPLETO.forEach((item) => {
+      mapHistorico.set(item.chavePeriodo, { ...item })
+    })
+
+    // Aplica os registros do PocketBase (inclusive novos relatórios e uploads)
+    secao2Bd.forEach((bd) => {
+      if (!bd.ativo) {
+        // Se foi desativado/ocultado na gestão interna, remove da listagem
+        if (bd.chave_periodo) mapHistorico.delete(bd.chave_periodo)
+        return
+      }
+
+      const chave = bd.chave_periodo || `${bd.ano}-${bd.mes}`
+      const urlInfo = resolverUrlDocumento(bd, bd.url_externa || '')
+      const anoNum = Number(bd.ano) || 2026
+      const mesNome = bd.mes || bd.rotulo || ''
+
+      mapHistorico.set(chave, {
+        id: bd.id,
+        titulo: bd.titulo,
+        mes: mesNome,
+        ano: bd.ano || '2026',
+        anoNum,
+        mesNum: 1, // ordenação feita por chavePeriodo
+        chavePeriodo: chave,
+        url: urlInfo.url,
+        nomeArquivo: urlInfo.nomeExibicao,
+        temArquivoDireto: Boolean(urlInfo.url),
+      })
+    })
+
+    return Array.from(mapHistorico.values())
+  }, [secao2Bd])
+
   // Seção II: Filtros e Pesquisa
   const [pesquisaSecaoII, setPesquisaSecaoII] = useState<string>('')
   const [filtroAnoSecaoII, setFiltroAnoSecaoII] = useState<string>('todos')
   const [ordemSecaoII, setOrdemSecaoII] = useState<'desc' | 'asc'>('desc')
   const [itensExibir, setItensExibir] = useState<number | 'todos'>(12)
 
-  // Anos disponíveis na série histórica (2026/atual até 2003)
+  // Anos disponíveis na série histórica (incluindo anos criados no BD)
   const anosDisponiveis = useMemo(() => {
     const anosSet = new Set<number>()
-    HISTORICO_QUANTIDADES_COMPLETO.forEach((item) => anosSet.add(item.anoNum))
+    historicoComBd.forEach((item) => {
+      if (item.anoNum) anosSet.add(item.anoNum)
+    })
     return Array.from(anosSet).sort((a, b) => b - a)
-  }, [])
+  }, [historicoComBd])
 
   // Filtragem dos relatórios da Seção II
   const relatoriosFiltradosTotal = useMemo(() => {
     const termo = pesquisaSecaoII.trim().toLowerCase()
 
-    const filtrados = HISTORICO_QUANTIDADES_COMPLETO.filter((item) => {
+    const filtrados = historicoComBd.filter((item) => {
       // Filtro por texto pesquisado
       if (termo) {
         const correspondeTitulo = item.titulo.toLowerCase().includes(termo)
@@ -192,7 +269,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
       }
       return b.chavePeriodo.localeCompare(a.chavePeriodo)
     })
-  }, [pesquisaSecaoII, filtroAnoSecaoII, ordemSecaoII])
+  }, [historicoComBd, pesquisaSecaoII, filtroAnoSecaoII, ordemSecaoII])
 
   // Itens visíveis conforme paginação
   const relatoriosVisiveis =
@@ -254,54 +331,64 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
 
         <div className="p-6 sm:p-8 space-y-10">
           {/* ITEM 1 & 2: MODELO DE CONTRATO MASTER DE TRANSPORTE FIRME */}
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
-                Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais
-              </h2>
-              <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
-              <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                Estabelece os procedimentos para o envio das informações referentes às atividades de
-                transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à
-                Agência Nacional do Petróleo - ANP.
-              </p>
-            </div>
+          {(!masterBd || masterBd.ativo) && (
+            <div className="space-y-3">
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
+                  {masterBd?.titulo ||
+                    'Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais'}
+                </h2>
+                <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
+                <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                  {masterBd?.descricao ||
+                    'Estabelece os procedimentos para o envio das informações referentes às atividades de transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência Nacional do Petróleo - ANP.'}
+                </p>
+              </div>
 
-            {/* TABELA: NOME DO DOCUMENTO | ARQUIVO */}
-            <div className="overflow-x-auto border border-slate-200 rounded-md">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#0a1d37] text-white font-semibold font-display">
-                  <tr>
-                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
-                      Nome do Documento
-                    </th>
-                    <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
-                      Arquivo
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800 font-medium">
-                      Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e
-                      anuais
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        <FileDown className="h-3.5 w-3.5" />
-                        Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              {/* TABELA: NOME DO DOCUMENTO | ARQUIVO */}
+              {(() => {
+                const docMaster = resolverUrlDocumento(
+                  masterBd,
+                  'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
+                )
+                return (
+                  <div className="overflow-x-auto border border-slate-200 rounded-md">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-[#0a1d37] text-white font-semibold font-display">
+                        <tr>
+                          <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
+                            Nome do Documento
+                          </th>
+                          <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
+                            Arquivo
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 bg-white">
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-slate-800 font-medium">
+                            {masterBd?.titulo ||
+                              'Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais'}
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={docMaster.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {docMaster.nomeExibicao || 'Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })()}
             </div>
-          </div>
+          )}
 
           {/* ITEM 3: SEÇÃO I - INSTALAÇÕES DE TRANSPORTE E SERVIÇOS PRESTADOS */}
           <div className="space-y-4">
@@ -326,207 +413,311 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
                   {/* a) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">a)</span> Termos e condições
-                      gerais de prestação de serviço
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/08/Termos-e-Condicoes-do-Contrato-Extraor.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_a')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/08/Termos-e-Condicoes-do-Contrato-Extraor.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">a)</span>{' '}
+                          {item?.titulo || 'Termos e condições gerais de prestação de serviço'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* b) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">b)</span> Modelo de contrato
-                      para cada tipo de serviço
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_b')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">b)</span>{' '}
+                          {item?.titulo || 'Modelo de contrato para cada tipo de serviço'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* c) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">c)</span> Modelo de acordo de
-                      conexão
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000435.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_c')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000435.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">c)</span>{' '}
+                          {item?.titulo || 'Modelo de acordo de conexão'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* d) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">d)</span> Modelo de Acordo
-                      Operativo de alocação das quantidades de gás nas estações de entrega
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000436.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_d')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000436.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">d)</span>{' '}
+                          {item?.titulo ||
+                            'Modelo de Acordo Operativo de alocação das quantidades de gás nas estações de entrega'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* e) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">e)</span> Mapa atualizado das
-                      instalações de transporte
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000437.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_e')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000437.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">e)</span>{' '}
+                          {item?.titulo || 'Mapa atualizado das instalações de transporte'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* f) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">f)</span> Características
-                      Físicas e Capacidade Máxima das Instalações de Transporte, nas melhores
-                      condições operacionais
-                    </td>
-                    <td className="p-3 text-center space-y-1">
-                      <div>
-                        <a
-                          href="https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_-I.f-_caracteristicas-.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          - Características
-                        </a>
-                      </div>
-                      <div>
-                        <a
-                          href="https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_item-I.f_-fluxos-fisicos.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          - Fluxos Físicos do Gás Natural
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* g) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">g)</span> Capacidade Disponível
-                      para Prestação de Novos Serviços de Transporte Firme nas melhores condições
-                      operacionais
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2024/10/bol_elet_I_g-cap-disponivel.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
-
-                  {/* h) */}
-                  <tr className="bg-sky-50/40 hover:bg-sky-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <div className="flex items-start gap-1.5">
-                        <span className="font-semibold text-[#0a2540]">h)</span>
-                        <div>
-                          <span>
-                            Quantidades Programadas e Realizadas de Gás nos pontos de recepção e
-                            entrega (dados diários, referentes ao mês anterior) -{' '}
-                          </span>
-                          <strong className="text-[#0a2540]">
-                            Consultar Tabela no item &quot;Quantidades realizadas de gás nos pontos
-                            de recepção e entrega&quot; constante no final dessa página
-                          </strong>
-                          <div className="mt-1">
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_f')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_-I.f-_caracteristicas-.pdf',
+                    )
+                    const docSecundario = resolverUrlSecundaria(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_item-I.f_-fluxos-fisicos.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">f)</span>{' '}
+                          {item?.titulo ||
+                            'Características Físicas e Capacidade Máxima das Instalações de Transporte, nas melhores condições operacionais'}
+                        </td>
+                        <td className="p-3 text-center space-y-1">
+                          <div>
                             <a
-                              href="#secao-ii-quantidades"
-                              className="text-[11px] font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline inline-flex items-center gap-1"
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
                             >
-                              &rarr; Ver relatórios mensais na Seção II abaixo
+                              {doc.nomeExibicao || '- Características'}
                             </a>
                           </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-center font-bold text-slate-400">-</td>
-                  </tr>
+                          <div>
+                            <a
+                              href={docSecundario.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              {docSecundario.nomeExibicao || '- Fluxos Físicos do Gás Natural'}
+                            </a>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })()}
+
+                  {/* g) */}
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_g')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_elet_I_g-cap-disponivel.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">g)</span>{' '}
+                          {item?.titulo ||
+                            'Capacidade Disponível para Prestação de Novos Serviços de Transporte Firme nas melhores condições operacionais'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
+
+                  {/* h) */}
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_h')
+                    if (item && item.ativo === false) return null
+                    return (
+                      <tr className="bg-sky-50/40 hover:bg-sky-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <div className="flex items-start gap-1.5">
+                            <span className="font-semibold text-[#0a2540]">h)</span>
+                            <div>
+                              <span>
+                                {item?.titulo ||
+                                  'Quantidades Programadas e Realizadas de Gás nos pontos de recepção e entrega (dados diários, referentes ao mês anterior)'}{' '}
+                                -{' '}
+                              </span>
+                              <strong className="text-[#0a2540]">
+                                {item?.descricao ||
+                                  'Consultar Tabela no item "Quantidades realizadas de gás nos pontos de recepção e entrega" constante no final dessa página'}
+                              </strong>
+                              <div className="mt-1">
+                                <a
+                                  href="#secao-ii-quantidades"
+                                  className="text-[11px] font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline inline-flex items-center gap-1"
+                                >
+                                  &rarr; Ver relatórios mensais na Seção II abaixo
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-center font-bold text-slate-400">-</td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* i) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">i)</span> Interrupções e
-                      Reduções de Capacidade, atuais e planejadas, no sistema
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000440.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_i')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000440.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">i)</span>{' '}
+                          {item?.titulo ||
+                            'Interrupções e Reduções de Capacidade, atuais e planejadas, no sistema'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
 
                   {/* j) */}
-                  <tr className="hover:bg-slate-50 transition-colors">
-                    <td className="p-3 text-slate-800">
-                      <span className="font-semibold text-[#0a2540]">j)</span> Ampliações Planejadas
-                    </td>
-                    <td className="p-3 text-center">
-                      <a
-                        href="https://www.tsb.com.br/wp-content/uploads/2023/08/Ampliacoes-Planejadas.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                      >
-                        - Baixar Arquivo
-                      </a>
-                    </td>
-                  </tr>
+                  {(() => {
+                    const item = secao1BdMap.get('alinea_j')
+                    if (item && item.ativo === false) return null
+                    const doc = resolverUrlDocumento(
+                      item,
+                      'https://www.tsb.com.br/wp-content/uploads/2023/08/Ampliacoes-Planejadas.pdf',
+                    )
+                    return (
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 text-slate-800">
+                          <span className="font-semibold text-[#0a2540]">j)</span>{' '}
+                          {item?.titulo || 'Ampliações Planejadas'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                          >
+                            {doc.nomeExibicao || '- Baixar Arquivo'}
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })()}
                 </tbody>
               </table>
             </div>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T02:00:52.684Z",
+  "generatedAt": "2026-10-20T02:27:50.986Z",
   "collections": [
     {
       "name": "users",
@@ -434,6 +434,140 @@
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_quadro_tarifa_chave ON quadro_tarifa (chave)"]
+    },
+    {
+      "name": "transparencia_conteudo",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "secao",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "boletim_master",
+            "boletim_secao1",
+            "boletim_secao2",
+            "plataforma_inciso"
+          ]
+        },
+        {
+          "name": "chave",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rotulo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ordem",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "url_externa",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nome_arquivo_custom",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ano",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "mes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "chave_periodo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "url_secundaria",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nome_url_secundaria",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_secundario",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_transparencia_secao_chave ON transparencia_conteudo (secao, chave)",
+        "CREATE INDEX idx_transparencia_secao_ordem ON transparencia_conteudo (secao, ordem)",
+        "CREATE INDEX idx_transparencia_periodo ON transparencia_conteudo (chave_periodo)"
+      ]
     }
   ]
 }

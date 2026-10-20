@@ -18,6 +18,7 @@ import {
 } from '@/services/solicitacoes'
 import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
 import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
+import { EditoriaTransparencia } from '@/components/EditoriaTransparencia'
 import {
   ShieldAlert,
   ShieldCheck,
@@ -37,6 +38,7 @@ import {
   DollarSign,
   Save,
   Eye,
+  Layers,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -77,8 +79,10 @@ export default function Gestao() {
   const [sulgasObs, setSulgasObs] = useState('')
   const [prontoContratacaoTentado, setProntoContratacaoTentado] = useState(false)
 
-  // Aba ativa na Gestão Interna: 'solicitacoes' ou 'tarifa'
-  const [abaAtiva, setAbaAtiva] = useState<'solicitacoes' | 'tarifa'>('solicitacoes')
+  // Aba ativa na Gestão Interna: 'solicitacoes' | 'tarifa' | 'transparencia'
+  const [abaAtiva, setAbaAtiva] = useState<'solicitacoes' | 'tarifa' | 'transparencia'>(
+    'solicitacoes',
+  )
 
   // Estado da Tarifa em Destaque
   const [tarifaForm, setTarifaForm] = useState<QuadroTarifa>(TARIFA_SEED_FALLBACK)
@@ -413,13 +417,13 @@ export default function Gestao() {
             /* ESTADO AUTENTICADO (DASHBOARD) */
             <div className="space-y-6">
               {/* NAVEGAÇÃO POR ABAS NA GESTÃO INTERNA */}
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
                 <button
                   type="button"
                   onClick={() => setAbaAtiva('solicitacoes')}
                   className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
                     abaAtiva === 'solicitacoes'
-                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      ? 'bg-[#0a2540] text-white shadow-xs font-bold'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -432,10 +436,26 @@ export default function Gestao() {
 
                 <button
                   type="button"
+                  onClick={() => setAbaAtiva('transparencia')}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
+                    abaAtiva === 'transparencia'
+                      ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Layers className="h-4 w-4 text-sky-400" />
+                  Editoria de Transparência (Boletim &amp; Plataforma)
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-100 text-[#0a2540] font-bold">
+                    Editável
+                  </span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setAbaAtiva('tarifa')}
                   className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
                     abaAtiva === 'tarifa'
-                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      ? 'bg-[#0a2540] text-white shadow-xs font-bold'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -946,6 +966,9 @@ export default function Gestao() {
                   </form>
                 </div>
               )}
+
+              {/* ABA 3: EDITORIA DE TRANSPARÊNCIA (BOLETIM E PLATAFORMA) */}
+              {abaAtiva === 'transparencia' && <EditoriaTransparencia />}
             </div>
           )}
         </CardContent>

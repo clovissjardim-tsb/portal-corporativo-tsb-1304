@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,12 @@ import {
   PlusCircle,
   Layers,
 } from 'lucide-react'
+import {
+  transparenciaService,
+  resolverUrlDocumento,
+  resolverUrlSecundaria,
+  type ItemTransparencia,
+} from '@/services/transparencia'
 import type {
   SolicitacaoIncisoVII,
   ResumoPublicoSolicitacao,
@@ -134,6 +140,28 @@ export default function PlataformaEletronica({
   erroFormCessao,
   handleSubmeterCessao,
 }: PlataformaEletronicaProps) {
+  // Itens da Plataforma Eletrônica gerenciados pelo PocketBase
+  const [itensBd, setItensBd] = useState<ItemTransparencia[]>([])
+
+  const carregarItensPlataforma = useCallback(async () => {
+    try {
+      const itens = await transparenciaService.listarPorSecao('plataforma_inciso')
+      setItensBd(itens)
+    } catch (e) {
+      console.warn('[PlataformaEletronica] Usando dados canônicos como fallback:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    carregarItensPlataforma()
+  }, [carregarItensPlataforma])
+
+  const incisosBdMap = useMemo(() => {
+    const map = new Map<string, ItemTransparencia>()
+    itensBd.forEach((it) => map.set(it.chave, it))
+    return map
+  }, [itensBd])
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB (IGUAL AO BOLETIM ELETRÔNICO OFICIAL) */}
@@ -246,158 +274,231 @@ export default function PlataformaEletronica({
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {/* INCISO I */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        I
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">I - Fluxo Físico</span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://tsb.com.br/wp-content/uploads/2023/04/fluxo_fisico.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <FileDown className="h-3.5 w-3.5" />- Baixar Arquivo
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_i')
+                      if (item && item.ativo === false) return null
+                      const doc = resolverUrlDocumento(
+                        item,
+                        'https://tsb.com.br/wp-content/uploads/2023/04/fluxo_fisico.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            I
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo || 'I - Fluxo Físico'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {doc.nomeExibicao || '- Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* INCISO II */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        II
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          II - Características técnicas e operacionais de Instalação de Transporte
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://tsb.com.br/wp-content/uploads/2023/04/bibArq000438-2.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <FileDown className="h-3.5 w-3.5" />- Baixar Arquivo
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_ii')
+                      if (item && item.ativo === false) return null
+                      const doc = resolverUrlDocumento(
+                        item,
+                        'https://tsb.com.br/wp-content/uploads/2023/04/bibArq000438-2.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            II
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo ||
+                                'II - Características técnicas e operacionais de Instalação de Transporte'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {doc.nomeExibicao || '- Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* INCISO III */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        III
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e
-                          capacidade ociosa por ponto relevante.
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-Disponivel-SITE.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <FileDown className="h-3.5 w-3.5" />- Baixar Arquivo
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_iii')
+                      if (item && item.ativo === false) return null
+                      const doc = resolverUrlDocumento(
+                        item,
+                        'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-Disponivel-SITE.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            III
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo ||
+                                'III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e capacidade ociosa por ponto relevante.'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {doc.nomeExibicao || '- Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* INCISO IV */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        IV
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          IV - Capacidades contratadas por contrato de serviço de transporte
-                          celebrado
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-gasoduto-A.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <FileDown className="h-3.5 w-3.5" />- Baixar Arquivo
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_iv')
+                      if (item && item.ativo === false) return null
+                      const doc = resolverUrlDocumento(
+                        item,
+                        'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-gasoduto-A.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            IV
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo ||
+                                'IV - Capacidades contratadas por contrato de serviço de transporte celebrado'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {doc.nomeExibicao || '- Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* INCISO V */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        V
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          V - Simulação termo-hidráulica
-                        </span>
-                        <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-600">
-                          <a
-                            href="https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-1.pdf"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
-                          >
-                            <FileDown className="h-3 w-3" />
-                            Simulação Trecho 1 (PDF)
-                          </a>
-                          <span className="text-slate-300">•</span>
-                          <a
-                            href="https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-3.pdf"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
-                          >
-                            <FileDown className="h-3 w-3" />
-                            Simulação Trecho 3 (PDF)
-                          </a>
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://www.tsb.com.br/v-simulacao-termo-hidraulica/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Acessar Página Oficial
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_v')
+                      if (item && item.ativo === false) return null
+                      const doc1 = resolverUrlDocumento(
+                        item,
+                        'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-1.pdf',
+                      )
+                      const doc2 = resolverUrlSecundaria(
+                        item,
+                        'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-3.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            V
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo || 'V - Simulação termo-hidráulica'}
+                            </span>
+                            <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-600">
+                              <a
+                                href={doc1.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
+                              >
+                                <FileDown className="h-3 w-3" />
+                                {doc1.nomeExibicao || 'Simulação Trecho 1 (PDF)'}
+                              </a>
+                              <span className="text-slate-300">•</span>
+                              <a
+                                href={doc2.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
+                              >
+                                <FileDown className="h-3 w-3" />
+                                {doc2.nomeExibicao || 'Simulação Trecho 3 (PDF)'}
+                              </a>
+                            </div>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href="https://www.tsb.com.br/v-simulacao-termo-hidraulica/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              Acessar Página Oficial
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* INCISO VI */}
-                    <tr className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        VI
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          VI - Termos e condições tarifárias e não tarifárias
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <a
-                          href="https://tsb.com.br/wp-content/uploads/2023/04/termo_de_acesso.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                        >
-                          <FileDown className="h-3.5 w-3.5" />- Baixar Arquivo
-                        </a>
-                      </td>
-                    </tr>
+                    {(() => {
+                      const item = incisosBdMap.get('inciso_vi')
+                      if (item && item.ativo === false) return null
+                      const doc = resolverUrlDocumento(
+                        item,
+                        'https://tsb.com.br/wp-content/uploads/2023/04/termo_de_acesso.pdf',
+                      )
+                      return (
+                        <tr className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
+                            VI
+                          </td>
+                          <td className="p-3 text-slate-800 border-r border-slate-200">
+                            <span className="font-semibold text-[#0a2540]">
+                              {item?.titulo ||
+                                'VI - Termos e condições tarifárias e não tarifárias'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              {doc.nomeExibicao || '- Baixar Arquivo'}
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })()}
 
                     {/* ATALHOS DIRETOS PARA OS INCISOS VII E VIII */}
                     <tr className="bg-slate-50/60 hover:bg-slate-100/60 transition-colors border-t-2 border-slate-200">
@@ -492,29 +593,37 @@ export default function PlataformaEletronica({
           {subAba === 'vii' && (
             <div className="space-y-8">
               {/* BANNER COM AMPARO LEGAL E LINK AO SISTEMA OFICIAL */}
-              <div className="p-4 bg-[#f0fdf4] border-l-4 border-l-[#059669] border border-emerald-200 rounded-r-lg space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-[#059669] font-bold text-sm">
-                    <Info className="h-4 w-4" />
-                    Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016
+              {(() => {
+                const itemVII = incisosBdMap.get('inciso_vii')
+                const linkLegado = itemVII?.url_externa || 'http://tsb.com.br:8443/Home/Solicitacao'
+                const nomeLinkLegado =
+                  itemVII?.nome_arquivo_custom || 'Acessar sistema oficial alternativo TSB (:8443)'
+                const textoIntro =
+                  itemVII?.descricao ||
+                  'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.'
+
+                return (
+                  <div className="p-4 bg-[#f0fdf4] border-l-4 border-l-[#059669] border border-emerald-200 rounded-r-lg space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-[#059669] font-bold text-sm">
+                        <Info className="h-4 w-4" />
+                        {itemVII?.titulo ||
+                          'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016'}
+                      </div>
+                      <a
+                        href={linkLegado}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
+                      >
+                        {nomeLinkLegado}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed">{textoIntro}</p>
                   </div>
-                  <a
-                    href="http://tsb.com.br:8443/Home/Solicitacao"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
-                  >
-                    Acessar sistema oficial alternativo TSB (:8443)
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório
-                  automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de
-                  resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada
-                  por escrito da transportadora.
-                </p>
-              </div>
+                )
+              })()}
 
               {/* ITEM 1: RESUMO PÚBLICO DAS SOLICITAÇÕES DE ACESSO (Art. 9º, VII - SEM DADOS PESSOAIS / LGPD) */}
               {/* BLOCO DUPLO DE RESUMO: POR PONTO RELEVANTE E POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
@@ -1155,28 +1264,37 @@ export default function PlataformaEletronica({
           {subAba === 'viii' && (
             <div className="space-y-6">
               {/* BANNER COM AMPARO LEGAL E LINK AO SISTEMA OFICIAL */}
-              <div className="p-4 bg-[#eff6ff] border-l-4 border-l-[#0284c7] border border-blue-200 rounded-r-lg space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-[#0284c7] font-bold text-sm">
-                    <Info className="h-4 w-4" />
-                    Amparo Legal: Art. 9º, Inciso VIII da Resolução ANP nº 11/2016
+              {(() => {
+                const itemVIII = incisosBdMap.get('inciso_viii')
+                const linkLegado = itemVIII?.url_externa || 'http://tsb.com.br:8443/Home/Ofertas'
+                const nomeLinkLegado =
+                  itemVIII?.nome_arquivo_custom || 'Acessar sistema oficial alternativo TSB (:8443)'
+                const textoIntro =
+                  itemVIII?.descricao ||
+                  'Mecanismo de divulgação de ofertas de capacidade ociosa para cessão entre carregadores, promovendo o aproveitamento eficiente e secundário da malha dutoviária da TSB. Consulta e cadastro públicos de ofertas.'
+
+                return (
+                  <div className="p-4 bg-[#eff6ff] border-l-4 border-l-[#0284c7] border border-blue-200 rounded-r-lg space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-[#0284c7] font-bold text-sm">
+                        <Info className="h-4 w-4" />
+                        {itemVIII?.titulo ||
+                          'Amparo Legal: Art. 9º, Inciso VIII da Resolução ANP nº 11/2016'}
+                      </div>
+                      <a
+                        href={linkLegado}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-blue-300"
+                      >
+                        {nomeLinkLegado}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed">{textoIntro}</p>
                   </div>
-                  <a
-                    href="http://tsb.com.br:8443/Home/Ofertas"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-blue-300"
-                  >
-                    Acessar sistema oficial alternativo TSB (:8443)
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Mecanismo de divulgação de ofertas de capacidade ociosa para cessão entre
-                  carregadores, promovendo o aproveitamento eficiente e secundário da malha
-                  dutoviária da TSB. Consulta e cadastro públicos de ofertas.
-                </p>
-              </div>
+                )
+              })()}
 
               {/* BARRA DE AÇÕES */}
               <div className="flex items-center justify-between flex-wrap gap-2">
