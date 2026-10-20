@@ -386,8 +386,8 @@ export default function Transparencia() {
             Boletim Eletrônico
           </h3>
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Programação diária e mensal, manutenções, qualidade do gás, contratos de transporte e
-            modelos regulatórios.
+            Instalações de transporte e serviços prestados, quantidades programadas e realizadas nos
+            Trechos 1 e 3 e modelos regulatórios.
           </p>
         </button>
 
