@@ -16,6 +16,8 @@ import {
   type StatusSolicitacao,
   type ManifestacaoSulgasStatus,
 } from '@/services/solicitacoes'
+import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
+import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
 import {
   ShieldAlert,
   ShieldCheck,
@@ -32,6 +34,9 @@ import {
   CheckCircle2,
   AlertCircle,
   FileCheck,
+  DollarSign,
+  Save,
+  Eye,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -72,6 +77,14 @@ export default function Gestao() {
   const [sulgasObs, setSulgasObs] = useState('')
   const [prontoContratacaoTentado, setProntoContratacaoTentado] = useState(false)
 
+  // Aba ativa na Gestão Interna: 'solicitacoes' ou 'tarifa'
+  const [abaAtiva, setAbaAtiva] = useState<'solicitacoes' | 'tarifa'>('solicitacoes')
+
+  // Estado da Tarifa em Destaque
+  const [tarifaForm, setTarifaForm] = useState<QuadroTarifa>(TARIFA_SEED_FALLBACK)
+  const [carregandoTarifa, setCarregandoTarifa] = useState(false)
+  const [salvandoTarifa, setSalvandoTarifa] = useState(false)
+
   // Carregar solicitações do backend
   const carregarSolicitacoes = useCallback(async () => {
     try {
@@ -84,9 +97,48 @@ export default function Gestao() {
     }
   }, [])
 
+  // Carregar quadro de tarifa do backend
+  const carregarTarifa = useCallback(async () => {
+    setCarregandoTarifa(true)
+    try {
+      const dados = await tarifaService.obterTarifaPrincipal()
+      if (dados) {
+        setTarifaForm(dados)
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar tarifa na gestão:', e)
+    } finally {
+      setCarregandoTarifa(false)
+    }
+  }, [])
+
   useEffect(() => {
     carregarSolicitacoes()
-  }, [carregarSolicitacoes])
+    carregarTarifa()
+  }, [carregarSolicitacoes, carregarTarifa])
+
+  const salvarTarifaGestao = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSalvandoTarifa(true)
+    try {
+      const salva = await tarifaService.salvarTarifa(tarifaForm)
+      setTarifaForm(salva)
+      toast({
+        title: 'Quadro de Tarifa Salvo!',
+        description:
+          'Os dados do quadro de tarifa em destaque da página inicial foram atualizados com sucesso.',
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao salvar quadro de tarifa.'
+      toast({
+        title: 'Erro ao salvar tarifa',
+        description: msg,
+        variant: 'destructive',
+      })
+    } finally {
+      setSalvandoTarifa(false)
+    }
+  }
 
   // Realtime hook para atualizar a fila quando novas solicitações forem criadas ou editadas
   useRealtime<SolicitacaoIncisoVII>(
@@ -360,152 +412,544 @@ export default function Gestao() {
           ) : (
             /* ESTADO AUTENTICADO (DASHBOARD) */
             <div className="space-y-6">
-              {/* Box de aviso sobre os 3 desfechos regulatórios */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <FileSignature className="h-4 w-4 text-[#0284c7] shrink-0" />
-                  <span>
-                    <strong>Conformidade Art. 10 (Res. ANP nº 11/2016):</strong> Fila integrada com
-                    os 3 desfechos padronizados (I - Confirmação com termos; II - Aprofundamento com
-                    escopo/custos; III - Negativa fundamentada com previsão de disponibilidade),
-                    cópia automática à ANP (§3º) e checklist de manifestação da Sulgás (§5º).
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500 whitespace-nowrap">
-                  Operador: {user?.name || user?.email}
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
-                <div className="space-y-0.5">
-                  <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-[#0284c7]" />
-                    Fila de Solicitações do Inciso VII (SLA Legal: 20 Dias Úteis)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Sincronização em tempo real das submissões de acesso efetuadas no Portal de
-                    Transparência
-                  </p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={carregarSolicitacoes}
-                  disabled={carregando}
-                  className="text-xs text-slate-700 h-8 self-start sm:self-auto"
+              {/* NAVEGAÇÃO POR ABAS NA GESTÃO INTERNA */}
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('solicitacoes')}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
+                    abaAtiva === 'solicitacoes'
+                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${carregando ? 'animate-spin' : ''}`} />
-                  Atualizar Fila
-                </Button>
+                  <Clock className="h-4 w-4" />
+                  Fila Inciso VII (SLA 20d)
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
+                    {solicitacoes.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('tarifa')}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
+                    abaAtiva === 'tarifa'
+                      ? 'bg-[#0a2540] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <DollarSign className="h-4 w-4 text-emerald-400" />
+                  Tarifa em Destaque (Página Inicial)
+                  {tarifaForm.ativo ? (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-700 font-bold">
+                      Ativo
+                    </span>
+                  ) : (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-600 font-bold">
+                      Oculto
+                    </span>
+                  )}
+                </button>
               </div>
 
-              {/* TABELA DE SOLICITAÇÕES COM PONTOS SEPARADOS E DESFECHOS */}
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3">Protocolo</th>
-                      <th className="p-3">Solicitante (Razão / CNPJ)</th>
-                      <th className="p-3">Pontos (Recebimento &rarr; Entrega)</th>
-                      <th className="p-3">Status / Desfecho</th>
-                      <th className="p-3">Sulgás (§5º)</th>
-                      <th className="p-3">SLA</th>
-                      <th className="p-3 text-right">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {solicitacoes.length > 0 ? (
-                      solicitacoes.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 font-mono font-bold text-[#0a2540]">
-                            {item.protocolo}
-                          </td>
-                          <td className="p-3">
-                            <div className="font-semibold text-slate-800">{item.razao_social}</div>
-                            <div className="text-[11px] text-slate-500">
-                              CNPJ: {item.cnpj} &bull;{' '}
-                              <span
-                                className={
-                                  item.modalidade === 'Troca Operacional'
-                                    ? 'text-purple-700 font-semibold'
-                                    : ''
-                                }
-                              >
-                                {item.modalidade}
-                              </span>{' '}
-                              &bull; {item.capacidade?.toLocaleString('pt-BR')} m³/dia
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-slate-800 font-medium">
-                              {item.ponto_recebimento || 'Paso de Los Libres'} &rarr;{' '}
-                              {item.ponto_entrega || 'Triunfo'}
-                            </div>
-                            <div className="text-[10px] text-slate-500">{item.trecho}</div>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                                item.status.includes('Confirmação') || item.status === 'Aprovada'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : item.status.includes('Negativa') || item.status === 'Rejeitada'
-                                    ? 'bg-red-50 text-red-700 border border-red-200'
-                                    : item.status.includes('Aprofundamento')
-                                      ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                                      : 'bg-blue-50 text-blue-700 border border-blue-200'
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                            {item.copia_anp_enviada && (
-                              <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1">
-                                <Send className="h-2.5 w-2.5 text-blue-600" />
-                                Cópia ANP enviada
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                item.manifestacao_sulgas_status === 'Recebida - Favoravel'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : item.manifestacao_sulgas_status === 'Recebida - Com Ressalvas'
-                                    ? 'bg-amber-100 text-amber-800'
-                                    : 'bg-slate-100 text-slate-700'
-                              }`}
-                            >
-                              {item.manifestacao_sulgas_status || 'Pendente'}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#15803d] border border-emerald-300">
-                              {item.sla_dias || 20}d
-                            </span>
-                          </td>
-                          <td className="p-3 text-right">
-                            <Button
-                              size="sm"
-                              onClick={() => abrirModalAnalise(item)}
-                              className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-semibold h-7 px-2.5"
-                            >
-                              Deliberar Parecer
-                            </Button>
-                          </td>
+              {/* ABA 1: FILA DE SOLICITAÇÕES REGULATÓRIAS */}
+              {abaAtiva === 'solicitacoes' && (
+                <div className="space-y-6 animate-fade-in">
+                  {/* Box de aviso sobre os 3 desfechos regulatórios */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <FileSignature className="h-4 w-4 text-[#0284c7] shrink-0" />
+                      <span>
+                        <strong>Conformidade Art. 10 (Res. ANP nº 11/2016):</strong> Fila integrada
+                        com os 3 desfechos padronizados (I - Confirmação com termos; II -
+                        Aprofundamento com escopo/custos; III - Negativa fundamentada com previsão
+                        de disponibilidade), cópia automática à ANP (§3º) e checklist de
+                        manifestação da Sulgás (§5º).
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 whitespace-nowrap">
+                      Operador: {user?.name || user?.email}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+                    <div className="space-y-0.5">
+                      <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-[#0284c7]" />
+                        Fila de Solicitações do Inciso VII (SLA Legal: 20 Dias Úteis)
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Sincronização em tempo real das submissões de acesso efetuadas no Portal de
+                        Transparência
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarSolicitacoes}
+                      disabled={carregando}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregando ? 'animate-spin' : ''}`}
+                      />
+                      Atualizar Fila
+                    </Button>
+                  </div>
+
+                  {/* TABELA DE SOLICITAÇÕES COM PONTOS SEPARADOS E DESFECHOS */}
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
+                        <tr>
+                          <th className="p-3">Protocolo</th>
+                          <th className="p-3">Solicitante (Razão / CNPJ)</th>
+                          <th className="p-3">Pontos (Recebimento &rarr; Entrega)</th>
+                          <th className="p-3">Status / Desfecho</th>
+                          <th className="p-3">Sulgás (§5º)</th>
+                          <th className="p-3">SLA</th>
+                          <th className="p-3 text-right">Ação</th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="p-6 text-center text-slate-500">
-                          {carregando
-                            ? 'Carregando fila de solicitações...'
-                            : 'Nenhuma solicitação encontrada no momento.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 bg-white">
+                        {solicitacoes.length > 0 ? (
+                          solicitacoes.map((item) => (
+                            <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 font-mono font-bold text-[#0a2540]">
+                                {item.protocolo}
+                              </td>
+                              <td className="p-3">
+                                <div className="font-semibold text-slate-800">
+                                  {item.razao_social}
+                                </div>
+                                <div className="text-[11px] text-slate-500">
+                                  CNPJ: {item.cnpj} &bull;{' '}
+                                  <span
+                                    className={
+                                      item.modalidade === 'Troca Operacional'
+                                        ? 'text-purple-700 font-semibold'
+                                        : ''
+                                    }
+                                  >
+                                    {item.modalidade}
+                                  </span>{' '}
+                                  &bull; {item.capacidade?.toLocaleString('pt-BR')} m³/dia
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="text-slate-800 font-medium">
+                                  {item.ponto_recebimento || 'Paso de Los Libres'} &rarr;{' '}
+                                  {item.ponto_entrega || 'Triunfo'}
+                                </div>
+                                <div className="text-[10px] text-slate-500">{item.trecho}</div>
+                              </td>
+                              <td className="p-3">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                    item.status.includes('Confirmação') ||
+                                    item.status === 'Aprovada'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : item.status.includes('Negativa') ||
+                                          item.status === 'Rejeitada'
+                                        ? 'bg-red-50 text-red-700 border border-red-200'
+                                        : item.status.includes('Aprofundamento')
+                                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                          : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  }`}
+                                >
+                                  {item.status}
+                                </span>
+                                {item.copia_anp_enviada && (
+                                  <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1">
+                                    <Send className="h-2.5 w-2.5 text-blue-600" />
+                                    Cópia ANP enviada
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                    item.manifestacao_sulgas_status === 'Recebida - Favoravel'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : item.manifestacao_sulgas_status ===
+                                          'Recebida - Com Ressalvas'
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-slate-100 text-slate-700'
+                                  }`}
+                                >
+                                  {item.manifestacao_sulgas_status || 'Pendente'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#15803d] border border-emerald-300">
+                                  {item.sla_dias || 20}d
+                                </span>
+                              </td>
+                              <td className="p-3 text-right">
+                                <Button
+                                  size="sm"
+                                  onClick={() => abrirModalAnalise(item)}
+                                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-semibold h-7 px-2.5"
+                                >
+                                  Deliberar Parecer
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="p-6 text-center text-slate-500">
+                              {carregando
+                                ? 'Carregando fila de solicitações...'
+                                : 'Nenhuma solicitação encontrada no momento.'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ABA 2: EDITORIA DO QUADRO DE TARIFA EM DESTAQUE */}
+              {abaAtiva === 'tarifa' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="p-4 bg-sky-50 border border-sky-200 rounded-lg text-xs text-sky-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 font-bold text-[#0a2540]">
+                        <DollarSign className="h-4 w-4 text-[#0284c7]" />
+                        <span>Gerenciamento do Quadro de Tarifa na Página Inicial</span>
+                      </div>
+                      <p className="text-slate-600">
+                        Edite os valores e textos da tarifa contratual extraordinária exibida na
+                        página inicial (/), reproduzindo as diretrizes e resoluções aplicáveis da
+                        ANP. O termo &ldquo;ex-impostos&rdquo; será automaticamente formatado em
+                        negrito e sublinhado no layout final.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarTarifa}
+                      disabled={carregandoTarifa}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto shrink-0"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoTarifa ? 'animate-spin' : ''}`}
+                      />
+                      Recarregar Dados
+                    </Button>
+                  </div>
+
+                  <form
+                    onSubmit={salvarTarifaGestao}
+                    className="space-y-5 bg-white border border-slate-200 rounded-lg p-5"
+                  >
+                    {/* Status Ativo/Inativo */}
+                    <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-lg border border-slate-200">
+                      <div>
+                        <Label
+                          htmlFor="tarifaAtiva"
+                          className="text-xs font-bold text-[#0a2540] block"
+                        >
+                          Exibir Quadro na Página Inicial
+                        </Label>
+                        <span className="text-[11px] text-slate-500">
+                          Se desativado, o quadro de tarifa será completamente ocultado da página
+                          inicial do portal.
+                        </span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="tarifaAtiva"
+                          type="checkbox"
+                          checked={tarifaForm.ativo}
+                          onChange={(e) =>
+                            setTarifaForm({ ...tarifaForm, ativo: e.target.checked })
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]"></div>
+                      </label>
+                    </div>
+
+                    {/* Título e Ano */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <Label
+                          htmlFor="tarifaTitulo"
+                          className="text-xs font-semibold text-slate-700"
+                        >
+                          Título Centralizado do Quadro *
+                        </Label>
+                        <Input
+                          id="tarifaTitulo"
+                          required
+                          value={tarifaForm.titulo}
+                          onChange={(e) => setTarifaForm({ ...tarifaForm, titulo: e.target.value })}
+                          className="text-xs font-medium"
+                          placeholder="Ex: TARIFA CONTRATO EXTRAORDINÁRIO TRECHO T3 – 2026"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="tarifaAno" className="text-xs font-semibold text-slate-700">
+                          Ano de Vigência
+                        </Label>
+                        <Input
+                          id="tarifaAno"
+                          value={tarifaForm.ano_vigencia || ''}
+                          onChange={(e) =>
+                            setTarifaForm({ ...tarifaForm, ano_vigencia: e.target.value })
+                          }
+                          className="text-xs font-medium"
+                          placeholder="Ex: 2026"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Texto explicativo */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="tarifaTexto" className="text-xs font-semibold text-slate-700">
+                        Texto Explicativo da Tarifa (Variação IGP-M / IPCA) *
+                      </Label>
+                      <Textarea
+                        id="tarifaTexto"
+                        required
+                        rows={2}
+                        value={tarifaForm.texto_explicativo}
+                        onChange={(e) =>
+                          setTarifaForm({ ...tarifaForm, texto_explicativo: e.target.value })
+                        }
+                        className="text-xs"
+                        placeholder="Tarifa ex-impostos para 2026, considerando a variação de -1,05% do IGP-M de 2025 (55%) e de 4,26% do IPCA de 2025 (45%):"
+                      />
+                      <span className="text-[10px] text-slate-500 block">
+                        Nota: A expressão &ldquo;ex-impostos&rdquo; será automaticamente formatada
+                        com{' '}
+                        <u>
+                          <strong>sublinhado e negrito</strong>
+                        </u>
+                        .
+                      </span>
+                    </div>
+
+                    {/* Valores Principais */}
+                    <div className="p-4 bg-red-50/50 border border-red-200 rounded-lg space-y-3">
+                      <span className="text-xs font-bold text-red-900 block">
+                        Valores Globais do Contrato
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="tarifaMilM3"
+                            className="text-xs font-semibold text-red-900"
+                          >
+                            Valor em Destaque Vermelho (R$/Mil m³) *
+                          </Label>
+                          <Input
+                            id="tarifaMilM3"
+                            required
+                            value={tarifaForm.valor_mil_m3}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, valor_mil_m3: e.target.value })
+                            }
+                            className="text-xs font-bold text-red-600 bg-white"
+                            placeholder="59,1750"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="tarifaMmbtu"
+                            className="text-xs font-semibold text-slate-700"
+                          >
+                            Correspondência em R$/MM Btu *
+                          </Label>
+                          <Input
+                            id="tarifaMmbtu"
+                            required
+                            value={tarifaForm.valor_mmbtu}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, valor_mmbtu: e.target.value })
+                            }
+                            className="text-xs font-semibold bg-white"
+                            placeholder="1,5864"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Linha 70% Entrada */}
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                      <span className="text-xs font-bold text-[#0a2540] block">
+                        Parcela de Entrada (Ponto de Injeção)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="entradaPerc"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Identificação / Percentual *
+                          </Label>
+                          <Input
+                            id="entradaPerc"
+                            required
+                            value={tarifaForm.entrada_percentual}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, entrada_percentual: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="70% Entrada"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="entradaMmbtu"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Valor R$/MM Btu *
+                          </Label>
+                          <Input
+                            id="entradaMmbtu"
+                            required
+                            value={tarifaForm.entrada_valor_mmbtu}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, entrada_valor_mmbtu: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="1,1089"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="entradaMilM3"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Valor R$/Mil m³ *
+                          </Label>
+                          <Input
+                            id="entradaMilM3"
+                            required
+                            value={tarifaForm.entrada_valor_mil_m3}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, entrada_valor_mil_m3: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="41,3628"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Linha 30% Saída */}
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                      <span className="text-xs font-bold text-[#0a2540] block">
+                        Parcela de Saída (Ponto de Retirada)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="saidaPerc"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Identificação / Percentual *
+                          </Label>
+                          <Input
+                            id="saidaPerc"
+                            required
+                            value={tarifaForm.saida_percentual}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, saida_percentual: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="30% Saída"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="saidaMmbtu"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Valor R$/MM Btu *
+                          </Label>
+                          <Input
+                            id="saidaMmbtu"
+                            required
+                            value={tarifaForm.saida_valor_mmbtu}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, saida_valor_mmbtu: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="0,4775"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="saidaMilM3"
+                            className="text-[11px] font-semibold text-slate-700"
+                          >
+                            Valor R$/Mil m³ *
+                          </Label>
+                          <Input
+                            id="saidaMilM3"
+                            required
+                            value={tarifaForm.saida_valor_mil_m3}
+                            onChange={(e) =>
+                              setTarifaForm({ ...tarifaForm, saida_valor_mil_m3: e.target.value })
+                            }
+                            className="h-8 text-xs bg-white"
+                            placeholder="17,8122"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pré-visualização do quadro em tempo real */}
+                    <div className="space-y-2 pt-2 border-t">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                        <Eye className="h-4 w-4 text-[#0284c7]" />
+                        <span>
+                          Pré-visualização do Quadro (Exatamente como aparecerá na Página Inicial):
+                        </span>
+                      </div>
+                      <div className="p-4 bg-slate-100 rounded-lg">
+                        <QuadroTarifaDestaque tarifa={tarifaForm} />
+                      </div>
+                    </div>
+
+                    {/* Botões de Ação */}
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setTarifaForm(TARIFA_SEED_FALLBACK)}
+                        className="text-xs"
+                      >
+                        Restaurar Valores Padrão (2026)
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={salvandoTarifa}
+                        className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold px-5"
+                      >
+                        {salvandoTarifa ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Salvando no Banco...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Salvar Alterações da Tarifa
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

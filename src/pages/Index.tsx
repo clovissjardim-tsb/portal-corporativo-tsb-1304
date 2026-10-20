@@ -1,8 +1,39 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Building2, Network, Headphones, Shield, ArrowRight } from 'lucide-react'
+import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
+import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
 
 export default function Index() {
+  const [tarifa, setTarifa] = useState<QuadroTarifa | null>(null)
+  const [carregandoTarifa, setCarregandoTarifa] = useState(true)
+
+  useEffect(() => {
+    let ativo = true
+    tarifaService
+      .obterTarifaPrincipal()
+      .then((dados) => {
+        if (ativo) {
+          setTarifa(dados)
+        }
+      })
+      .catch(() => {
+        if (ativo) {
+          setTarifa(TARIFA_SEED_FALLBACK)
+        }
+      })
+      .finally(() => {
+        if (ativo) {
+          setCarregandoTarifa(false)
+        }
+      })
+
+    return () => {
+      ativo = false
+    }
+  }, [])
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* HERO CARD */}
@@ -46,6 +77,13 @@ export default function Index() {
         {/* Efeito decorativo sutil de fundo */}
         <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-white/5 pointer-events-none blur-2xl" />
       </section>
+
+      {/* BLOCO DE TARIFA EM DESTAQUE (REPRODUÇÃO FIEL AO QUADRO CONTRATO EXTRAORDINÁRIO) */}
+      {!carregandoTarifa && tarifa && tarifa.ativo && (
+        <section aria-label="Quadro de Tarifa em Destaque">
+          <QuadroTarifaDestaque tarifa={tarifa} />
+        </section>
+      )}
 
       {/* 3 CARDS INFORMATIVOS */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T01:09:03.881Z",
+  "generatedAt": "2026-10-20T01:27:33.215Z",
   "collections": [
     {
       "name": "users",
@@ -328,6 +328,112 @@
         "CREATE INDEX idx_cessoes_status_created ON ofertas_cessao_inciso_viii (status, created DESC)",
         "CREATE INDEX idx_cessoes_trecho ON ofertas_cessao_inciso_viii (trecho)"
       ]
+    },
+    {
+      "name": "quadro_tarifa",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "chave",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "texto_explicativo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_mil_m3",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valor_mmbtu",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "entrada_percentual",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "entrada_valor_mmbtu",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "entrada_valor_mil_m3",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "saida_percentual",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "saida_valor_mmbtu",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "saida_valor_mil_m3",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ano_vigencia",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_quadro_tarifa_chave ON quadro_tarifa (chave)"]
     }
   ]
 }
