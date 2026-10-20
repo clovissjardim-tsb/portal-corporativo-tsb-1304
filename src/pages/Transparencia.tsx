@@ -145,23 +145,41 @@ export default function Transparencia() {
     })
   }
 
-  // Linhas da tabela de Programação Diária
+  // Linhas da tabela de Programação Diária com dados reais do sistema da TSB (Trechos 1 e 3)
+  // Fontes oficiais: Informativo de Capacidade Disponível (bol_elet_I_g-cap-disponivel.pdf),
+  // Características Técnicas (bol_ele_-I.f-_caracteristicas-.pdf) e Contrato de Transporte (Capacidade-gasoduto-A.pdf)
   const linhasDiaria = [
     {
-      ponto: 'EMED Uruguaiana',
+      ponto: 'Trecho 1 — Ponto de Recepção Paso de Los Libres / Uruguaiana',
       tipo: 'Recepção',
-      contratada: '2.800.000',
-      programado: '1.250.000',
-      realizado: '1.248.500',
-      pressao: '45,2',
+      contratada: '0 (Sem contrato ativo)',
+      programado: '0',
+      realizado: '0',
+      pressao: '25 a 55 (Operacional)',
     },
     {
-      ponto: 'EMED Triunfo',
+      ponto: 'Trecho 1 — Ponto de Entrega Uruguaiana (UTE Uruguaiana)',
       tipo: 'Entrega',
-      contratada: '2.800.000',
-      programado: '1.250.000',
-      realizado: '1.248.500',
-      pressao: '38,7',
+      contratada: '0 (Sem contrato ativo)',
+      programado: '0',
+      realizado: '0',
+      pressao: '25 a 45 (Operacional)',
+    },
+    {
+      ponto: 'Trecho 3 — Ponto de Recebimento Canoas (Interconexão TBG)',
+      tipo: 'Recepção',
+      contratada: '800.000 (Sulgás)',
+      programado: '800.000',
+      realizado: '800.000',
+      pressao: '20 a 28 (Controlada TBG)',
+    },
+    {
+      ponto: 'Trecho 3 — Ponto de Entrega Triunfo (Polo Petroquímico)',
+      tipo: 'Entrega',
+      contratada: '800.000 (Sulgás)',
+      programado: '800.000',
+      realizado: '800.000',
+      pressao: '20 a 40 (Controlada EMED)',
     },
   ]
 
@@ -171,6 +189,7 @@ export default function Transparencia() {
       return true
     if (filtroDiariaAplicado.ponto.includes('Triunfo') && linha.ponto.includes('Triunfo'))
       return true
+    if (filtroDiariaAplicado.ponto.includes('Canoas') && linha.ponto.includes('Canoas')) return true
     return false
   })
 
