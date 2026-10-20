@@ -27,10 +27,32 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
-        display: ['SF Pro Display', 'Inter var', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Archivo', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        tsb: {
+          blue: {
+            950: '#061325',
+            900: '#0a1d37',
+            850: '#0c2340',
+            800: '#0e2b54',
+            700: '#143b73',
+            600: '#1b4d96',
+            500: '#2563eb',
+            400: '#38bdf8',
+            100: '#e0f2fe',
+            50: '#f0f9ff',
+          },
+          red: {
+            600: '#c50510',
+            DEFAULT: '#e30613',
+            500: '#e30613',
+            400: '#ef4444',
+            100: '#fee2e2',
+            50: '#fef2f2',
+          },
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

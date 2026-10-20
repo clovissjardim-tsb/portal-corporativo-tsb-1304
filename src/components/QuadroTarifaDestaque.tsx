@@ -58,32 +58,32 @@ export function QuadroTarifaDestaque({ tarifa }: QuadroTarifaProps) {
   return (
     <div className="w-full flex justify-center my-2">
       <Card className="w-full max-w-4xl border border-slate-200/80 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-xl overflow-hidden bg-white">
-        {/* CABEÇALHO DO QUADRO COM GRADIENTE CORPORATIVO TSB */}
+        {/* CABEÇALHO DO QUADRO COM GRADIENTE CORPORATIVO TSB HARMONIZADO */}
         <CardHeader
           style={{
-            background: 'linear-gradient(135deg, #0a2540 0%, #0369a1 60%, #0284c7 100%)',
+            background: 'linear-gradient(135deg, #0a1d37 0%, #0e2b54 50%, #1b4d96 100%)',
           }}
-          className="text-white p-5 sm:p-6"
+          className="text-white p-5 sm:p-6 border-b border-white/10"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className="bg-white/10 text-sky-200 border-white/25 text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5"
+                  className="bg-white/15 text-white border-white/30 text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 font-display"
                 >
                   Regulação ANP
                 </Badge>
                 {tarifa.ano_vigencia && (
                   <Badge
                     variant="outline"
-                    className="bg-sky-400/20 text-white border-white/20 text-[11px] font-semibold px-2 py-0.5"
+                    className="bg-[#e30613]/20 text-white border-[#e30613]/40 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 font-display"
                   >
                     Vigência {tarifa.ano_vigencia}
                   </Badge>
                 )}
               </div>
-              <CardTitle className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight text-white leading-snug pt-1">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight text-white leading-snug pt-1 font-display">
                 {tarifa.titulo}
               </CardTitle>
             </div>
@@ -99,40 +99,42 @@ export function QuadroTarifaDestaque({ tarifa }: QuadroTarifaProps) {
           {/* VALOR PRINCIPAL E CORRESPONDÊNCIA ENERGÉTICA */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Card do Valor Principal */}
-            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-sky-50/80 via-white to-slate-50 border border-sky-100 shadow-xs flex flex-col justify-between">
+            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-red-50/30 via-white to-slate-50 border border-slate-200 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between pb-2">
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wider font-display">
                   Valor da Tarifa
                 </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0369a1] bg-sky-100/70 border border-sky-200 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-[#c50510] bg-[#fef2f2] border border-[#fecaca] px-2.5 py-0.5 rounded-full font-display">
                   <ShieldCheck className="h-3 w-3" />
                   Referência Oficial
                 </span>
               </div>
               <div className="pt-1">
-                <span className="text-xs text-slate-500 font-medium block">R$/Mil m³</span>
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#0a2540] tracking-tight">
+                <span className="text-xs text-slate-500 font-medium block font-sans">
+                  R$/Mil m³
+                </span>
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#0a1d37] tracking-tight font-display">
                   {tarifa.valor_mil_m3}
                 </span>
               </div>
             </div>
 
             {/* Card da Correspondência Energética */}
-            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-amber-50/60 via-white to-slate-50 border border-amber-100/80 shadow-xs flex flex-col justify-between">
+            <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-slate-50 via-white to-blue-50/20 border border-slate-200 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between pb-2">
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wider font-display">
                   Correspondência Energética
                 </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-full">
-                  <Flame className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-[#143b73] bg-[#f0f9ff] border border-blue-200 px-2.5 py-0.5 rounded-full font-display">
+                  <Flame className="h-3 w-3 text-[#e30613]" />
                   Base Térmica
                 </span>
               </div>
               <div className="pt-1">
-                <span className="text-xs text-slate-500 font-medium block">
+                <span className="text-xs text-slate-500 font-medium block font-sans">
                   Que corresponde a R$/MM Btu
                 </span>
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#0a2540] tracking-tight">
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#0a1d37] tracking-tight font-display">
                   {tarifa.valor_mmbtu}
                 </span>
               </div>
@@ -141,35 +143,37 @@ export function QuadroTarifaDestaque({ tarifa }: QuadroTarifaProps) {
 
           {/* DESDOBRAMENTO: CARDS DE 70% ENTRADA E 30% SAÍDA */}
           <div className="space-y-3 pt-1">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block font-display">
               Desdobramento por Ponto de Transporte
             </span>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Card de Entrada (ex: 70% Entrada) */}
-              <div className="p-4 rounded-xl bg-white border border-sky-200/90 shadow-xs hover:border-sky-300 transition-colors">
-                <div className="flex items-center gap-2 pb-3 border-b border-sky-100">
-                  <div className="p-2 rounded-lg bg-sky-50 text-sky-600">
+              <div className="p-4 rounded-xl bg-white border border-blue-200/90 shadow-xs hover:border-blue-300 transition-colors">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-blue-100">
+                  <div className="p-2 rounded-lg bg-blue-50 text-[#143b73]">
                     <ArrowDownRight className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#0a2540] leading-none">
+                    <h3 className="font-bold text-sm text-[#0a1d37] leading-none font-display">
                       {tarifa.entrada_percentual}
                     </h3>
-                    <span className="text-[11px] text-slate-500 font-medium">Ponto de Injeção</span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Ponto de Injeção (Entrada)
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-3">
                   <div>
                     <span className="text-[11px] text-slate-500 font-medium block">R$/MM Btu</span>
-                    <span className="text-base sm:text-lg font-bold text-slate-900">
+                    <span className="text-base sm:text-lg font-bold text-slate-900 font-display">
                       {tarifa.entrada_valor_mmbtu}
                     </span>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-500 font-medium block">R$/Mil m³</span>
-                    <span className="text-base sm:text-lg font-bold text-slate-900">
+                    <span className="text-base sm:text-lg font-bold text-slate-900 font-display">
                       {tarifa.entrada_valor_mil_m3}
                     </span>
                   </div>
@@ -178,16 +182,16 @@ export function QuadroTarifaDestaque({ tarifa }: QuadroTarifaProps) {
 
               {/* Card de Saída (ex: 30% Saída) */}
               <div className="p-4 rounded-xl bg-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 transition-colors">
-                <div className="flex items-center gap-2 pb-3 border-b border-emerald-100">
-                  <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-emerald-100">
+                  <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
                     <ArrowUpRight className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#0a2540] leading-none">
+                    <h3 className="font-bold text-sm text-[#0a1d37] leading-none font-display">
                       {tarifa.saida_percentual}
                     </h3>
                     <span className="text-[11px] text-slate-500 font-medium">
-                      Ponto de Retirada
+                      Ponto de Retirada (Saída)
                     </span>
                   </div>
                 </div>

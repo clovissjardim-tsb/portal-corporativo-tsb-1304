@@ -138,21 +138,26 @@ export default function PlataformaEletronica({
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB (IGUAL AO BOLETIM ELETRÔNICO OFICIAL) */}
       <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-        {/* CABEÇALHO OFICIAL */}
-        <div className="bg-[#0a2540] text-white p-6 sm:p-8">
+        {/* CABEÇALHO OFICIAL COM PALETA TSB */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0a1d37 0%, #0c2340 50%, #143b73 100%)',
+          }}
+          className="text-white p-6 sm:p-8 border-b border-white/10"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <span className="text-xs uppercase tracking-wider font-semibold text-[#38bdf8]">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-sky-200 font-display">
               Portal TSB • Regulação &amp; Acesso Público
             </span>
-            <Badge className="bg-[#059669] hover:bg-[#059669] text-white border-0 text-xs px-3 py-1">
+            <Badge className="bg-[#e30613] hover:bg-[#c50510] text-white border-0 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 font-display">
               Resolução ANP nº 11/2016 • Art. 9º
             </Badge>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-[#34d399]" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 font-display">
+            <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-sky-300" />
             Plataforma Eletrônica
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
             <a
               href="https://www.tsb.com.br/wp-content/uploads/2023/08/Artigo-9o-RESOLUCAO-11-2016docx.pdf"
               target="_blank"
@@ -226,13 +231,17 @@ export default function PlataformaEletronica({
               {/* TABELA PRINCIPAL NO MESMO PADRÃO DO BOLETIM ELETRÔNICO OFICIAL */}
               <div className="overflow-x-auto border border-slate-200 rounded-md">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-[#0a2540] text-white font-semibold">
+                  <thead className="bg-[#0a1d37] text-white font-semibold font-display">
                     <tr>
-                      <th className="p-3 w-16 text-center border-r border-slate-700/60">Inciso</th>
-                      <th className="p-3 w-3/5 sm:w-2/3 border-r border-slate-700/60">
+                      <th className="p-3 w-16 text-center border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
+                        Inciso
+                      </th>
+                      <th className="p-3 w-3/5 sm:w-2/3 border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
                         Exigência Legal (Art. 9º, Res. ANP 11/2016)
                       </th>
-                      <th className="p-3 w-2/5 sm:w-1/3 text-center">Arquivo / Consulta</th>
+                      <th className="p-3 w-2/5 sm:w-1/3 text-center tracking-wider uppercase text-[11px]">
+                        Arquivo / Consulta
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
@@ -955,7 +964,7 @@ export default function PlataformaEletronica({
                   <Button
                     type="submit"
                     disabled={submetendoVII}
-                    className="w-full bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold py-3 text-sm mt-4 shadow-sm"
+                    className="w-full bg-[#0a1d37] hover:bg-[#143b73] text-white font-bold py-3 text-sm mt-4 shadow-sm font-display tracking-wide uppercase"
                   >
                     {submetendoVII
                       ? 'Submetendo Solicitação...'

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Menu, X, LogIn, LogOut, User, ShieldCheck } from 'lucide-react'
+import logoTsb from '@/assets/image-ee90b.png'
 
 interface LayoutProps {
   children?: React.ReactNode
@@ -53,13 +54,30 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         {/* MAIN NAV BAR */}
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          {/* LOGO */}
-          <Link to="/" className="flex items-center gap-2.5 text-decoration-none group">
-            <span className="text-2xl font-black tracking-tight text-white group-hover:text-sky-300 transition-colors">
-              TSB
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#0284c7] text-white shadow-sm">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          {/* LOGO OFICIAL TSB */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 text-decoration-none group py-1"
+            title="TSB — Transportadora Sulbrasileira de Gás S.A."
+          >
+            {/* Box com fundo branco translúcido/limpo para destaque de alto contraste do logo TSB sobre o header escuro */}
+            <div className="bg-white/95 hover:bg-white transition-all duration-200 px-3 py-1.5 rounded-md shadow-sm border border-white/20 flex items-center">
+              <img
+                src={logoTsb}
+                alt="TSB — Transportadora Sulbrasileira de Gás S.A."
+                className="h-8 sm:h-9 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+              />
+            </div>
+            <div className="hidden xl:flex flex-col">
+              <span className="text-[11px] font-bold tracking-wider uppercase text-slate-200 font-display leading-tight">
+                Portal Regulatório
+              </span>
+              <span className="text-[9px] font-semibold text-slate-400 tracking-wider uppercase">
+                Acesso Aberto
+              </span>
+            </div>
+            <span className="hidden sm:inline-flex items-center text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#e30613] text-white shadow-xs font-display">
               REGULAÇÃO ANP
             </span>
           </Link>
@@ -196,13 +214,19 @@ export default function Layout({ children }: LayoutProps) {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
           {/* COLUNA 1: INSTITUCIONAL TSB */}
           <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-tight text-white">TSB</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#0284c7] text-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/95 p-2 rounded-md shadow-sm inline-flex items-center">
+                <img
+                  src={logoTsb}
+                  alt="TSB — Transportadora Sulbrasileira de Gás S.A."
+                  className="h-7 w-auto object-contain"
+                />
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#e30613] text-white shadow-sm font-display">
                 Transportadora
               </span>
             </div>
-            <h4 className="text-white font-bold text-base">
+            <h4 className="text-white font-bold text-base font-display tracking-tight">
               TSB — Transportadora Sulbrasileira de Gás S.A.
             </h4>
             <p className="text-xs leading-relaxed text-slate-400 max-w-md">
@@ -222,7 +246,9 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* COLUNA 2: GRUPO LINKS */}
           <div>
-            <h4 className="text-white font-bold text-sm tracking-wide uppercase mb-3">Links</h4>
+            <h4 className="text-white font-bold text-xs tracking-wider uppercase mb-3 font-display text-slate-300">
+              Links Rápidos
+            </h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <a
@@ -288,7 +314,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* COLUNA 3: GRUPO COMPLIANCE */}
           <div>
-            <h4 className="text-white font-bold text-sm tracking-wide uppercase mb-3">
+            <h4 className="text-white font-bold text-xs tracking-wider uppercase mb-3 font-display text-slate-300">
               COMPLIANCE
             </h4>
             <ul className="space-y-2 text-xs">

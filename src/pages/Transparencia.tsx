@@ -291,11 +291,16 @@ export default function Transparencia() {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CABEÇALHO DO MÓDULO */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0a2540]">
+      <div className="space-y-1.5">
+        <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200/80 text-[10px] font-bold tracking-wider uppercase text-[#143b73] font-display">
+          <span>Regulação ANP</span>
+          <span>•</span>
+          <span>Acesso Público</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a1d37] font-display">
           Portal de Transparência Regulatória
         </h1>
-        <p className="text-slate-600 text-sm sm:text-base">
+        <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-4xl">
           Acesso público e irrestrito às informações técnicas, operacionais e comerciais do sistema
           dutoviário TSB, em cumprimento integral à regulamentação expedida pela ANP.
         </p>
@@ -308,18 +313,20 @@ export default function Transparencia() {
           onClick={() => setActivePilar('boletim')}
           className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
             activePilar === 'boletim'
-              ? 'border-[#0284c7] bg-[#f0f9ff] shadow-sm'
-              : 'border-slate-200 bg-white hover:border-[#0284c7]/50 hover:bg-slate-50'
+              ? 'border-[#143b73] bg-[#f0f9ff] shadow-sm'
+              : 'border-slate-200 bg-white hover:border-[#143b73]/40 hover:bg-slate-50'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#e0f2fe] text-[#0369a1]">
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#e0f2fe] text-[#0e2b54] font-display">
               Acesso Livre
             </span>
-            <span className="text-xs font-semibold text-slate-500">Portaria ANP nº 1/2003</span>
+            <span className="text-xs font-semibold text-slate-500 font-display">
+              Portaria ANP nº 1/2003
+            </span>
           </div>
-          <h3 className="text-lg font-bold text-[#0a2540] flex items-center gap-2">
-            <Radio className="h-5 w-5 text-[#0284c7]" />
+          <h3 className="text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
+            <Radio className="h-5 w-5 text-[#143b73]" />
             Boletim Eletrônico
           </h3>
           <p className="text-xs text-slate-600 mt-2 leading-relaxed">
@@ -339,14 +346,14 @@ export default function Transparencia() {
           }`}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d]">
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d] font-display">
               Acesso Livre
             </span>
-            <span className="text-xs font-semibold text-slate-500">
+            <span className="text-xs font-semibold text-slate-500 font-display">
               Resolução ANP nº 11/2016 (Arts. 9º e 10)
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#0a2540] flex items-center gap-2">
+          <h3 className="text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
             <Layers className="h-5 w-5 text-[#059669]" />
             Plataforma Eletrônica
           </h3>

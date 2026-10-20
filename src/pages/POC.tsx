@@ -54,7 +54,7 @@ export default function POC() {
         {/* Box Art. 8º: Requisito de Autorização Prévia da ANP */}
         <Card className="border-l-4 border-l-amber-500 border border-slate-200 bg-amber-50/30 shadow-sm">
           <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider font-display">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
               Requisito Obrigatório: Autorização Prévia da ANP (Art. 8º)
             </div>
@@ -70,8 +70,8 @@ export default function POC() {
         {/* Box Art. 8º-A: Serviço de Curto Prazo via Contrato Master */}
         <Card className="border-l-4 border-l-[#0284c7] border border-slate-200 bg-sky-50/30 shadow-sm">
           <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-[#0a2540] font-bold text-xs uppercase tracking-wider">
-              <Flame className="h-4 w-4 text-[#0284c7] shrink-0" />
+            <div className="flex items-center gap-2 text-[#0a1d37] font-bold text-xs uppercase tracking-wider font-display">
+              <Flame className="h-4 w-4 text-[#e30613] shrink-0" />
               Serviço de Curto Prazo via Contrato Master (Art. 8º-A)
             </div>
             <p className="text-xs text-slate-700 leading-relaxed">

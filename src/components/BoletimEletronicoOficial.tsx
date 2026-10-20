@@ -227,20 +227,25 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB */}
       <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-        {/* CABEÇALHO OFICIAL */}
-        <div className="bg-[#0a2540] text-white p-6 sm:p-8">
+        {/* CABEÇALHO OFICIAL COM PALETA TSB */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #0a1d37 0%, #0c2340 50%, #143b73 100%)',
+          }}
+          className="text-white p-6 sm:p-8 border-b border-white/10"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <span className="text-xs uppercase tracking-wider font-semibold text-[#38bdf8]">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-sky-200 font-display">
               Portal TSB • Regulação &amp; Acesso Público
             </span>
-            <Badge className="bg-[#0284c7] hover:bg-[#0284c7] text-white border-0 text-xs px-3 py-1">
+            <Badge className="bg-[#e30613] hover:bg-[#c50510] text-white border-0 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 font-display">
               Portaria ANP nº 1/2003 • Art. 2º
             </Badge>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-display">
             Boletim Eletrônico
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
             Estabelece os procedimentos para o envio das informações referentes às atividades de
             transporte e de compra e venda de gás natural ao mercado, aos Carregadores e à Agência
             Nacional do Petróleo - ANP.
@@ -251,7 +256,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           {/* ITEM 1 & 2: MODELO DE CONTRATO MASTER DE TRANSPORTE FIRME */}
           <div className="space-y-3">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
                 Modelo de Contrato Master de Transporte Firme para períodos de curto prazo e anuais
               </h2>
               <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
@@ -265,12 +270,14 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
             {/* TABELA: NOME DO DOCUMENTO | ARQUIVO */}
             <div className="overflow-x-auto border border-slate-200 rounded-md">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#0a2540] text-white font-semibold">
+                <thead className="bg-[#0a1d37] text-white font-semibold font-display">
                   <tr>
-                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60">
+                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
                       Nome do Documento
                     </th>
-                    <th className="p-3 w-1/4 sm:w-1/5 text-center">Arquivo</th>
+                    <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
+                      Arquivo
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
@@ -299,7 +306,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           {/* ITEM 3: SEÇÃO I - INSTALAÇÕES DE TRANSPORTE E SERVIÇOS PRESTADOS */}
           <div className="space-y-4">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
                 I - Instalações de Transporte e Serviços Prestados, atualizadas permanentemente
               </h2>
               <div className="w-full h-px bg-slate-200 mt-2" />
@@ -307,12 +314,14 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
 
             <div className="overflow-x-auto border border-slate-200 rounded-md">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#0a2540] text-white font-semibold">
+                <thead className="bg-[#0a1d37] text-white font-semibold font-display">
                   <tr>
-                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60">
+                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
                       Nome do Documento
                     </th>
-                    <th className="p-3 w-1/4 sm:w-1/5 text-center">Arquivo</th>
+                    <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
+                      Arquivo
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
@@ -526,7 +535,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           {/* ITEM 4: SEÇÃO II - QUANTIDADES PROGRAMADAS E REALIZADAS NOS TRECHOS 1 E 3 */}
           <div id="secao-ii-quantidades" className="space-y-4 scroll-mt-6">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
                 II - Quantidades Programadas e realizadas nos Trechos 1 e 3
               </h2>
               <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
@@ -536,8 +545,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
             <div className="bg-slate-50 p-3.5 sm:p-4 rounded-lg border border-slate-200 space-y-3.5">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-[#0284c7]" />
-                  <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wide">
+                  <Search className="h-4 w-4 text-[#143b73]" />
+                  <span className="text-xs font-bold text-[#0a1d37] uppercase tracking-wider font-display">
                     Pesquisar &amp; Filtros de Série Histórica
                   </span>
                 </div>
@@ -719,12 +728,14 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
             {/* TABELA DE ARQUIVOS DA SEÇÃO II */}
             <div className="overflow-x-auto border border-slate-200 rounded-md">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#0a2540] text-white font-semibold">
+                <thead className="bg-[#0a1d37] text-white font-semibold font-display">
                   <tr>
-                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60">
+                    <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
                       Documento / Mês de Referência (Trechos 1 e 3)
                     </th>
-                    <th className="p-3 w-1/4 sm:w-1/5 text-center">Arquivo</th>
+                    <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wider uppercase text-[11px]">
+                      Arquivo
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
