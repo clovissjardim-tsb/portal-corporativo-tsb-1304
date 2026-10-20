@@ -18,24 +18,7 @@ import {
   Search,
 } from 'lucide-react'
 
-export interface LinhaOperacionalDiaria {
-  ponto: string
-  tipo: string
-  contratada: string
-  programado: string
-  realizado: string
-  pressao: string
-}
-
 export interface BoletimEletronicoProps {
-  linhasDiaria?: LinhaOperacionalDiaria[]
-  linhasDiariaFiltradas?: LinhaOperacionalDiaria[]
-  filtroDataDiaria?: string
-  setFiltroDataDiaria?: (val: string) => void
-  filtroPontoDiaria?: string
-  setFiltroPontoDiaria?: (val: string) => void
-  filtroDiariaAplicado?: { data: string; ponto: string }
-  handleFiltrarDiaria?: (e: React.FormEvent) => void
   filtroAnoMensal?: string
   setFiltroAnoMensal?: (val: string) => void
   filtroMesMensal?: string
@@ -163,45 +146,7 @@ function gerarHistoricoQuantidades(): RelatorioMensalItem[] {
 
 const HISTORICO_QUANTIDADES_COMPLETO: RelatorioMensalItem[] = gerarHistoricoQuantidades()
 
-const LINHAS_DIARIA_PADRAO: LinhaOperacionalDiaria[] = [
-  {
-    ponto: 'Trecho 1 — Ponto de Recepção Paso de Los Libres / Uruguaiana',
-    tipo: 'Recepção',
-    contratada: '0 (Sem contrato ativo)',
-    programado: '0',
-    realizado: '0',
-    pressao: '25 a 55 (Operacional)',
-  },
-  {
-    ponto: 'Trecho 1 — Ponto de Entrega Uruguaiana (UTE Uruguaiana)',
-    tipo: 'Entrega',
-    contratada: '0 (Sem contrato ativo)',
-    programado: '0',
-    realizado: '0',
-    pressao: '25 a 45 (Operacional)',
-  },
-  {
-    ponto: 'Trecho 3 — Ponto de Recebimento Canoas (Interconexão TBG)',
-    tipo: 'Recepção',
-    contratada: '800.000 (Sulgás)',
-    programado: '800.000',
-    realizado: '800.000',
-    pressao: '20 a 28 (Controlada TBG)',
-  },
-  {
-    ponto: 'Trecho 3 — Ponto de Entrega Triunfo (Polo Petroquímico)',
-    tipo: 'Entrega',
-    contratada: '800.000 (Sulgás)',
-    programado: '800.000',
-    realizado: '800.000',
-    pressao: '20 a 40 (Controlada EMED)',
-  },
-]
-
-export default function BoletimEletronico({
-  linhasDiaria,
-  linhasDiariaFiltradas,
-}: BoletimEletronicoProps) {
+export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   const { toast } = useToast()
 
   // Seção II: Filtros e Pesquisa
@@ -277,9 +222,6 @@ export default function BoletimEletronico({
       description: 'Exibindo os 12 arquivos mais recentes da série histórica.',
     })
   }
-
-  // Linhas operacionais para o item h) no final da página
-  const dadosDiariosOperacionais = linhasDiariaFiltradas || linhasDiaria || LINHAS_DIARIA_PADRAO
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -528,6 +470,14 @@ export default function BoletimEletronico({
                             Consultar Tabela no item &quot;Quantidades realizadas de gás nos pontos
                             de recepção e entrega&quot; constante no final dessa página
                           </strong>
+                          <div className="mt-1">
+                            <a
+                              href="#secao-ii-quantidades"
+                              className="text-[11px] font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline inline-flex items-center gap-1"
+                            >
+                              &rarr; Ver relatórios mensais na Seção II abaixo
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -574,7 +524,7 @@ export default function BoletimEletronico({
           </div>
 
           {/* ITEM 4: SEÇÃO II - QUANTIDADES PROGRAMADAS E REALIZADAS NOS TRECHOS 1 E 3 */}
-          <div className="space-y-4">
+          <div id="secao-ii-quantidades" className="space-y-4 scroll-mt-6">
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
                 II - Quantidades Programadas e realizadas nos Trechos 1 e 3
@@ -867,71 +817,6 @@ export default function BoletimEletronico({
                   </div>
                 </div>
               )}
-          </div>
-
-          {/* ITEM H - QUANTIDADES REALIZADAS DE GÁS NOS PONTOS DE RECEPÇÃO E ENTREGA CONSTANTE NO FINAL DESSA PÁGINA */}
-          <div className="pt-4 border-t border-slate-200 space-y-4">
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
-                  Quantidades realizadas de gás nos pontos de recepção e entrega
-                </h2>
-                <Badge className="bg-[#0a2540] text-white text-[11px]">
-                  Portaria ANP nº 1/2003 • Art. 2º, I, h
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-600 mt-1">
-                Dados operacionais diários nos Trechos 1 (Paso de Los Libres / Uruguaiana) e 3
-                (Canoas / Triunfo) do sistema de transporte da TSB.
-              </p>
-              <div className="w-full h-px bg-slate-200 mt-2" />
-            </div>
-
-            {/* TABELA DE QUANTIDADES DIÁRIAS (TRECHOS 1 E 3) */}
-            <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#0a2540] text-white font-semibold border-b border-slate-700">
-                  <tr>
-                    <th className="p-3">Ponto Operacional</th>
-                    <th className="p-3">Tipo de Ponto</th>
-                    <th className="p-3 text-right">Capacidade Contratada (m³/dia)</th>
-                    <th className="p-3 text-right">Volume Programado (m³/dia)</th>
-                    <th className="p-3 text-right">Volume Realizado (m³/dia)</th>
-                    <th className="p-3 text-right">Pressão Média (kgf/cm²)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {dadosDiariosOperacionais.map((l) => (
-                    <tr key={l.ponto} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-semibold text-[#0a2540]">{l.ponto}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                            l.tipo === 'Recepção'
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          }`}
-                        >
-                          {l.tipo}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right font-mono text-slate-700">{l.contratada}</td>
-                      <td className="p-3 text-right font-mono text-slate-700">{l.programado}</td>
-                      <td className="p-3 text-right font-mono font-medium text-slate-900">
-                        {l.realizado}
-                      </td>
-                      <td className="p-3 text-right font-mono text-slate-700">{l.pressao}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="text-[11px] text-slate-500">
-              Volume expresso em m³ padrão nas condições de referência (20 °C, 1 atm). Dados
-              operacionais atualizados permanentemente nos termos da regulamentação aplicável da
-              ANP.
-            </div>
           </div>
         </div>
       </Card>

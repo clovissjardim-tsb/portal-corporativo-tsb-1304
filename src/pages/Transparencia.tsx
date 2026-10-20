@@ -42,14 +42,6 @@ export default function Transparencia() {
   // Sub-abas da Plataforma: 'i_vi' | 'vii' | 'viii'
   const [subAbaPlataforma, setSubAbaPlataforma] = useState<'i_vi' | 'vii' | 'viii'>('i_vi')
 
-  // Filtros da Programação Diária
-  const [filtroDataDiaria, setFiltroDataDiaria] = useState('2026-09-09')
-  const [filtroPontoDiaria, setFiltroPontoDiaria] = useState('Todos os Pontos')
-  const [filtroDiariaAplicado, setFiltroDiariaAplicado] = useState({
-    data: '2026-09-09',
-    ponto: 'Todos os Pontos',
-  })
-
   // Filtros da Programação Mensal
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
   const [filtroMesMensal, setFiltroMesMensal] = useState('Setembro')
@@ -131,67 +123,6 @@ export default function Transparencia() {
       carregarOfertasCessao()
     }
   }, [activePilar, subAbaPlataforma, carregarResumoVII, carregarOfertasCessao])
-
-  // Filtragem da Programação Diária
-  const handleFiltrarDiaria = (e: React.FormEvent) => {
-    e.preventDefault()
-    setFiltroDiariaAplicado({
-      data: filtroDataDiaria,
-      ponto: filtroPontoDiaria,
-    })
-    toast({
-      title: 'Programação diária filtrada',
-      description: `Data: ${filtroDataDiaria} | Ponto: ${filtroPontoDiaria}`,
-    })
-  }
-
-  // Linhas da tabela de Programação Diária com dados reais do sistema da TSB (Trechos 1 e 3)
-  // Fontes oficiais: Informativo de Capacidade Disponível (bol_elet_I_g-cap-disponivel.pdf),
-  // Características Técnicas (bol_ele_-I.f-_caracteristicas-.pdf) e Contrato de Transporte (Capacidade-gasoduto-A.pdf)
-  const linhasDiaria = [
-    {
-      ponto: 'Trecho 1 — Ponto de Recepção Paso de Los Libres / Uruguaiana',
-      tipo: 'Recepção',
-      contratada: '0 (Sem contrato ativo)',
-      programado: '0',
-      realizado: '0',
-      pressao: '25 a 55 (Operacional)',
-    },
-    {
-      ponto: 'Trecho 1 — Ponto de Entrega Uruguaiana (UTE Uruguaiana)',
-      tipo: 'Entrega',
-      contratada: '0 (Sem contrato ativo)',
-      programado: '0',
-      realizado: '0',
-      pressao: '25 a 45 (Operacional)',
-    },
-    {
-      ponto: 'Trecho 3 — Ponto de Recebimento Canoas (Interconexão TBG)',
-      tipo: 'Recepção',
-      contratada: '800.000 (Sulgás)',
-      programado: '800.000',
-      realizado: '800.000',
-      pressao: '20 a 28 (Controlada TBG)',
-    },
-    {
-      ponto: 'Trecho 3 — Ponto de Entrega Triunfo (Polo Petroquímico)',
-      tipo: 'Entrega',
-      contratada: '800.000 (Sulgás)',
-      programado: '800.000',
-      realizado: '800.000',
-      pressao: '20 a 40 (Controlada EMED)',
-    },
-  ]
-
-  const linhasDiariaFiltradas = linhasDiaria.filter((linha) => {
-    if (filtroDiariaAplicado.ponto === 'Todos os Pontos') return true
-    if (filtroDiariaAplicado.ponto.includes('Uruguaiana') && linha.ponto.includes('Uruguaiana'))
-      return true
-    if (filtroDiariaAplicado.ponto.includes('Triunfo') && linha.ponto.includes('Triunfo'))
-      return true
-    if (filtroDiariaAplicado.ponto.includes('Canoas') && linha.ponto.includes('Canoas')) return true
-    return false
-  })
 
   // Submissão do Inciso VII (com período obrigatório)
   const handleSubmeterVII = async (e: React.FormEvent) => {
@@ -425,13 +356,6 @@ export default function Transparencia() {
       {/* PILAR 1: BOLETIM ELETRÔNICO (FORMATO OFICIAL TSB) */}
       {activePilar === 'boletim' && (
         <BoletimEletronico
-          filtroDataDiaria={filtroDataDiaria}
-          setFiltroDataDiaria={setFiltroDataDiaria}
-          filtroPontoDiaria={filtroPontoDiaria}
-          setFiltroPontoDiaria={setFiltroPontoDiaria}
-          filtroDiariaAplicado={filtroDiariaAplicado}
-          handleFiltrarDiaria={handleFiltrarDiaria}
-          linhasDiariaFiltradas={linhasDiariaFiltradas}
           filtroAnoMensal={filtroAnoMensal}
           setFiltroAnoMensal={setFiltroAnoMensal}
           filtroMesMensal={filtroMesMensal}
