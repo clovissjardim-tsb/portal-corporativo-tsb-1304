@@ -9,6 +9,8 @@ import {
   solicitacoesService,
   type SolicitacaoIncisoVII,
   type ResumoPublicoSolicitacao,
+  type ResumoPublicoInstalacao,
+  type ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
 import { cessoesService, type OfertaCessaoIncisoVIII } from '@/services/cessoes'
 import { Radio, Layers } from 'lucide-react'
@@ -28,15 +30,18 @@ export default function Transparencia() {
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
   const [filtroMesMensal, setFiltroMesMensal] = useState('Setembro')
 
-  // Formulário do Inciso VII (com campo Período obrigatório - Art. 10, II)
+  // Formulário do Inciso VII (Arts. 9º e 10 da Res. ANP 11/2016)
   const [formVII, setFormVII] = useState({
     razao_social: '',
     cnpj: '',
     email: '',
-    modalidade: '' as '' | 'Firme Ordinário' | 'Interruptível',
+    modalidade: '' as '' | ModalidadeSolicitacao,
     capacidade: '',
     trecho: '',
+    ponto_recebimento: '',
+    ponto_entrega: '',
     periodo: '',
+    garantias_seguranca_swap: '',
   })
   const [submetendoVII, setSubmetendoVII] = useState(false)
   const [erroFormVII, setErroFormVII] = useState<string | null>(null)
@@ -52,6 +57,7 @@ export default function Transparencia() {
 
   // Resumo público agregado do Inciso VII (Art. 9º, VII - sem dados pessoais)
   const [resumoPublicoVII, setResumoPublicoVII] = useState<ResumoPublicoSolicitacao[]>([])
+  const [resumoInstalacaoVII, setResumoInstalacaoVII] = useState<ResumoPublicoInstalacao[]>([])
   const [carregandoResumoVII, setCarregandoResumoVII] = useState(false)
 
   // Ofertas de Cessão do Inciso VIII
@@ -69,12 +75,16 @@ export default function Transparencia() {
   const [submetendoCessao, setSubmetendoCessao] = useState(false)
   const [erroFormCessao, setErroFormCessao] = useState<string | null>(null)
 
-  // Carregar dados de resumo público do Inciso VII
+  // Carregar dados de resumo público do Inciso VII (Pontos e Instalações de Transporte)
   const carregarResumoVII = useCallback(async () => {
     setCarregandoResumoVII(true)
     try {
-      const dados = await solicitacoesService.obterResumoPublico()
-      setResumoPublicoVII(dados)
+      const [dadosPontos, dadosInstalacoes] = await Promise.all([
+        solicitacoesService.obterResumoPublico(),
+        solicitacoesService.obterResumoPorInstalacao(),
+      ])
+      setResumoPublicoVII(dadosPontos)
+      setResumoInstalacaoVII(dadosInstalacoes)
     } catch {
       // Ignora erro
     } finally {
@@ -115,10 +125,19 @@ export default function Transparencia() {
       !formVII.modalidade ||
       !formVII.capacidade ||
       !formVII.trecho ||
+      !formVII.ponto_recebimento ||
+      !formVII.ponto_entrega ||
       !formVII.periodo
     ) {
       setErroFormVII(
-        'Por favor, preencha todos os campos obrigatórios marcados com *, incluindo o período requisitado.',
+        'Por favor, preencha todos os campos obrigatórios marcados com *, incluindo Pontos de Recebimento e Entrega e o Período.',
+      )
+      return
+    }
+
+    if (formVII.modalidade === 'Troca Operacional' && !formVII.garantias_seguranca_swap.trim()) {
+      setErroFormVII(
+        'Para a modalidade de Troca Operacional (swap), é obrigatório indicar as garantias de segurança e confiabilidade da injeção e retirada (Art. 10, §1º).',
       )
       return
     }
@@ -136,10 +155,16 @@ export default function Transparencia() {
         razao_social: formVII.razao_social.trim(),
         cnpj: formVII.cnpj.trim(),
         email: formVII.email.trim(),
-        modalidade: formVII.modalidade as 'Firme Ordinário' | 'Interruptível',
+        modalidade: formVII.modalidade as ModalidadeSolicitacao,
         capacidade: capacidadeNum,
         trecho: formVII.trecho.trim(),
+        ponto_recebimento: formVII.ponto_recebimento.trim(),
+        ponto_entrega: formVII.ponto_entrega.trim(),
         periodo: formVII.periodo.trim(),
+        garantias_seguranca_swap:
+          formVII.modalidade === 'Troca Operacional'
+            ? formVII.garantias_seguranca_swap.trim()
+            : undefined,
       })
 
       toast({
@@ -155,7 +180,10 @@ export default function Transparencia() {
         modalidade: '',
         capacidade: '',
         trecho: '',
+        ponto_recebimento: '',
+        ponto_entrega: '',
         periodo: '',
+        garantias_seguranca_swap: '',
       })
 
       // Atualiza o resumo agregado e a consulta
@@ -354,6 +382,7 @@ export default function Transparencia() {
           handleVerificarSLA={handleVerificarSLA}
           resultadoConsulta={resultadoConsulta}
           resumoPublicoVII={resumoPublicoVII}
+          resumoInstalacaoVII={resumoInstalacaoVII}
           carregandoResumoVII={carregandoResumoVII}
           carregarResumoVII={carregarResumoVII}
           ofertasCessao={ofertasCessao}

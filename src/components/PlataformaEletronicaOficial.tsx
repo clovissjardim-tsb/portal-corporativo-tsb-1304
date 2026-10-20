@@ -17,7 +17,12 @@ import {
   PlusCircle,
   Layers,
 } from 'lucide-react'
-import type { SolicitacaoIncisoVII, ResumoPublicoSolicitacao } from '@/services/solicitacoes'
+import type {
+  SolicitacaoIncisoVII,
+  ResumoPublicoSolicitacao,
+  ResumoPublicoInstalacao,
+  ModalidadeSolicitacao,
+} from '@/services/solicitacoes'
 import type { OfertaCessaoIncisoVIII } from '@/services/cessoes'
 
 export interface PlataformaEletronicaProps {
@@ -30,20 +35,26 @@ export interface PlataformaEletronicaProps {
     razao_social: string
     cnpj: string
     email: string
-    modalidade: '' | 'Firme Ordinário' | 'Interruptível'
+    modalidade: '' | ModalidadeSolicitacao
     capacidade: string
     trecho: string
+    ponto_recebimento: string
+    ponto_entrega: string
     periodo: string
+    garantias_seguranca_swap: string
   }
   setFormVII: React.Dispatch<
     React.SetStateAction<{
       razao_social: string
       cnpj: string
       email: string
-      modalidade: '' | 'Firme Ordinário' | 'Interruptível'
+      modalidade: '' | ModalidadeSolicitacao
       capacidade: string
       trecho: string
+      ponto_recebimento: string
+      ponto_entrega: string
       periodo: string
+      garantias_seguranca_swap: string
     }>
   >
   submetendoVII: boolean
@@ -63,6 +74,7 @@ export interface PlataformaEletronicaProps {
 
   // Resumo Público Inciso VII
   resumoPublicoVII: ResumoPublicoSolicitacao[]
+  resumoInstalacaoVII?: ResumoPublicoInstalacao[]
   carregandoResumoVII: boolean
   carregarResumoVII: () => void
 
@@ -109,6 +121,7 @@ export default function PlataformaEletronica({
   handleVerificarSLA,
   resultadoConsulta,
   resumoPublicoVII,
+  resumoInstalacaoVII = [],
   carregandoResumoVII,
   carregarResumoVII,
   ofertasCessao,
@@ -495,94 +508,178 @@ export default function PlataformaEletronica({
               </div>
 
               {/* ITEM 1: RESUMO PÚBLICO DAS SOLICITAÇÕES DE ACESSO (Art. 9º, VII - SEM DADOS PESSOAIS / LGPD) */}
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#0a2540] flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-[#059669]" />
-                      Resumo Público das Solicitações de Acesso por Ponto Relevante
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Publicação agregada e anonimizada da demanda solicitada no sistema (Art. 9º,
-                      VII da Resolução ANP nº 11/2016 e conformidade com a LGPD).
-                    </p>
+              {/* BLOCO DUPLO DE RESUMO: POR PONTO RELEVANTE E POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
+              <div className="space-y-6">
+                {/* 1.1 Resumo por Ponto Relevante (Injeção / Retirada) */}
+                <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0a2540] flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                        Resumo Público das Solicitações por Ponto Relevante (Art. 9º, VII)
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Publicação agregada e anonimizada da demanda discriminada por Pontos de
+                        Recebimento e Entrega (Conformidade com LGPD).
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarResumoVII}
+                      disabled={carregandoResumoVII}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoResumoVII ? 'animate-spin' : ''}`}
+                      />
+                      Atualizar
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={carregarResumoVII}
-                    disabled={carregandoResumoVII}
-                    className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
-                  >
-                    <RefreshCw
-                      className={`h-3.5 w-3.5 mr-1.5 ${carregandoResumoVII ? 'animate-spin' : ''}`}
-                    />
-                    Atualizar
-                  </Button>
-                </div>
 
-                <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#0a2540] text-white font-semibold">
-                      <tr>
-                        <th className="p-3 border-r border-slate-700/60">
-                          Ponto / Trecho Relevante
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">Modalidade</th>
-                        <th className="p-3 text-center border-r border-slate-700/60">
-                          Nº de Solicitações
-                        </th>
-                        <th className="p-3 text-right border-r border-slate-700/60">
-                          Capacidade Total Demandada (m³/dia)
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">
-                          Período(s) Requisitado(s)
-                        </th>
-                        <th className="p-3 text-center">Status Predominante</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {resumoPublicoVII.length > 0 ? (
-                        resumoPublicoVII.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3">
-                              <div className="font-semibold text-[#0a2540]">
-                                {item.pontoRelevante}
-                              </div>
-                              <div className="text-[11px] text-slate-500">{item.trecho}</div>
-                            </td>
-                            <td className="p-3">
-                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-800">
-                                {item.modalidade}
-                              </span>
-                            </td>
-                            <td className="p-3 text-center font-bold font-mono">
-                              {item.totalSolicitacoes}
-                            </td>
-                            <td className="p-3 text-right font-mono font-bold text-slate-900">
-                              {item.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
-                            </td>
-                            <td className="p-3 text-slate-700 text-[11px]">
-                              {item.periodosDemandados.join(', ')}
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                {item.statusPredominante}
-                              </span>
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-[#0a2540] text-white font-semibold">
+                        <tr>
+                          <th className="p-3 border-r border-slate-700/60">
+                            Ponto Recebimento (Injeção) ➔ Ponto Entrega (Retirada)
+                          </th>
+                          <th className="p-3 border-r border-slate-700/60">Modalidade</th>
+                          <th className="p-3 text-center border-r border-slate-700/60">
+                            Nº Solicitações
+                          </th>
+                          <th className="p-3 text-right border-r border-slate-700/60">
+                            Capacidade Total Demandada (m³/dia)
+                          </th>
+                          <th className="p-3 border-r border-slate-700/60">
+                            Período(s) Requisitado(s)
+                          </th>
+                          <th className="p-3 text-center">Status Predominante</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {resumoPublicoVII.length > 0 ? (
+                          resumoPublicoVII.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3">
+                                <div className="font-semibold text-[#0a2540]">
+                                  {item.pontoRecebimento} &rarr; {item.pontoEntrega}
+                                </div>
+                                <div className="text-[11px] text-slate-500">{item.trecho}</div>
+                              </td>
+                              <td className="p-3">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                    item.modalidade === 'Troca Operacional'
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : 'bg-slate-100 text-slate-800'
+                                  }`}
+                                >
+                                  {item.modalidade}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center font-bold font-mono">
+                                {item.totalSolicitacoes}
+                              </td>
+                              <td className="p-3 text-right font-mono font-bold text-slate-900">
+                                {item.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
+                              </td>
+                              <td className="p-3 text-slate-700 text-[11px]">
+                                {item.periodosDemandados.join(', ')}
+                              </td>
+                              <td className="p-3 text-center">
+                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                  {item.statusPredominante}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-slate-500">
+                              {carregandoResumoVII
+                                ? 'Consolidando resumo regulatório...'
+                                : 'Nenhuma demanda de acesso registrada até o momento.'}
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={6} className="p-4 text-center text-slate-500">
-                            {carregandoResumoVII
-                              ? 'Consolidando resumo regulatório...'
-                              : 'Nenhuma demanda de acesso registrada até o momento.'}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 1.2 ART. 9º, VII: Resumo por Instalação de Transporte (Trecho 1 e Trecho 3) */}
+                <div className="p-5 bg-[#f8fafc] border border-slate-200 rounded-lg space-y-3">
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-[#0a2540] flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-[#0284c7]" />
+                      Resumo da Demanda por Instalação de Transporte (Trechos 1 e 3)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Capacidade total requerida agregada por duto/trecho físico, sem exibição de
+                      solicitantes (Art. 9º, VII).
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {resumoInstalacaoVII.map((inst, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-3"
+                      >
+                        <div className="flex items-center justify-between border-b pb-2">
+                          <div>
+                            <span className="text-xs font-bold text-[#0284c7] uppercase tracking-wider block">
+                              Instalação de Transporte
+                            </span>
+                            <h4 className="text-base font-bold text-[#0a2540]">
+                              {inst.instalacao}
+                            </h4>
+                          </div>
+                          <Badge className="bg-[#0a2540] text-white text-xs font-mono">
+                            {inst.totalSolicitacoes}{' '}
+                            {inst.totalSolicitacoes === 1 ? 'demanda' : 'demandas'}
+                          </Badge>
+                        </div>
+
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          {inst.descricaoInstalacao}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-md text-xs">
+                          <div>
+                            <span className="text-slate-500 block text-[11px]">
+                              Capacidade Total:
+                            </span>
+                            <strong className="text-base font-bold text-slate-900 font-mono">
+                              {inst.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
+                            </strong>
+                            <span className="text-[10px] text-slate-500 block">m³/dia</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[11px]">Modalidades:</span>
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {inst.modalidadesPresentes.map((m, mIdx) => (
+                                <span
+                                  key={mIdx}
+                                  className="text-[10px] px-1.5 py-0.5 bg-white border border-slate-200 rounded font-medium text-slate-700"
+                                >
+                                  {m}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 flex items-center justify-between pt-1">
+                          <span>
+                            <strong>Períodos:</strong>{' '}
+                            {inst.periodosDemandados.slice(0, 2).join('; ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -664,7 +761,7 @@ export default function PlataformaEletronica({
                         onChange={(e) =>
                           setFormVII({
                             ...formVII,
-                            modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
+                            modalidade: e.target.value as ModalidadeSolicitacao,
                           })
                         }
                         className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
@@ -673,6 +770,83 @@ export default function PlataformaEletronica({
                         <option value="">Selecione a modalidade...</option>
                         <option value="Firme Ordinário">Firme Ordinário</option>
                         <option value="Interruptível">Interruptível</option>
+                        <option value="Troca Operacional">
+                          Troca Operacional (Swap - Art. 10, §1º)
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* ART. 10, IV: CAMPOS SEPARADOS DE PONTOS DE RECEBIMENTO E ENTREGA */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-white border border-slate-200 rounded-md">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="ponto_recebimento"
+                        className="text-xs font-semibold text-slate-700 flex items-center justify-between"
+                      >
+                        <span>Ponto(s) de Recebimento / Interconexão *</span>
+                        <span className="text-[10px] text-emerald-700 font-medium">
+                          Injeção (Entrada)
+                        </span>
+                      </Label>
+                      <select
+                        id="ponto_recebimento"
+                        required
+                        value={formVII.ponto_recebimento}
+                        onChange={(e) => {
+                          const pRec = e.target.value
+                          let trechoSugerido = formVII.trecho
+                          if (pRec.includes('Paso de Los Libres')) {
+                            trechoSugerido = 'Trecho 1 (Gasoduto Uruguaiana)'
+                          } else if (pRec.includes('Canoas')) {
+                            trechoSugerido = 'Trecho 3 (Gasoduto Triunfo)'
+                          }
+                          setFormVII({
+                            ...formVII,
+                            ponto_recebimento: pRec,
+                            trecho: trechoSugerido,
+                          })
+                        }}
+                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                        disabled={submetendoVII}
+                      >
+                        <option value="">Selecione o ponto de injeção...</option>
+                        <option value="Paso de Los Libres (Fronteira Brasil/Argentina)">
+                          Paso de Los Libres (Fronteira Brasil/Argentina)
+                        </option>
+                        <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
+                        <option value="EMED Uruguaiana">EMED Uruguaiana</option>
+                        <option value="EMED Triunfo">EMED Triunfo</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="ponto_entrega"
+                        className="text-xs font-semibold text-slate-700 flex items-center justify-between"
+                      >
+                        <span>Ponto(s) de Entrega / Interconexão *</span>
+                        <span className="text-[10px] text-blue-700 font-medium">
+                          Retirada (Saída)
+                        </span>
+                      </Label>
+                      <select
+                        id="ponto_entrega"
+                        required
+                        value={formVII.ponto_entrega}
+                        onChange={(e) => setFormVII({ ...formVII, ponto_entrega: e.target.value })}
+                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                        disabled={submetendoVII}
+                      >
+                        <option value="">Selecione o ponto de entrega...</option>
+                        <option value="Uruguaiana (UTE Uruguaiana)">
+                          Uruguaiana (UTE Uruguaiana)
+                        </option>
+                        <option value="Triunfo (Polo Petroquímico)">
+                          Triunfo (Polo Petroquímico)
+                        </option>
+                        <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
+                        <option value="Paso de Los Libres">Paso de Los Libres</option>
                       </select>
                     </div>
                   </div>
@@ -697,7 +871,7 @@ export default function PlataformaEletronica({
 
                     <div className="space-y-1.5">
                       <Label htmlFor="trecho" className="text-xs font-semibold text-slate-700">
-                        Trecho de Interesse *
+                        Instalação / Trecho de Transporte *
                       </Label>
                       <select
                         id="trecho"
@@ -708,13 +882,53 @@ export default function PlataformaEletronica({
                         disabled={submetendoVII}
                       >
                         <option value="">Selecione o trecho...</option>
-                        <option value="Uruguaiana -> Triunfo">Uruguaiana -&gt; Triunfo</option>
-                        <option value="EMED Triunfo -> Polo Petroquímico">
-                          EMED Triunfo -&gt; Polo Petroquímico
+                        <option value="Trecho 1 (Gasoduto Uruguaiana)">
+                          Trecho 1 (Gasoduto Uruguaiana - 24")
+                        </option>
+                        <option value="Trecho 3 (Gasoduto Triunfo)">
+                          Trecho 3 (Gasoduto Triunfo - 18")
+                        </option>
+                        <option value="Uruguaiana -> Triunfo (Sistema Completo)">
+                          Uruguaiana -&gt; Triunfo (Sistema Completo TSB)
                         </option>
                       </select>
                     </div>
                   </div>
+
+                  {/* ART. 10, §1º: GARANTIAS DE SEGURANÇA E CONFIABILIDADE QUANDO TROCA OPERACIONAL */}
+                  {formVII.modalidade === 'Troca Operacional' && (
+                    <div className="p-4 bg-purple-50/70 border border-purple-200 rounded-md space-y-2 animate-fade-in">
+                      <Label
+                        htmlFor="garantias_swap"
+                        className="text-xs font-bold text-purple-900 flex items-center justify-between"
+                      >
+                        <span>
+                          Garantias de Segurança e Confiabilidade Operacional (Art. 10, §1º) *
+                        </span>
+                        <span className="text-[10px] text-purple-700 font-medium">
+                          Obrigatório para Troca Operacional
+                        </span>
+                      </Label>
+                      <p className="text-[11px] text-purple-800 leading-relaxed">
+                        Conforme a Resolução ANP nº 11/2016, indique detalhadamente as salvaguardas
+                        e garantias operacionais que asseguram a injeção física no Ponto de
+                        Recebimento e a respectiva retirada no Ponto de Entrega, sem prejuízo à
+                        estabilidade hidráulica do sistema de transporte.
+                      </p>
+                      <textarea
+                        id="garantias_swap"
+                        required
+                        rows={3}
+                        placeholder="Descreva as fontes de suprimento de lastro, comprovação de disponibilidade contratual nos pontos de injeção, planos de contingência operacional e garantias financeiras..."
+                        value={formVII.garantias_seguranca_swap}
+                        onChange={(e) =>
+                          setFormVII({ ...formVII, garantias_seguranca_swap: e.target.value })
+                        }
+                        className="w-full p-2.5 text-xs bg-white border border-purple-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                        disabled={submetendoVII}
+                      />
+                    </div>
+                  )}
 
                   {/* CAMPO PERÍODO OBRIGATÓRIO (Art. 10, Inciso II da Resolução ANP nº 11/2016) */}
                   <div className="space-y-1.5">
@@ -795,8 +1009,16 @@ export default function PlataformaEletronica({
 
                         <div className="text-xs space-y-1.5 text-emerald-900/90 pt-1 border-t border-emerald-200">
                           <div>
-                            <strong>Modalidade / Trecho:</strong>{' '}
-                            {resultadoConsulta.dados.modalidade} | {resultadoConsulta.dados.trecho}
+                            <strong>Modalidade:</strong> {resultadoConsulta.dados.modalidade}
+                          </div>
+                          <div>
+                            <strong>Pontos Regulatórios:</strong>{' '}
+                            {resultadoConsulta.dados.ponto_recebimento || 'Paso de Los Libres'}{' '}
+                            &rarr;{' '}
+                            {resultadoConsulta.dados.ponto_entrega || 'Triunfo (Polo Petroquímico)'}
+                          </div>
+                          <div>
+                            <strong>Instalação / Trecho:</strong> {resultadoConsulta.dados.trecho}
                           </div>
                           <div>
                             <strong>Capacidade Solicitada:</strong>{' '}
@@ -815,14 +1037,86 @@ export default function PlataformaEletronica({
                             </span>
                           </div>
 
+                          {resultadoConsulta.dados.garantias_seguranca_swap && (
+                            <div className="text-purple-900">
+                              <strong>Garantias de Segurança (Swap):</strong>{' '}
+                              {resultadoConsulta.dados.garantias_seguranca_swap}
+                            </div>
+                          )}
+
+                          {/* PARECER FUNDAMENTADO E DETALHAMENTO DO DESFECHO (SEM DADOS PESSOAIS) */}
                           {resultadoConsulta.dados.parecer_fundamentado && (
-                            <div className="mt-3 p-3 bg-white/80 rounded border border-emerald-300">
-                              <span className="font-bold text-emerald-950 block mb-1">
-                                Parecer Técnico-Regulatório Fundamentado (Art. 10, Res. 11/2016):
-                              </span>
+                            <div className="mt-3 p-3.5 bg-white/90 rounded border border-emerald-300 space-y-2">
+                              <div className="flex items-center justify-between flex-wrap gap-1">
+                                <span className="font-bold text-emerald-950 block">
+                                  Parecer Técnico-Regulatório Fundamentado (Art. 10, Res. 11/2016):
+                                </span>
+                                {resultadoConsulta.dados.desfecho_tipo && (
+                                  <Badge className="bg-[#0a2540] text-white text-[10px]">
+                                    {resultadoConsulta.dados.desfecho_tipo === 'CONFIRMACAO' &&
+                                      'Desfecho I - Confirmação'}
+                                    {resultadoConsulta.dados.desfecho_tipo === 'APROFUNDAMENTO' &&
+                                      'Desfecho II - Aprofundamento'}
+                                    {resultadoConsulta.dados.desfecho_tipo === 'NEGATIVA' &&
+                                      'Desfecho III - Negativa'}
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-slate-800 leading-relaxed italic">
                                 &quot;{resultadoConsulta.dados.parecer_fundamentado}&quot;
                               </p>
+
+                              {/* Termos e condições do Desfecho I */}
+                              {resultadoConsulta.dados.termos_condicoes && (
+                                <div className="p-2.5 bg-emerald-50 rounded border border-emerald-200 text-[11px] text-emerald-950">
+                                  <strong>Termos e Condições do Atendimento:</strong>{' '}
+                                  {resultadoConsulta.dados.termos_condicoes}
+                                </div>
+                              )}
+
+                              {/* Condições, escopo, cronograma e custos do Desfecho II */}
+                              {(resultadoConsulta.dados.aprofundamento_condicoes ||
+                                resultadoConsulta.dados.aprofundamento_cronograma) && (
+                                <div className="p-2.5 bg-sky-50 rounded border border-sky-200 text-[11px] text-sky-950 space-y-1">
+                                  <strong>
+                                    Detalhamento do Aprofundamento da Análise (Art. 10, §2º, II):
+                                  </strong>
+                                  {resultadoConsulta.dados.aprofundamento_condicoes && (
+                                    <div>
+                                      • <strong>Condições:</strong>{' '}
+                                      {resultadoConsulta.dados.aprofundamento_condicoes}
+                                    </div>
+                                  )}
+                                  {resultadoConsulta.dados.aprofundamento_escopo && (
+                                    <div>
+                                      • <strong>Escopo:</strong>{' '}
+                                      {resultadoConsulta.dados.aprofundamento_escopo}
+                                    </div>
+                                  )}
+                                  {resultadoConsulta.dados.aprofundamento_cronograma && (
+                                    <div>
+                                      • <strong>Cronograma:</strong>{' '}
+                                      {resultadoConsulta.dados.aprofundamento_cronograma}
+                                    </div>
+                                  )}
+                                  {resultadoConsulta.dados.aprofundamento_custos && (
+                                    <div>
+                                      • <strong>Custos:</strong>{' '}
+                                      {resultadoConsulta.dados.aprofundamento_custos}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Previsão de disponibilidade do Desfecho III */}
+                              {resultadoConsulta.dados.previsao_disponibilidade && (
+                                <div className="p-2.5 bg-red-50 rounded border border-red-200 text-[11px] text-red-950">
+                                  <strong>
+                                    Previsão de Disponibilidade do Serviço (Art. 10, §2º, III):
+                                  </strong>{' '}
+                                  {resultadoConsulta.dados.previsao_disponibilidade}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

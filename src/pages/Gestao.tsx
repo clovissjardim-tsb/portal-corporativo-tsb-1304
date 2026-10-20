@@ -4,11 +4,18 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtime } from '@/hooks/use-realtime'
-import { solicitacoesService, type SolicitacaoIncisoVII } from '@/services/solicitacoes'
+import {
+  solicitacoesService,
+  type SolicitacaoIncisoVII,
+  type DesfechoTipo,
+  type StatusSolicitacao,
+  type ManifestacaoSulgasStatus,
+} from '@/services/solicitacoes'
 import {
   ShieldAlert,
   ShieldCheck,
@@ -18,9 +25,13 @@ import {
   X,
   AlertTriangle,
   RefreshCw,
-  Lock,
   KeyRound,
   FileSignature,
+  Send,
+  Building2,
+  CheckCircle2,
+  AlertCircle,
+  FileCheck,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -31,12 +42,35 @@ export default function Gestao() {
   const [carregando, setCarregando] = useState(true)
   const [itemSelecionado, setItemSelecionado] = useState<SolicitacaoIncisoVII | null>(null)
   const [modalAberto, setModalAberto] = useState(false)
-  const [novoStatus, setNovoStatus] = useState<SolicitacaoIncisoVII['status']>(
-    'Solicitação Recebida - Em Análise Técnica',
+
+  // ART. 10, §2º: Os 3 Desfechos Oficiais Padronizados
+  const [desfechoTipo, setDesfechoTipo] = useState<DesfechoTipo>('CONFIRMACAO')
+  const [novoStatus, setNovoStatus] = useState<StatusSolicitacao>(
+    'Confirmação do Atendimento (Desfecho I)',
   )
   const [parecerFundamentado, setParecerFundamentado] = useState('')
   const [erroParecer, setErroParecer] = useState<string | null>(null)
   const [salvandoStatus, setSalvandoStatus] = useState(false)
+
+  // Campos específicos dos desfechos
+  // Desfecho I: Confirmação com termos e condições
+  const [termosCondicoes, setTermosCondicoes] = useState('')
+  // Desfecho II: Aprofundamento com 4 elementos
+  const [condicoesAprofundamento, setCondicoesAprofundamento] = useState('')
+  const [escopoAprofundamento, setEscopoAprofundamento] = useState('')
+  const [cronogramaAprofundamento, setCronogramaAprofundamento] = useState('')
+  const [custosAprofundamento, setCustosAprofundamento] = useState('')
+  // Desfecho III: Negativa com previsão de disponibilidade
+  const [previsaoDisponibilidade, setPrevisaoDisponibilidade] = useState('')
+
+  // ART. 10, §3º: Cópia à ANP
+  const [copiaAnpDestinatario, setCopiaAnpDestinatario] = useState('acesso.transporte@anp.gov.br')
+
+  // ART. 10, §5º: Manifestação da Concessionária Estadual (Sulgás)
+  const [sulgasStatus, setSulgasStatus] = useState<ManifestacaoSulgasStatus>('Pendente')
+  const [sulgasData, setSulgasData] = useState('')
+  const [sulgasObs, setSulgasObs] = useState('')
+  const [prontoContratacaoTentado, setProntoContratacaoTentado] = useState(false)
 
   // Carregar solicitações do backend
   const carregarSolicitacoes = useCallback(async () => {
@@ -75,46 +109,178 @@ export default function Gestao() {
 
   const abrirModalAnalise = (item: SolicitacaoIncisoVII) => {
     setItemSelecionado(item)
-    setNovoStatus(item.status)
+
+    // Dedução do desfecho tipo inicial
+    let inicialTipo: DesfechoTipo = 'CONFIRMACAO'
+    if (item.desfecho_tipo === 'APROFUNDAMENTO' || item.status.includes('Aprofundamento')) {
+      inicialTipo = 'APROFUNDAMENTO'
+    } else if (
+      item.desfecho_tipo === 'NEGATIVA' ||
+      item.status.includes('Negativa') ||
+      item.status === 'Rejeitada'
+    ) {
+      inicialTipo = 'NEGATIVA'
+    } else if (
+      item.desfecho_tipo === 'CONFIRMACAO' ||
+      item.status === 'Aprovada' ||
+      item.status.includes('Confirmação')
+    ) {
+      inicialTipo = 'CONFIRMACAO'
+    }
+
+    setDesfechoTipo(inicialTipo)
+    setNovoStatus(
+      inicialTipo === 'CONFIRMACAO'
+        ? 'Confirmação do Atendimento (Desfecho I)'
+        : inicialTipo === 'APROFUNDAMENTO'
+          ? 'Aprofundamento da Análise (Desfecho II)'
+          : 'Negativa Fundamentada (Desfecho III)',
+    )
+
     setParecerFundamentado(item.parecer_fundamentado || '')
+    setTermosCondicoes(
+      item.termos_condicoes ||
+        'Atendimento com disponibilidade de capacidade firme/interruptível conforme condições técnicas e tarifárias aprovadas pela ANP para o sistema TSB.',
+    )
+    setCondicoesAprofundamento(
+      item.aprofundamento_condicoes ||
+        'Necessidade de modelagem hidráulica transitória e dimensionamento de reforço na estação de compressão/medição.',
+    )
+    setEscopoAprofundamento(
+      item.aprofundamento_escopo ||
+        'Estudo termo-hidráulico avançado e verificação de integridade operacional para atendimento da curva de vazão solicitada.',
+    )
+    setCronogramaAprofundamento(
+      item.aprofundamento_cronograma || '60 dias úteis para emissão do relatório executivo',
+    )
+    setCustosAprofundamento(
+      item.aprofundamento_custos ||
+        'Custos técnicos de estudo orçados em conformidade com tabela de serviços técnicos da transportadora.',
+    )
+    setPrevisaoDisponibilidade(
+      item.previsao_disponibilidade ||
+        'Indisponibilidade física momentânea. Previsão de nova capacidade mediante expansão planejada do Trecho 2 ou conclusão do próximo ciclo de contratação anual.',
+    )
+
+    setCopiaAnpDestinatario(item.copia_anp_destinatario || 'acesso.transporte@anp.gov.br')
+
+    // Sulgás
+    setSulgasStatus(item.manifestacao_sulgas_status || 'Pendente')
+    setSulgasData(item.manifestacao_sulgas_data || new Date().toISOString().split('T')[0])
+    setSulgasObs(item.manifestacao_sulgas_observacoes || '')
+    setProntoContratacaoTentado(false)
+
     setErroParecer(null)
     setModalAberto(true)
   }
 
-  // ITEM 6: PARECER FUNDAMENTADO OBRIGATÓRIO (Art. 10 da Resolução ANP nº 11/2016)
+  // Sincroniza status conforme o tipo de desfecho
+  const handleMudarDesfecho = (tipo: DesfechoTipo) => {
+    setDesfechoTipo(tipo)
+    if (tipo === 'CONFIRMACAO') {
+      setNovoStatus('Confirmação do Atendimento (Desfecho I)')
+    } else if (tipo === 'APROFUNDAMENTO') {
+      setNovoStatus('Aprofundamento da Análise (Desfecho II)')
+    } else if (tipo === 'NEGATIVA') {
+      setNovoStatus('Negativa Fundamentada (Desfecho III)')
+    }
+  }
+
+  // ART. 10: SALVAMENTO COM VALIDAÇÕES REGULATÓRIAS
   const salvarRespostaAnalise = async () => {
     if (!itemSelecionado) return
 
-    // O parecer técnico deve ser obrigatório, especialmente em negativa ou aprovação
-    if (!parecerFundamentado.trim()) {
+    // 1. Parecer técnico fundamentado obrigatório por escrito (Art. 10)
+    if (!parecerFundamentado.trim() || parecerFundamentado.trim().length < 15) {
       setErroParecer(
-        'O Art. 10 da Resolução ANP nº 11/2016 exige parecer técnico fundamentado por escrito.',
+        'O Art. 10 da Resolução ANP nº 11/2016 exige parecer técnico fundamentado por escrito (mínimo de 15 caracteres).',
       )
       return
     }
 
-    if (parecerFundamentado.trim().length < 15) {
-      setErroParecer('A fundamentação deve conter no mínimo 15 caracteres.')
-      return
+    // 2. Validações por tipo de desfecho
+    if (desfechoTipo === 'CONFIRMACAO') {
+      if (!termosCondicoes.trim()) {
+        setErroParecer(
+          'Para o Desfecho I (Confirmação do Atendimento), é obrigatório indicar os termos e condições regulatórios (Art. 10, §2º, I).',
+        )
+        return
+      }
+
+      // ART. 10, §5º: BLOQUEIO ANTES DA CONTRATAÇÃO SE MANIFESTAÇÃO SULGÁS PENDENTE
+      // Quando o operador confirmar a aprovação definitiva para contratação
+      if (sulgasStatus === 'Pendente' && prontoContratacaoTentado) {
+        setErroParecer(
+          'BLOQUEIO REGULATÓRIO (Art. 10, §5º): Antes da assinatura do contrato ou conclusão para contratação, é obrigatória a formalização da manifestação da distribuidora estadual (Sulgás). Altere o status da manifestação para "Recebida - Favorável" ou informe as ressalvas.',
+        )
+        return
+      }
+    } else if (desfechoTipo === 'APROFUNDAMENTO') {
+      if (
+        !condicoesAprofundamento.trim() ||
+        !escopoAprofundamento.trim() ||
+        !cronogramaAprofundamento.trim() ||
+        !custosAprofundamento.trim()
+      ) {
+        setErroParecer(
+          'Para o Desfecho II (Aprofundamento), é obrigatório preencher as Condições Necessárias, o Escopo, o Cronograma Previsto e os Custos Estimados (Art. 10, §2º, II).',
+        )
+        return
+      }
+    } else if (desfechoTipo === 'NEGATIVA') {
+      if (!previsaoDisponibilidade.trim()) {
+        setErroParecer(
+          'Para o Desfecho III (Negativa), é obrigatório informar por escrito a previsão de quando o serviço estará disponível (Art. 10, §2º, III).',
+        )
+        return
+      }
     }
 
     setSalvandoStatus(true)
     setErroParecer(null)
 
     try {
-      const atualizado = await solicitacoesService.atualizarStatus(
-        itemSelecionado.id,
-        novoStatus,
-        parecerFundamentado.trim(),
-      )
+      const atualizado = await solicitacoesService.atualizarDeliberacao({
+        id: itemSelecionado.id,
+        desfecho_tipo: desfechoTipo,
+        status: novoStatus,
+        parecer_fundamentado: parecerFundamentado.trim(),
+        // I
+        termos_condicoes: desfechoTipo === 'CONFIRMACAO' ? termosCondicoes.trim() : undefined,
+        // II
+        aprofundamento_condicoes:
+          desfechoTipo === 'APROFUNDAMENTO' ? condicoesAprofundamento.trim() : undefined,
+        aprofundamento_escopo:
+          desfechoTipo === 'APROFUNDAMENTO' ? escopoAprofundamento.trim() : undefined,
+        aprofundamento_cronograma:
+          desfechoTipo === 'APROFUNDAMENTO' ? cronogramaAprofundamento.trim() : undefined,
+        aprofundamento_custos:
+          desfechoTipo === 'APROFUNDAMENTO' ? custosAprofundamento.trim() : undefined,
+        // III
+        previsao_disponibilidade:
+          desfechoTipo === 'NEGATIVA' ? previsaoDisponibilidade.trim() : undefined,
+        // Cópia ANP
+        copia_anp_destinatario: copiaAnpDestinatario.trim() || 'acesso.transporte@anp.gov.br',
+        // Sulgás
+        manifestacao_sulgas_status: sulgasStatus,
+        manifestacao_sulgas_data: sulgasData.trim() || undefined,
+        manifestacao_sulgas_observacoes: sulgasObs.trim() || undefined,
+      })
+
       setSolicitacoes((prev) => prev.map((s) => (s.id === atualizado.id ? atualizado : s)))
+
+      const avisoAnp =
+        desfechoTipo === 'APROFUNDAMENTO' || desfechoTipo === 'NEGATIVA'
+          ? ' Cópia regulatória enviada automaticamente à ANP pelo SMTP corporativo (§3º).'
+          : ''
+
       toast({
-        title: 'Parecer e Status Atualizados!',
-        description: `Protocolo ${atualizado.protocolo} registrado com fundamentação técnica.`,
+        title: 'Deliberação e Parecer Concluídos!',
+        description: `Protocolo ${atualizado.protocolo}: ${atualizado.status}.${avisoAnp}`,
       })
       setModalAberto(false)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao atualizar o status.'
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar a deliberação regulatória.'
       toast({
         title: 'Atenção na atualização',
         description:
@@ -138,8 +304,8 @@ export default function Gestao() {
               Gestão Interna de Chamados e SLAs
             </CardTitle>
             <p className="text-xs text-slate-500 mt-0.5">
-              Controle regulatório de conformidade temporal e emissão de pareceres (Art. 10 da
-              Resolução ANP nº 11/2016)
+              Controle regulatório de conformidade temporal, deliberações oficiais e pareceres (Art.
+              10 da Resolução ANP nº 11/2016)
             </p>
           </div>
 
@@ -150,7 +316,6 @@ export default function Gestao() {
                   <ShieldCheck className="h-3.5 w-3.5 mr-1" />
                   Operador Autenticado
                 </Badge>
-                {/* Indicador de 2FA Operacional */}
                 <Badge
                   variant="outline"
                   className="text-[11px] border-slate-300 text-slate-600 hidden sm:inline-flex items-center gap-1"
@@ -195,14 +360,15 @@ export default function Gestao() {
           ) : (
             /* ESTADO AUTENTICADO (DASHBOARD) */
             <div className="space-y-6">
-              {/* Box de aviso sobre parecer fundamentado e 2FA */}
+              {/* Box de aviso sobre os 3 desfechos regulatórios */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <FileSignature className="h-4 w-4 text-[#0284c7] shrink-0" />
                   <span>
-                    <strong>Exigência Regulatória (Art. 10):</strong> Todas as deliberações de
-                    solicitações de acesso devem conter fundamentação técnica por escrito antes de
-                    sua publicação.
+                    <strong>Conformidade Art. 10 (Res. ANP nº 11/2016):</strong> Fila integrada com
+                    os 3 desfechos padronizados (I - Confirmação com termos; II - Aprofundamento com
+                    escopo/custos; III - Negativa fundamentada com previsão de disponibilidade),
+                    cópia automática à ANP (§3º) e checklist de manifestação da Sulgás (§5º).
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-500 whitespace-nowrap">
@@ -234,16 +400,17 @@ export default function Gestao() {
                 </Button>
               </div>
 
-              {/* TABELA DE SOLICITAÇÕES (AMBIENTE RESTRITO - DADOS DO SOLICITANTE) */}
+              {/* TABELA DE SOLICITAÇÕES COM PONTOS SEPARADOS E DESFECHOS */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-3">Protocolo</th>
                       <th className="p-3">Solicitante (Razão / CNPJ)</th>
-                      <th className="p-3">Período Requisitado</th>
-                      <th className="p-3">Status Atual</th>
-                      <th className="p-3">SLA Restante</th>
+                      <th className="p-3">Pontos (Recebimento &rarr; Entrega)</th>
+                      <th className="p-3">Status / Desfecho</th>
+                      <th className="p-3">Sulgás (§5º)</th>
+                      <th className="p-3">SLA</th>
                       <th className="p-3 text-right">Ação</th>
                     </tr>
                   </thead>
@@ -257,31 +424,63 @@ export default function Gestao() {
                           <td className="p-3">
                             <div className="font-semibold text-slate-800">{item.razao_social}</div>
                             <div className="text-[11px] text-slate-500">
-                              CNPJ: {item.cnpj} &bull; {item.modalidade} &bull;{' '}
-                              {item.capacidade?.toLocaleString('pt-BR')} m³/dia
+                              CNPJ: {item.cnpj} &bull;{' '}
+                              <span
+                                className={
+                                  item.modalidade === 'Troca Operacional'
+                                    ? 'text-purple-700 font-semibold'
+                                    : ''
+                                }
+                              >
+                                {item.modalidade}
+                              </span>{' '}
+                              &bull; {item.capacidade?.toLocaleString('pt-BR')} m³/dia
                             </div>
                           </td>
-                          <td className="p-3 text-slate-700">
-                            {item.periodo || (
-                              <span className="text-slate-400 italic">Não informado</span>
-                            )}
+                          <td className="p-3">
+                            <div className="text-slate-800 font-medium">
+                              {item.ponto_recebimento || 'Paso de Los Libres'} &rarr;{' '}
+                              {item.ponto_entrega || 'Triunfo'}
+                            </div>
+                            <div className="text-[10px] text-slate-500">{item.trecho}</div>
                           </td>
                           <td className="p-3">
                             <span
                               className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                                item.status === 'Aprovada'
+                                item.status.includes('Confirmação') || item.status === 'Aprovada'
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : item.status === 'Rejeitada'
+                                  : item.status.includes('Negativa') || item.status === 'Rejeitada'
                                     ? 'bg-red-50 text-red-700 border border-red-200'
-                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : item.status.includes('Aprofundamento')
+                                      ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                      : 'bg-blue-50 text-blue-700 border border-blue-200'
                               }`}
                             >
                               {item.status}
                             </span>
+                            {item.copia_anp_enviada && (
+                              <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1">
+                                <Send className="h-2.5 w-2.5 text-blue-600" />
+                                Cópia ANP enviada
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                item.manifestacao_sulgas_status === 'Recebida - Favoravel'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : item.manifestacao_sulgas_status === 'Recebida - Com Ressalvas'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {item.manifestacao_sulgas_status || 'Pendente'}
+                            </span>
                           </td>
                           <td className="p-3">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#dcfce7] text-[#15803d] border border-emerald-300">
-                              {item.sla_dias || 20} Dias Úteis
+                              {item.sla_dias || 20}d
                             </span>
                           </td>
                           <td className="p-3 text-right">
@@ -290,14 +489,14 @@ export default function Gestao() {
                               onClick={() => abrirModalAnalise(item)}
                               className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-semibold h-7 px-2.5"
                             >
-                              Analisar e Emitir Parecer
+                              Deliberar Parecer
                             </Button>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="p-6 text-center text-slate-500">
+                        <td colSpan={7} className="p-6 text-center text-slate-500">
                           {carregando
                             ? 'Carregando fila de solicitações...'
                             : 'Nenhuma solicitação encontrada no momento.'}
@@ -312,10 +511,10 @@ export default function Gestao() {
         </CardContent>
       </Card>
 
-      {/* MODAL DETALHES E ANÁLISE DA SOLICITAÇÃO COM PARECER FUNDAMENTADO */}
+      {/* MODAL DETALHES E DELIBERAÇÃO COM OS 3 DESFECHOS OFICIAIS (ART. 10, §2º) */}
       {modalAberto && itemSelecionado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-6 space-y-4 border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 relative max-h-[92vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setModalAberto(false)}
@@ -329,13 +528,14 @@ export default function Gestao() {
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold">Análise Regulatória e Emissão de Parecer</h3>
+                <h3 className="text-lg font-bold">Deliberação Regulatória Oficial (Art. 10)</h3>
                 <p className="text-xs text-slate-500 font-mono">
-                  Protocolo: {itemSelecionado.protocolo} (Art. 10 da Res. ANP 11/2016)
+                  Protocolo: {itemSelecionado.protocolo} &bull; Resolução ANP nº 11/2016
                 </p>
               </div>
             </div>
 
+            {/* DADOS CADASTRAIS DA SOLICITAÇÃO (ART. 10, IV) */}
             <div className="p-4 bg-slate-50 rounded-lg border text-xs text-slate-700 space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -350,16 +550,24 @@ export default function Gestao() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-slate-500 block">E-mail:</span>
-                  <strong className="text-slate-900">{itemSelecionado.email}</strong>
+                  <span className="text-slate-500 block">Ponto de Recebimento (Injeção):</span>
+                  <strong className="text-emerald-900 font-semibold">
+                    {itemSelecionado.ponto_recebimento || 'Paso de Los Libres'}
+                  </strong>
                 </div>
+                <div>
+                  <span className="text-slate-500 block">Ponto de Entrega (Retirada):</span>
+                  <strong className="text-blue-900 font-semibold">
+                    {itemSelecionado.ponto_entrega || 'Triunfo (Polo Petroquímico)'}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <span className="text-slate-500 block">Modalidade:</span>
                   <strong className="text-slate-900">{itemSelecionado.modalidade}</strong>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-slate-500 block">Capacidade Solicitada:</span>
                   <strong className="font-mono text-slate-900">
@@ -367,74 +575,361 @@ export default function Gestao() {
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Trecho de Interesse:</span>
+                  <span className="text-slate-500 block">Instalação / Trecho:</span>
                   <strong className="text-slate-900">{itemSelecionado.trecho}</strong>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-slate-500 block">Período Requisitado:</span>
-                  <strong className="text-slate-900">
-                    {itemSelecionado.periodo || 'Não especificado'}
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">SLA Restante:</span>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#dcfce7] text-[#15803d]">
-                    {itemSelecionado.sla_dias || 20} Dias Úteis
+              {/* Se for Swap, exibe garantias do §1º */}
+              {itemSelecionado.garantias_seguranca_swap && (
+                <div className="p-2.5 bg-purple-50 rounded border border-purple-200 mt-1">
+                  <span className="text-purple-900 font-bold block mb-0.5">
+                    Garantias de Segurança e Confiabilidade (Swap - Art. 10, §1º):
                   </span>
+                  <p className="text-purple-950 italic">
+                    &quot;{itemSelecionado.garantias_seguranca_swap}&quot;
+                  </p>
                 </div>
+              )}
+            </div>
+
+            {/* SELEÇÃO DOS 3 DESFECHOS OFICIAIS (ART. 10, §2º) */}
+            <div className="space-y-2 pt-2">
+              <Label className="text-xs font-bold text-slate-800 block">
+                Escolha o Desfecho Oficial da Análise Técnica (Art. 10, §2º da Res. ANP 11/2016):
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleMudarDesfecho('CONFIRMACAO')}
+                  className={`p-3 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                    desfechoTipo === 'CONFIRMACAO'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold shadow-xs'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Desfecho I</span>
+                  </div>
+                  <div className="font-semibold">Confirmação</div>
+                  <div className="text-[10px] font-normal text-slate-500 mt-1">
+                    Atendimento integral com termos e condições.
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleMudarDesfecho('APROFUNDAMENTO')}
+                  className={`p-3 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                    desfechoTipo === 'APROFUNDAMENTO'
+                      ? 'border-sky-600 bg-sky-50 text-sky-950 font-bold shadow-xs'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-sky-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Desfecho II</span>
+                  </div>
+                  <div className="font-semibold">Aprofundamento</div>
+                  <div className="text-[10px] font-normal text-slate-500 mt-1">
+                    Depende de estudos, escopo, cronograma e custos.
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleMudarDesfecho('NEGATIVA')}
+                  className={`p-3 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                    desfechoTipo === 'NEGATIVA'
+                      ? 'border-red-600 bg-red-50 text-red-950 font-bold shadow-xs'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-red-700">
+                    <X className="h-4 w-4" />
+                    <span>Desfecho III</span>
+                  </div>
+                  <div className="font-semibold">Negativa</div>
+                  <div className="text-[10px] font-normal text-slate-500 mt-1">
+                    Recusa fundamentada com previsão de disponibilidade.
+                  </div>
+                </button>
               </div>
             </div>
 
-            {/* SELEÇÃO DE STATUS */}
-            <div className="space-y-1.5 pt-2">
-              <Label htmlFor="statusModal" className="text-xs font-semibold text-slate-700">
-                Deliberação / Status Regulatório:
-              </Label>
-              <select
-                id="statusModal"
-                value={novoStatus}
-                onChange={(e) => setNovoStatus(e.target.value as SolicitacaoIncisoVII['status'])}
-                className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-              >
-                <option value="Solicitação Recebida - Em Análise Técnica">
-                  Solicitação Recebida - Em Análise Técnica
-                </option>
-                <option value="Em Análise Técnica">Em Análise Técnica</option>
-                <option value="Aguardando Documentação">Aguardando Documentação</option>
-                <option value="Aprovada">Aprovada</option>
-                <option value="Rejeitada">Rejeitada (Negativa Fundamentada)</option>
-              </select>
-            </div>
+            {/* CAMPOS ESPECÍFICOS CONFORME O DESFECHO SELECIONADO */}
+            {/* DESFECHO I: TERMOS E CONDIÇÕES */}
+            {desfechoTipo === 'CONFIRMACAO' && (
+              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2 animate-fade-in text-xs">
+                <Label htmlFor="termosCondicoes" className="font-bold text-emerald-950">
+                  Termos e Condições do Atendimento (Art. 10, §2º, I) *
+                </Label>
+                <Textarea
+                  id="termosCondicoes"
+                  required
+                  rows={2}
+                  placeholder="Especifique as condições operacionais, pressão mínima e máxima de entrega, programação e tarifa regulatória..."
+                  value={termosCondicoes}
+                  onChange={(e) => setTermosCondicoes(e.target.value)}
+                  className="bg-white text-xs"
+                />
+              </div>
+            )}
 
-            {/* ITEM 6: CAMPO DE TEXTO DE FUNDAMENTAÇÃO OBRIGATÓRIA */}
+            {/* DESFECHO II: 4 ELEMENTOS OBRIGATÓRIOS DO APROFUNDAMENTO DA ANÁLISE */}
+            {desfechoTipo === 'APROFUNDAMENTO' && (
+              <div className="p-3.5 bg-sky-50/70 border border-sky-200 rounded-lg space-y-3 animate-fade-in text-xs">
+                <span className="font-bold text-sky-950 block">
+                  Exigências do Aprofundamento da Análise (Art. 10, §2º, II):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="condicoesAprof"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      1. Condições Necessárias *
+                    </Label>
+                    <Input
+                      id="condicoesAprof"
+                      required
+                      placeholder="Ex: Reforço nas válvulas reguladoras da EMED"
+                      value={condicoesAprofundamento}
+                      onChange={(e) => setCondicoesAprofundamento(e.target.value)}
+                      className="bg-white text-xs h-8"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="escopoAprof"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      2. Escopo dos Estudos *
+                    </Label>
+                    <Input
+                      id="escopoAprof"
+                      required
+                      placeholder="Ex: Simulação termo-hidráulica em regime transiente"
+                      value={escopoAprofundamento}
+                      onChange={(e) => setEscopoAprofundamento(e.target.value)}
+                      className="bg-white text-xs h-8"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cronogramaAprof"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      3. Cronograma Previsto *
+                    </Label>
+                    <Input
+                      id="cronogramaAprof"
+                      required
+                      placeholder="Ex: 45 dias úteis a partir do aceite"
+                      value={cronogramaAprofundamento}
+                      onChange={(e) => setCronogramaAprofundamento(e.target.value)}
+                      className="bg-white text-xs h-8"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="custosAprof"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      4. Custos Estimados *
+                    </Label>
+                    <Input
+                      id="custosAprof"
+                      required
+                      placeholder="Ex: R$ 38.000,00 (conforme tabela TSB)"
+                      value={custosAprofundamento}
+                      onChange={(e) => setCustosAprofundamento(e.target.value)}
+                      className="bg-white text-xs h-8"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* DESFECHO III: NEGATIVA COM PREVISÃO DE DISPONIBILIDADE */}
+            {desfechoTipo === 'NEGATIVA' && (
+              <div className="p-3.5 bg-red-50/70 border border-red-200 rounded-lg space-y-2 animate-fade-in text-xs">
+                <Label htmlFor="prevDisponibilidade" className="font-bold text-red-950">
+                  Previsão de Quando o Serviço Estará Disponível (Art. 10, §2º, III) *
+                </Label>
+                <Input
+                  id="prevDisponibilidade"
+                  required
+                  placeholder="Ex: Previsão no ciclo de oferta pública do 2º semestre de 2027 ou expansão do Trecho 2..."
+                  value={previsaoDisponibilidade}
+                  onChange={(e) => setPrevisaoDisponibilidade(e.target.value)}
+                  className="bg-white text-xs"
+                />
+              </div>
+            )}
+
+            {/* PARECER TÉCNICO FUNDAMENTADO POR ESCRITO (OBRIGATÓRIO PARA TODOS OS CASOS - ART. 10) */}
             <div className="space-y-1.5">
               <Label
                 htmlFor="parecerTexto"
                 className="text-xs font-semibold text-slate-700 flex items-center justify-between"
               >
-                <span>Parecer Técnico-Regulatório Fundamentado por Escrito *</span>
+                <span>Parecer Técnico-Regulatório Fundamentado por Escrito (Art. 10) *</span>
                 <span className="text-[10px] text-amber-700 font-normal">
-                  {novoStatus === 'Rejeitada'
-                    ? 'Negativa deve ser fundamentada expressamente'
-                    : 'Exigência Art. 10'}
+                  Visível na consulta pública por protocolo (sem dados pessoais)
                 </span>
               </Label>
               <Textarea
                 id="parecerTexto"
                 required
-                rows={4}
-                placeholder="Insira a fundamentação técnica e operacional detalhada (ex.: disponibilidade hidráulica verificada, limitações de pressão nas estações de medição, capacidade ociosa existente ou indisponibilidade no trecho requisitado)..."
+                rows={3}
+                placeholder="Insira a fundamentação técnica e operacional detalhada da TSB..."
                 value={parecerFundamentado}
                 onChange={(e) => setParecerFundamentado(e.target.value)}
                 className="text-xs bg-white resize-y"
               />
-              {erroParecer && (
-                <p className="text-[11px] text-red-600 font-semibold">{erroParecer}</p>
+            </div>
+
+            {/* ART. 10, §3º: CÓPIA AUTOMÁTICA À ANP (QUANDO DESFECHO II OU III) */}
+            {(desfechoTipo === 'APROFUNDAMENTO' || desfechoTipo === 'NEGATIVA') && (
+              <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-lg space-y-1.5 text-xs text-blue-950 animate-fade-in">
+                <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                  <Send className="h-4 w-4 text-blue-700" />
+                  <span>Cópia Oficial à ANP (Art. 10, §3º)</span>
+                </div>
+                <p className="text-[11px] text-blue-800 leading-relaxed">
+                  Conforme exigência do §3º, a TSB encaminhará automaticamente cópia integral desta
+                  decisão à ANP via SMTP corporativo (<code>site@tsb.com.br</code>) com registro nos
+                  logs.
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  <Label
+                    htmlFor="anpDest"
+                    className="text-[11px] font-semibold text-blue-900 shrink-0"
+                  >
+                    Destinatário ANP:
+                  </Label>
+                  <Input
+                    id="anpDest"
+                    value={copiaAnpDestinatario}
+                    onChange={(e) => setCopiaAnpDestinatario(e.target.value)}
+                    className="h-7 text-xs bg-white"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ART. 10, §5º: CHECKLIST DE MANIFESTAÇÃO DA SULGÁS (DISTRIBUIDORA ESTADUAL) */}
+            <div className="p-3.5 bg-amber-50/60 border border-amber-200 rounded-lg space-y-2.5 text-xs">
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <Building2 className="h-4 w-4 text-amber-700" />
+                  <span>Manifestação da Concessionária Estadual - Sulgás (Art. 10, §5º)</span>
+                </div>
+                <Badge
+                  className={`text-[10px] ${
+                    sulgasStatus === 'Recebida - Favoravel'
+                      ? 'bg-emerald-600 text-white'
+                      : sulgasStatus === 'Recebida - Com Ressalvas'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-500 text-white'
+                  }`}
+                >
+                  {sulgasStatus}
+                </Badge>
+              </div>
+
+              <p className="text-[11px] text-amber-900 leading-relaxed">
+                Antes da celebração do contrato de transporte (Art. 10, §5º), deve ser registrada a
+                manifestação da Sulgás sobre a solicitação aprovada. A aprovação não pode avançar
+                para contratação sem essa manifestação formal.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="sulgasStatus"
+                    className="text-[11px] font-semibold text-slate-700"
+                  >
+                    Status da Manifestação da Sulgás *
+                  </Label>
+                  <select
+                    id="sulgasStatus"
+                    value={sulgasStatus}
+                    onChange={(e) => setSulgasStatus(e.target.value as ManifestacaoSulgasStatus)}
+                    className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="Pendente">Pendente de Resposta da Sulgás</option>
+                    <option value="Recebida - Favoravel">Recebida - Favorável sem Ressalvas</option>
+                    <option value="Recebida - Com Ressalvas">
+                      Recebida - Com Ressalvas Técnicas
+                    </option>
+                    <option value="Nao Aplicavel">Não Aplicável</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="sulgasData" className="text-[11px] font-semibold text-slate-700">
+                    Data da Manifestação / Protocolo Sulgás
+                  </Label>
+                  <Input
+                    id="sulgasData"
+                    type="date"
+                    value={sulgasData}
+                    onChange={(e) => setSulgasData(e.target.value)}
+                    className="h-8 text-xs bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="sulgasObs" className="text-[11px] font-semibold text-slate-700">
+                  Observações / Parecer da Sulgás
+                </Label>
+                <Input
+                  id="sulgasObs"
+                  placeholder="Ex: Ofício Sulgás nº 412/2026 atestando conformidade com a malha local..."
+                  value={sulgasObs}
+                  onChange={(e) => setSulgasObs(e.target.value)}
+                  className="h-8 text-xs bg-white"
+                />
+              </div>
+
+              {desfechoTipo === 'CONFIRMACAO' && sulgasStatus === 'Pendente' && (
+                <div className="p-2 bg-amber-100 border border-amber-300 rounded text-[11px] text-amber-900 flex items-center justify-between gap-2">
+                  <span>
+                    Aviso: Enquanto pendente a manifestação da Sulgás, a solicitação pode ser
+                    confirmada tecnicamente, mas fica{' '}
+                    <strong>bloqueada para contratação final</strong>.
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setProntoContratacaoTentado(true)
+                      setErroParecer(
+                        'BLOQUEIO REGULATÓRIO (Art. 10, §5º): Antes da assinatura do contrato ou conclusão para contratação, é obrigatória a formalização da manifestação da Sulgás.',
+                      )
+                    }}
+                    className="text-[10px] h-6 px-2 border-amber-400 bg-white text-amber-900 shrink-0"
+                  >
+                    Testar Bloqueio
+                  </Button>
+                </div>
               )}
             </div>
+
+            {erroParecer && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+                <span>{erroParecer}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t">
               <Button variant="outline" onClick={() => setModalAberto(false)} className="text-xs">
@@ -445,7 +940,14 @@ export default function Gestao() {
                 disabled={salvandoStatus}
                 className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold"
               >
-                {salvandoStatus ? 'Salvando Parecer...' : 'Salvar e Publicar Parecer'}
+                {salvandoStatus ? (
+                  'Salvando Deliberação...'
+                ) : (
+                  <>
+                    <FileCheck className="h-4 w-4 mr-1.5" />
+                    Publicar Deliberação Regulatória
+                  </>
+                )}
               </Button>
             </div>
           </div>

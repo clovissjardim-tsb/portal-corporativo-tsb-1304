@@ -2,9 +2,10 @@
  * Hook para envio de e-mails corporativos TSB via PocketBase / Skip Cloud.
  * NOTA: No JSVM do PocketBase os callbacks rodam em VM isolada, portanto todas as
  * funções auxiliares devem ficar inline dentro de cada handler.
+ * Conforme Arts. 9º e 10 da Resolução ANP nº 11/2016.
  */
 
-// 1. Hook automático após criação de solicitação do Inciso VII
+// 1. Hook automático após criação de solicitação do Inciso VII (e-mail de confirmação ao solicitante)
 onRecordCreate((e) => {
   e.next()
 
@@ -17,6 +18,9 @@ onRecordCreate((e) => {
     const slaDias = record.getInt('sla_dias') || 20
     const modalidade = record.getString('modalidade') || '-'
     const trecho = record.getString('trecho') || '-'
+    const pontoRecebimento = record.getString('ponto_recebimento') || '-'
+    const pontoEntrega = record.getString('ponto_entrega') || '-'
+    const garantiasSwap = record.getString('garantias_seguranca_swap') || ''
     const capacidade = record.getFloat('capacidade') ? String(record.getFloat('capacidade')) : '-'
     const periodo = record.getString('periodo') || '-'
 
@@ -36,6 +40,14 @@ onRecordCreate((e) => {
       $os.getenv('SMTP_FROM_NAME') ||
       e.app.settings().meta.senderName ||
       'TSB - Transportadora Sulbrasileira de Gás'
+
+    const swapRowHtml =
+      modalidade === 'Troca Operacional' && garantiasSwap
+        ? `<tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;vertical-align:top;">Garantias Operacionais (Swap - Art. 10, §1º):</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;line-height:18px;">${garantiasSwap}</td>
+          </tr>`
+        : ''
 
     const htmlBody = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -67,7 +79,7 @@ onRecordCreate((e) => {
           </tr>
           <tr>
             <td style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Protocolo Formal ANP</p>
+              <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Protocolo Formal ANP (Art. 10)</p>
               <h2 style="margin:6px 0 0 0;font-size:26px;color:#0284c7;font-family:'Courier New',Courier,monospace;letter-spacing:1px;font-weight:bold;">${protocolo}</h2>
             </td>
           </tr>
@@ -77,7 +89,7 @@ onRecordCreate((e) => {
                 Prezados representantes da <strong>${razaoSocial}</strong>,
               </p>
               <p style="margin:0 0 20px 0;font-size:14px;line-height:22px;color:#334155;">
-                Confirmamos o recebimento e a autuação formal da sua <strong>Solicitação de Acesso à Capacidade de Transporte Dutoviário</strong> (Art. 9º, Inciso VII da Resolução ANP nº 11/2016) no Portal Corporativo TSB.
+                Confirmamos o recebimento e a autuação formal da sua <strong>Solicitação de Acesso à Capacidade de Transporte Dutoviário</strong> (Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016) no Portal Corporativo TSB.
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;background-color:#f0fdf4;border-left:4px solid #059669;border-radius:0 6px 6px 0;padding:16px;">
                 <tr>
@@ -86,7 +98,7 @@ onRecordCreate((e) => {
                     <p style="margin:4px 0 12px 0;font-size:15px;color:#0f172a;font-weight:600;">${status}</p>
                     <p style="margin:0;font-size:13px;color:#166534;font-weight:bold;">Prazo Regulatório de Resposta (SLA)</p>
                     <p style="margin:4px 0 0 0;font-size:14px;color:#0f172a;">
-                      <strong>${slaDias} dias úteis</strong> a contar desta data, conforme preconiza a Resolução ANP nº 11/2016 e a Lei nº 14.134/2021 (Nova Lei do Gás).
+                      <strong>${slaDias} dias úteis</strong> a contar desta data, conforme preconiza o Art. 10 da Resolução ANP nº 11/2016 e a Lei nº 14.134/2021.
                     </p>
                   </td>
                 </tr>
@@ -94,15 +106,23 @@ onRecordCreate((e) => {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;border:1px solid #e2e8f0;border-radius:6px;border-collapse:collapse;">
                 <tr style="background-color:#f8fafc;">
                   <td colspan="2" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:bold;color:#475569;text-transform:uppercase;">
-                    Resumo Técnico da Solicitação
+                    Resumo Técnico da Solicitação (Art. 10, IV)
                   </td>
                 </tr>
                 <tr>
-                  <td width="40%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Modalidade:</td>
-                  <td width="60%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${modalidade}</td>
+                  <td width="42%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Modalidade:</td>
+                  <td width="58%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${modalidade}</td>
                 </tr>
                 <tr>
-                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Trecho Solicitado:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Ponto de Recebimento (Injeção):</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${pontoRecebimento}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Ponto de Entrega (Retirada):</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${pontoEntrega}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Instalação / Trecho de Transporte:</td>
                   <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${trecho}</td>
                 </tr>
                 <tr>
@@ -110,9 +130,10 @@ onRecordCreate((e) => {
                   <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${capacidade} m³/dia</td>
                 </tr>
                 <tr>
-                  <td style="padding:10px 14px;font-size:13px;color:#64748b;">Período Desejado:</td>
-                  <td style="padding:10px 14px;font-size:13px;color:#0f172a;font-weight:600;">${periodo}</td>
+                  <td style="padding:10px 14px;${swapRowHtml ? 'border-bottom:1px solid #e2e8f0;' : ''}font-size:13px;color:#64748b;">Período Desejado:</td>
+                  <td style="padding:10px 14px;${swapRowHtml ? 'border-bottom:1px solid #e2e8f0;' : ''}font-size:13px;color:#0f172a;font-weight:600;">${periodo}</td>
                 </tr>
+                ${swapRowHtml}
               </table>
               <p style="margin:20px 0 0 0;font-size:13px;line-height:20px;color:#64748b;">
                 A qualquer momento, o andamento da análise de viabilidade técnico-operacional pode ser consultado no Portal de Transparência da TSB utilizando o número deste protocolo.
@@ -153,7 +174,168 @@ onRecordCreate((e) => {
   }
 }, 'solicitacoes_inciso_vii')
 
-// 2. Rota de teste SMTP corporativo
+// 2. Hook de atualização: Dispara e-mail de CÓPIA À ANP quando desfecho for Aprofundamento (II) ou Negativa (III) (Art. 10, §3º)
+onRecordUpdate((e) => {
+  e.next()
+
+  try {
+    const record = e.record
+    const desfechoTipo = record.getString('desfecho_tipo')
+    const status = record.getString('status')
+
+    // Verifica se é desfecho II (APROFUNDAMENTO) ou III (NEGATIVA)
+    const ehAprofundamento = desfechoTipo === 'APROFUNDAMENTO' || status.includes('Aprofundamento')
+    const ehNegativa =
+      desfechoTipo === 'NEGATIVA' || status.includes('Negativa') || status === 'Rejeitada'
+
+    if (!ehAprofundamento && !ehNegativa) {
+      return
+    }
+
+    // Se já foi enviada a cópia anteriormente neste ciclo, evitar reenvio duplicado
+    const jaEnviada = record.getBool('copia_anp_enviada')
+    const originalDesfecho = record.original() ? record.original().getString('desfecho_tipo') : ''
+    const originalStatus = record.original() ? record.original().getString('status') : ''
+
+    // Se já estava com o mesmo desfecho e já tinha enviado, não reenviar
+    if (jaEnviada && originalDesfecho === desfechoTipo && originalStatus === status) {
+      return
+    }
+
+    const protocolo = record.getString('protocolo')
+    const razaoSocial = record.getString('razao_social')
+    const cnpj = record.getString('cnpj')
+    const trecho = record.getString('trecho')
+    const pontoRecebimento = record.getString('ponto_recebimento')
+    const pontoEntrega = record.getString('ponto_entrega')
+    const capacidade = record.getFloat('capacidade')
+    const parecer = record.getString('parecer_fundamentado')
+    const previsaoDisponibilidade = record.getString('previsao_disponibilidade')
+    const condicoes = record.getString('aprofundamento_condicoes')
+    const escopo = record.getString('aprofundamento_escopo')
+    const cronograma = record.getString('aprofundamento_cronograma')
+    const custos = record.getString('aprofundamento_custos')
+
+    const anpDestinatario =
+      record.getString('copia_anp_destinatario') ||
+      $os.getenv('ANP_DESTINATARIO_EMAIL') ||
+      'acesso.transporte@anp.gov.br'
+
+    const senderAddress =
+      $os.getenv('SMTP_FROM_ADDRESS') ||
+      $os.getenv('SMTP_SENDER') ||
+      e.app.settings().meta.senderAddress ||
+      'site@tsb.com.br'
+    const senderName =
+      $os.getenv('SMTP_FROM_NAME') ||
+      e.app.settings().meta.senderName ||
+      'TSB - Transportadora Sulbrasileira de Gás'
+
+    const tituloDecisao = ehAprofundamento
+      ? 'Aprofundamento da Análise (Art. 10, §2º, II)'
+      : 'Negativa Fundamentada (Art. 10, §2º, III)'
+
+    let detalhesHtml = ''
+    if (ehAprofundamento) {
+      detalhesHtml = `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;border:1px solid #cbd5e1;border-radius:6px;border-collapse:collapse;">
+          <tr style="background:#f1f5f9;"><td colspan="2" style="padding:8px 12px;font-weight:bold;font-size:12px;color:#0f172a;">Elementos do Aprofundamento da Análise (§2º, II)</td></tr>
+          <tr><td width="35%" style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">Condições Necessárias:</td><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#0f172a;">${condicoes || 'A serem definidas nos estudos'}</td></tr>
+          <tr><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">Escopo dos Estudos:</td><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#0f172a;">${escopo || 'Avaliação hidráulica e de reforço de infraestrutura'}</td></tr>
+          <tr><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">Cronograma Previsto:</td><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#0f172a;">${cronograma || 'Conforme cronograma técnico TSB'}</td></tr>
+          <tr><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">Custos Estimados:</td><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#0f172a;">${custos || 'A apurar conforme proposta técnica'}</td></tr>
+        </table>`
+    } else {
+      detalhesHtml = `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;border:1px solid #cbd5e1;border-radius:6px;border-collapse:collapse;">
+          <tr style="background:#fef2f2;"><td colspan="2" style="padding:8px 12px;font-weight:bold;font-size:12px;color:#991b1b;">Elementos da Negativa Fundamentada (§2º, III)</td></tr>
+          <tr><td width="35%" style="padding:8px 12px;border-top:1px solid #fee2e2;font-size:12px;color:#64748b;">Previsão de Disponibilidade:</td><td style="padding:8px 12px;border-top:1px solid #fee2e2;font-size:12px;color:#0f172a;font-weight:bold;">${previsaoDisponibilidade || 'Indisponibilidade estrutural / Sem previsão'}</td></tr>
+        </table>`
+    }
+
+    const htmlAnp = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Cópia à ANP - Decisão Inciso VII - Protocolo ${protocolo}</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;background-color:#f1f5f9;margin:0;padding:24px;color:#0f172a;">
+  <div style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;">
+    <div style="background:#0a2540;color:#ffffff;padding:20px 24px;">
+      <h2 style="margin:0;font-size:18px;">TSB - Cópia Regulatória à ANP</h2>
+      <p style="margin:4px 0 0 0;font-size:12px;color:#93c5fd;">Art. 10, §3º da Resolução ANP nº 11/2016 - Notificação Oficial</p>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:13px;line-height:20px;color:#334155;">
+        À <strong>Agência Nacional do Petróleo, Gás Natural e Biocombustíveis - ANP</strong> (Superintendência de Infraestrutura e Movimentação / Transporte),
+      </p>
+      <p style="font-size:13px;line-height:20px;color:#334155;">
+        Em cumprimento ao <strong>Art. 10, §3º da Resolução ANP nº 11/2016</strong>, a Transportadora Sulbrasileira de Gás S.A. (TSB) encaminha cópia da deliberação formal relativa à solicitação de acesso à capacidade dutoviária discriminada a seguir:
+      </p>
+
+      <div style="background:#f8fafc;border-left:4px solid #0284c7;padding:12px 16px;margin:16px 0;">
+        <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;">Protocolo Formal TSB</p>
+        <p style="margin:2px 0 0 0;font-size:18px;font-weight:bold;color:#0284c7;font-family:monospace;">${protocolo}</p>
+        <p style="margin:6px 0 0 0;font-size:13px;color:#0f172a;"><strong>Deliberação:</strong> ${tituloDecisao}</p>
+      </div>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;font-size:12px;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#64748b;width:35%;">Solicitante:</td><td style="padding:6px 0;font-weight:bold;color:#0f172a;">${razaoSocial} (CNPJ: ${cnpj})</td></tr>
+        <tr><td style="padding:6px 0;color:#64748b;">Instalação / Trecho:</td><td style="padding:6px 0;color:#0f172a;">${trecho}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748b;">Recebimento / Entrega:</td><td style="padding:6px 0;color:#0f172a;">${pontoRecebimento} &rarr; ${pontoEntrega}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748b;">Capacidade Requisitada:</td><td style="padding:6px 0;color:#0f172a;">${capacidade} m³/dia</td></tr>
+      </table>
+
+      ${detalhesHtml}
+
+      <div style="margin-top:16px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+        <span style="font-weight:bold;font-size:12px;color:#0f172a;display:block;margin-bottom:4px;">Parecer Técnico Fundamentado da TSB:</span>
+        <p style="margin:0;font-size:12px;line-height:18px;color:#334155;font-style:italic;">&quot;${parecer}&quot;</p>
+      </div>
+
+      <p style="margin:20px 0 0 0;font-size:11px;color:#64748b;line-height:16px;">
+        Este registro foi formalizado no Portal Corporativo TSB e registrado no histórico regulatório em conformidade com o Art. 10 da Res. ANP 11/2016.
+      </p>
+    </div>
+    <div style="background:#0a2540;padding:12px 24px;color:#94a3b8;font-size:11px;">
+      Transportadora Sulbrasileira de Gás S.A. - TSB &bull; Remetente: ${senderAddress}
+    </div>
+  </div>
+</body>
+</html>`
+
+    const message = new MailerMessage({
+      from: {
+        address: senderAddress,
+        name: senderName,
+      },
+      to: [{ address: anpDestinatario }],
+      subject: `[TSB - Regulação ANP] Cópia Oficial Art. 10 §3º - Protocolo ${protocolo} (${tituloDecisao})`,
+      html: htmlAnp,
+    })
+
+    e.app.newMailClient().send(message)
+    console.log(
+      `[SMTP TSB] Cópia à ANP enviada com sucesso para ${anpDestinatario} (Protocolo ${protocolo})`,
+    )
+
+    // Atualiza a flag na base de dados de forma silenciosa via raw query para não disparar loop de hook
+    const agoraIso = new Date().toISOString()
+    e.app
+      .db()
+      .newQuery(
+        'UPDATE solicitacoes_inciso_vii SET copia_anp_enviada = 1, copia_anp_data = {:dt}, copia_anp_destinatario = {:dst} WHERE id = {:id}',
+      )
+      .bind({
+        id: record.id,
+        dt: agoraIso,
+        dst: anpDestinatario,
+      })
+      .execute()
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    console.error(`[SMTP TSB] Falha ao enviar cópia à ANP: ${errMsg}`)
+  }
+}, 'solicitacoes_inciso_vii')
+
+// 3. Rota de teste SMTP corporativo
 routerAdd('POST', '/backend/v1/test-smtp', (c) => {
   let to = 'clovissjardim@gmail.com'
   try {
@@ -222,8 +404,7 @@ routerAdd('POST', '/backend/v1/test-smtp', (c) => {
   }
 })
 
-// 3. Job agendado para teste de inicialização único (opcional/cron)
-// Registra nos logs no boot se o SMTP está habilitado
+// 4. Job agendado para teste de inicialização diário (cron)
 cronAdd('tsb_smtp_status_check', '@daily', (c) => {
   const host = c.app.settings().smtp.host
   const enabled = c.app.settings().smtp.enabled

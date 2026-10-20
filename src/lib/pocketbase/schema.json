@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T00:50:35.604Z",
+  "generatedAt": "2026-10-20T01:09:03.881Z",
   "collections": [
     {
       "name": "users",
@@ -78,7 +78,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["Firme Ordinário", "Interruptível"]
+          "selectValues": ["Firme Ordinário", "Interruptível", "Troca Operacional"]
         },
         {
           "name": "capacidade",
@@ -108,7 +108,10 @@
             "Em Análise Técnica",
             "Aguardando Documentação",
             "Aprovada",
-            "Rejeitada"
+            "Rejeitada",
+            "Confirmação do Atendimento (Desfecho I)",
+            "Aprofundamento da Análise (Desfecho II)",
+            "Negativa Fundamentada (Desfecho III)"
           ]
         },
         {
@@ -139,6 +142,109 @@
         },
         {
           "name": "parecer_fundamentado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_recebimento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_entrega",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantias_seguranca_swap",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "desfecho_tipo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["CONFIRMACAO", "APROFUNDAMENTO", "NEGATIVA"]
+        },
+        {
+          "name": "termos_condicoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aprofundamento_condicoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aprofundamento_escopo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aprofundamento_cronograma",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aprofundamento_custos",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "previsao_disponibilidade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "copia_anp_enviada",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "copia_anp_data",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "copia_anp_destinatario",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "manifestacao_sulgas_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Nao Aplicavel",
+            "Pendente",
+            "Recebida - Favoravel",
+            "Recebida - Com Ressalvas"
+          ]
+        },
+        {
+          "name": "manifestacao_sulgas_data",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "manifestacao_sulgas_observacoes",
           "type": "text",
           "required": false,
           "system": false
