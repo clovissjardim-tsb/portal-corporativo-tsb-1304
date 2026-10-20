@@ -726,27 +726,23 @@ export default function Gestao() {
                         placeholder="Tarifa ex-impostos para 2026, considerando a variação de -1,05% do IGP-M de 2025 (55%) e de 4,26% do IPCA de 2025 (45%):"
                       />
                       <span className="text-[10px] text-slate-500 block">
-                        Nota: A expressão &ldquo;ex-impostos&rdquo; será automaticamente formatada
-                        com{' '}
-                        <u>
-                          <strong>sublinhado e negrito</strong>
-                        </u>
-                        .
+                        Nota: A expressão &ldquo;ex-impostos&rdquo; será automaticamente destacada
+                        em um chip visual harmonioso no card.
                       </span>
                     </div>
 
                     {/* Valores Principais */}
-                    <div className="p-4 bg-red-50/50 border border-red-200 rounded-lg space-y-3">
-                      <span className="text-xs font-bold text-red-900 block">
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                      <span className="text-xs font-bold text-[#0a2540] block">
                         Valores Globais do Contrato
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <Label
                             htmlFor="tarifaMilM3"
-                            className="text-xs font-semibold text-red-900"
+                            className="text-xs font-semibold text-slate-700"
                           >
-                            Valor em Destaque Vermelho (R$/Mil m³) *
+                            Valor Principal da Tarifa (R$/Mil m³) *
                           </Label>
                           <Input
                             id="tarifaMilM3"
@@ -755,7 +751,7 @@ export default function Gestao() {
                             onChange={(e) =>
                               setTarifaForm({ ...tarifaForm, valor_mil_m3: e.target.value })
                             }
-                            className="text-xs font-bold text-red-600 bg-white"
+                            className="text-xs font-bold text-[#0a2540] bg-white"
                             placeholder="59,1750"
                           />
                         </div>
