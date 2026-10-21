@@ -643,23 +643,25 @@ export default function PlataformaEletronica({
               <div className="p-6 sm:p-7 bg-white border-2 border-[#1b4d96]/30 rounded-xl shadow-sm space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-200">
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#e30613] text-white uppercase tracking-wider font-display">
-                        Modelo Regulatório TSB
+                        Inciso VII • Modelo Regulatório TSB
                       </span>
                       <span className="text-[11px] font-semibold text-slate-500">
-                        Resolução ANP nº 11/2016 • Art. 10
+                        Resolução ANP nº 11/2016 • Art. 9º, VII • Art. 10
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-extrabold text-[#0a1d37] font-display">
-                      Solicitação de Acesso Firme, Interruptível ou Troca Operacional (Swap)
+                      Inciso VII — Solicitação de Acesso Firme, Interruptível ou Troca Operacional
+                      (Swap)
                     </h3>
                     <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                      Em cumprimento estrito às exigências regulatórias da ANP e aos protocolos de
-                      segurança da informação e LGPD, a formalização de solicitações de acesso à
-                      capacidade de transporte da TSB adota o modelo misto: download do formulário
-                      oficial padronizado, assinatura física ou digital pelo representante legal e
-                      envio ao canal corporativo oficial.
+                      Em cumprimento estrito às exigências regulatórias do{' '}
+                      <strong>Art. 9º, Inciso VII</strong> e do <strong>Art. 10</strong> da ANP e
+                      aos protocolos de segurança da informação e LGPD, a formalização de
+                      solicitações de acesso à capacidade de transporte da TSB adota o modelo misto:
+                      download do formulário oficial padronizado, assinatura física ou digital pelo
+                      representante legal e envio ao canal corporativo oficial.
                     </p>
                   </div>
 
@@ -947,23 +949,24 @@ export default function PlataformaEletronica({
               <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 rounded-lg space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a1d37] text-white">
-                        Fluxo Oficial • Modelo Misto
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a1d37] text-white font-display">
+                        Inciso VIII • Modelo Regulatório TSB
                       </span>
                       <span className="text-[11px] font-semibold text-slate-500">
-                        Resolução ANP nº 11/2016, Art. 9º, VIII e Art. 10
+                        Resolução ANP nº 11/2016 • Art. 9º, VIII • Art. 10
                       </span>
                     </div>
-                    <h3 className="text-base font-bold text-[#0a1d37] flex items-center gap-2">
+                    <h3 className="text-base font-bold text-[#0a1d37] flex items-center gap-2 font-display">
                       <FileDown className="h-5 w-5 text-[#0284c7]" />
-                      Formulário-Padrão TSB para Comunicação de Cessão de Capacidade
+                      Inciso VIII — Formulário-Padrão TSB para Comunicação de Cessão de Capacidade
                     </h3>
                     <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
-                      A comunicação de cessão é feita mediante formulário-padrão assinado pelo
-                      representante legal, enviado ao canal oficial da TSB; após verificação da
-                      conformidade regulatória pela equipe técnica, a oferta é publicada neste
-                      resumo oficial.
+                      Em cumprimento estrito às exigências regulatórias do{' '}
+                      <strong>Art. 9º, Inciso VIII</strong> da ANP, a comunicação de cessão é feita
+                      mediante formulário-padrão assinado pelo representante legal, enviado ao canal
+                      oficial da TSB; após verificação da conformidade regulatória pela equipe
+                      técnica, a oferta é publicada neste resumo oficial.
                     </p>
                   </div>
 
