@@ -634,7 +634,226 @@ routerAdd('POST', '/backend/v1/test-smtp', (c) => {
   }
 })
 
-// 4. Job agendado para teste de inicialização diário (cron)
+// 4. Rotas Públicas LGPD-compliant para o Portal de Transparência (Incisos VII e VIII)
+// Estas rotas expõem exclusivamente dados operacionais agregados, SUPRIMINDO
+// dados pessoais (e-mail, telefone, CPF, nome de pessoa física) em ambiente público.
+
+// 4.1 Ofertas Ativas de Cessão de Capacidade (Inciso VIII) - Sem e-mail / sem dados pessoais
+routerAdd('GET', '/backend/v1/public/ofertas-cessao', (c) => {
+  try {
+    const records = c.app.findRecordsByFilter('ofertas_cessao_inciso_viii', '', '-created', 200, 0)
+
+    const sanitizadas = records.map((r) => {
+      // Gerador de identificador referencial da oferta (ex: CES-2026-N7S7)
+      const refId = 'CES-' + r.id.substring(0, 8).toUpperCase()
+      return {
+        id: r.id,
+        referencia: refId,
+        cedente: r.getString('cedente'),
+        trecho: r.getString('trecho'),
+        capacidade_ociosa: r.getFloat('capacidade_ociosa'),
+        periodo_contratual: r.getString('periodo_contratual'),
+        observacoes: r.getString('observacoes'),
+        status: r.getString('status') || 'Disponível',
+        created: r.getString('created'),
+      }
+    })
+
+    return c.json(200, sanitizadas)
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    return c.json(500, { error: errMsg })
+  }
+})
+
+// 4.2 Resumo Agregado por Ponto Relevante (Inciso VII) - Sem Razão Social individual, sem e-mail, sem CNPJ
+routerAdd('GET', '/backend/v1/public/solicitacoes-resumo', (c) => {
+  try {
+    const records = c.app.findRecordsByFilter('solicitacoes_inciso_vii', '', '-created', 500, 0)
+
+    const grupos = {}
+    for (const r of records) {
+      const pRec = r.getString('ponto_recebimento') || 'Paso de Los Libres'
+      const pEnt = r.getString('ponto_entrega') || 'Triunfo (Polo Petroquímico)'
+      const mod = r.getString('modalidade') || 'Firme Ordinário'
+      const chave = pRec + '__' + pEnt + '__' + mod
+
+      if (!grupos[chave]) {
+        grupos[chave] = []
+      }
+      grupos[chave].push(r)
+    }
+
+    const resultado = []
+    for (const chave in grupos) {
+      const itens = grupos[chave]
+      const primeiro = itens[0]
+      const pRec = primeiro.getString('ponto_recebimento') || 'Paso de Los Libres'
+      const pEnt = primeiro.getString('ponto_entrega') || 'Triunfo (Polo Petroquímico)'
+      const trecho = primeiro.getString('trecho')
+      const modalidade = primeiro.getString('modalidade')
+      const totalSolicitacoes = itens.length
+
+      let capacidadeTotal = 0
+      const periodosSet = {}
+      for (const item of itens) {
+        capacidadeTotal += item.getFloat('capacidade') || 0
+        const p = item.getString('periodo')
+        if (p) periodosSet[p] = true
+      }
+
+      const periodosDemandados = Object.keys(periodosSet)
+
+      resultado.push({
+        pontoRelevante: pRec + ' ➔ ' + pEnt,
+        pontoRecebimento: pRec,
+        pontoEntrega: pEnt,
+        trecho: trecho,
+        modalidade: modalidade,
+        totalSolicitacoes: totalSolicitacoes,
+        capacidadeTotalSolicitada: capacidadeTotal,
+        statusPredominante: primeiro.getString('status'),
+        periodosDemandados:
+          periodosDemandados.length > 0 ? periodosDemandados : ['Conforme Edital/Acordo'],
+      })
+    }
+
+    return c.json(200, resultado)
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    return c.json(500, { error: errMsg })
+  }
+})
+
+// 4.3 Resumo Agregado por Instalação de Transporte (Inciso VII) - Sem dados pessoais
+routerAdd('GET', '/backend/v1/public/solicitacoes-instalacao', (c) => {
+  try {
+    const records = c.app.findRecordsByFilter('solicitacoes_inciso_vii', '', '-created', 500, 0)
+
+    const mapa = {
+      'Trecho 1': [],
+      'Trecho 3': [],
+      'Outras Instalações': [],
+    }
+
+    for (const r of records) {
+      const t = (r.getString('trecho') || '').toLowerCase()
+      const pRec = (r.getString('ponto_recebimento') || '').toLowerCase()
+      const pEnt = (r.getString('ponto_entrega') || '').toLowerCase()
+
+      if (
+        t.indexOf('trecho 1') !== -1 ||
+        t.indexOf('uruguaiana') !== -1 ||
+        pRec.indexOf('libres') !== -1 ||
+        pRec.indexOf('uruguaiana') !== -1 ||
+        pEnt.indexOf('ute uruguaiana') !== -1
+      ) {
+        mapa['Trecho 1'].push(r)
+      } else if (
+        t.indexOf('trecho 3') !== -1 ||
+        t.indexOf('triunfo') !== -1 ||
+        pRec.indexOf('canoas') !== -1 ||
+        pEnt.indexOf('triunfo') !== -1 ||
+        pEnt.indexOf('polo') !== -1
+      ) {
+        mapa['Trecho 3'].push(r)
+      } else {
+        mapa['Outras Instalações'].push(r)
+      }
+    }
+
+    const descricoes = {
+      'Trecho 1':
+        'Gasoduto Uruguaiana (Extensão: 25 km, Diâmetro: 24", Paso de Los Libres ⇄ UTE Uruguaiana)',
+      'Trecho 3':
+        'Gasoduto Triunfo (Extensão: 25 km, Diâmetro: 18", Interconexão TBG Canoas ⇄ Polo Petroquímico de Triunfo)',
+      'Outras Instalações': 'Trecho 2 Planejado e Interconexões Complementares',
+    }
+
+    const keys = ['Trecho 1', 'Trecho 3', 'Outras Instalações']
+    const resultado = []
+
+    for (const key of keys) {
+      const itens = mapa[key]
+      if (itens.length === 0 && key === 'Outras Instalações') continue
+
+      let capacidadeTotal = 0
+      const modalidadesSet = {}
+      const periodosSet = {}
+
+      for (const item of itens) {
+        capacidadeTotal += item.getFloat('capacidade') || 0
+        const m = item.getString('modalidade')
+        if (m) modalidadesSet[m] = true
+        const p = item.getString('periodo')
+        if (p) periodosSet[p] = true
+      }
+
+      const mods = Object.keys(modalidadesSet)
+      const pers = Object.keys(periodosSet)
+
+      resultado.push({
+        instalacao: key,
+        descricaoInstalacao: descricoes[key],
+        totalSolicitacoes: itens.length,
+        capacidadeTotalSolicitada: capacidadeTotal,
+        modalidadesPresentes: mods.length > 0 ? mods : ['Nenhuma solicitação ativa'],
+        statusPredominante:
+          itens.length > 0 ? itens[0].getString('status') : 'Disponível para Solicitações',
+        periodosDemandados: pers.length > 0 ? pers : ['Conforme Demanda / Planejamento'],
+      })
+    }
+
+    return c.json(200, resultado)
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    return c.json(500, { error: errMsg })
+  }
+})
+
+// 4.4 Consulta de Parecer / SLA por Protocolo (Inciso VII) - Sem e-mail, sem dados pessoais
+routerAdd('GET', '/backend/v1/public/consulta-protocolo/{protocolo}', (c) => {
+  try {
+    const protocolo = c.request.pathValue('protocolo')
+    if (!protocolo) {
+      return c.json(400, { error: 'Protocolo é obrigatório' })
+    }
+
+    const record = c.app.findFirstRecordByData('solicitacoes_inciso_vii', 'protocolo', protocolo)
+    if (!record) {
+      return c.json(404, { error: 'Protocolo não localizado' })
+    }
+
+    // Retorna APENAS dados técnico-operacionais regulatórios, omitindo estritamente
+    // e-mail, telefone, CPF, representantes e dados pessoais (LGPD).
+    return c.json(200, {
+      id: record.id,
+      protocolo: record.getString('protocolo'),
+      modalidade: record.getString('modalidade'),
+      capacidade: record.getFloat('capacidade'),
+      trecho: record.getString('trecho'),
+      ponto_recebimento: record.getString('ponto_recebimento'),
+      ponto_entrega: record.getString('ponto_entrega'),
+      periodo: record.getString('periodo'),
+      status: record.getString('status'),
+      sla_dias: record.getInt('sla_dias'),
+      garantias_seguranca_swap: record.getString('garantias_seguranca_swap'),
+      desfecho_tipo: record.getString('desfecho_tipo'),
+      parecer_fundamentado: record.getString('parecer_fundamentado'),
+      termos_condicoes: record.getString('termos_condicoes'),
+      aprofundamento_condicoes: record.getString('aprofundamento_condicoes'),
+      aprofundamento_escopo: record.getString('aprofundamento_escopo'),
+      aprofundamento_cronograma: record.getString('aprofundamento_cronograma'),
+      aprofundamento_custos: record.getString('aprofundamento_custos'),
+      previsao_disponibilidade: record.getString('previsao_disponibilidade'),
+      created: record.getString('created'),
+    })
+  } catch (err) {
+    return c.json(404, { error: 'Protocolo não localizado' })
+  }
+})
+
+// 5. Job agendado para teste de inicialização diário (cron)
 cronAdd('tsb_smtp_status_check', '@daily', (c) => {
   const host = c.app.settings().smtp.host
   const enabled = c.app.settings().smtp.enabled

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T14:23:04.510Z",
+  "generatedAt": "2026-10-21T15:22:27.402Z",
   "collections": [
     {
       "name": "users",
@@ -78,11 +78,11 @@
       "name": "solicitacoes_inciso_vii",
       "type": "base",
       "apiRules": {
-        "list": "",
-        "view": "",
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
         "create": "",
         "update": "@request.auth.id != ''",
-        "delete": null
+        "delete": "@request.auth.id != ''"
       },
       "fields": [
         {
@@ -289,8 +289,8 @@
       "name": "ofertas_cessao_inciso_viii",
       "type": "base",
       "apiRules": {
-        "list": "",
-        "view": "",
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
         "create": "",
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"

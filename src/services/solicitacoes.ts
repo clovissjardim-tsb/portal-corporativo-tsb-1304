@@ -179,9 +179,26 @@ export const solicitacoesService = {
     })
   },
 
+  /**
+   * Consulta pública por protocolo (Inciso VII).
+   * 100% LGPD-compliant: consome rota do backend que retorna exclusivamente os dados
+   * regulatórios e o parecer fundamentado, omitindo e-mail, telefone e dados de contato.
+   */
   async buscarPorProtocolo(protocolo: string): Promise<SolicitacaoIncisoVII | null> {
+    const cleanProto = protocolo.trim().toUpperCase()
     try {
-      const cleanProto = protocolo.trim().toUpperCase()
+      const res = await fetch(
+        `${pb.baseUrl}/backend/v1/public/consulta-protocolo/${encodeURIComponent(cleanProto)}`,
+      )
+      if (res.ok) {
+        const data = await res.json()
+        return data as SolicitacaoIncisoVII
+      }
+    } catch {
+      // Fallback
+    }
+
+    try {
       const record = await pb
         .collection<SolicitacaoIncisoVII>('solicitacoes_inciso_vii')
         .getFirstListItem(`protocolo = "${cleanProto}"`)
@@ -230,44 +247,57 @@ export const solicitacoesService = {
    * 100% em conformidade com a LGPD: suprime Razão Social, CNPJ e e-mails de solicitantes.
    */
   async obterResumoPublico(): Promise<ResumoPublicoSolicitacao[]> {
-    const lista = await this.listar()
-
-    // Agrupar por pontos e modalidade
-    const grupos: Record<string, SolicitacaoIncisoVII[]> = {}
-
-    for (const item of lista) {
-      const pRec = item.ponto_recebimento || 'Paso de Los Libres'
-      const pEnt = item.ponto_entrega || 'Triunfo (Polo Petroquímico)'
-      const chave = `${pRec}__${pEnt}__${item.modalidade}`
-      if (!grupos[chave]) {
-        grupos[chave] = []
+    try {
+      const res = await fetch(`${pb.baseUrl}/backend/v1/public/solicitacoes-resumo`)
+      if (res.ok) {
+        return (await res.json()) as ResumoPublicoSolicitacao[]
       }
-      grupos[chave].push(item)
+    } catch {
+      // Fallback
     }
 
-    const resumo: ResumoPublicoSolicitacao[] = Object.entries(grupos).map(([_, itens]) => {
-      const primeiro = itens[0]
-      const pRec = primeiro.ponto_recebimento || 'Paso de Los Libres'
-      const pEnt = primeiro.ponto_entrega || 'Triunfo (Polo Petroquímico)'
-      const capacidadeTotal = itens.reduce((acc, curr) => acc + (Number(curr.capacidade) || 0), 0)
-      const periodos = Array.from(
-        new Set(itens.map((i) => i.periodo).filter((p): p is string => Boolean(p))),
-      )
+    try {
+      const lista = await this.listar()
 
-      return {
-        pontoRelevante: `${pRec} ➔ ${pEnt}`,
-        pontoRecebimento: pRec,
-        pontoEntrega: pEnt,
-        trecho: primeiro.trecho,
-        modalidade: primeiro.modalidade,
-        totalSolicitacoes: itens.length,
-        capacidadeTotalSolicitada: capacidadeTotal,
-        statusPredominante: itens[0].status,
-        periodosDemandados: periodos.length > 0 ? periodos : ['Conforme Edital/Acordo'],
+      // Agrupar por pontos e modalidade
+      const grupos: Record<string, SolicitacaoIncisoVII[]> = {}
+
+      for (const item of lista) {
+        const pRec = item.ponto_recebimento || 'Paso de Los Libres'
+        const pEnt = item.ponto_entrega || 'Triunfo (Polo Petroquímico)'
+        const chave = `${pRec}__${pEnt}__${item.modalidade}`
+        if (!grupos[chave]) {
+          grupos[chave] = []
+        }
+        grupos[chave].push(item)
       }
-    })
 
-    return resumo
+      const resumo: ResumoPublicoSolicitacao[] = Object.entries(grupos).map(([_, itens]) => {
+        const primeiro = itens[0]
+        const pRec = primeiro.ponto_recebimento || 'Paso de Los Libres'
+        const pEnt = primeiro.ponto_entrega || 'Triunfo (Polo Petroquímico)'
+        const capacidadeTotal = itens.reduce((acc, curr) => acc + (Number(curr.capacidade) || 0), 0)
+        const periodos = Array.from(
+          new Set(itens.map((i) => i.periodo).filter((p): p is string => Boolean(p))),
+        )
+
+        return {
+          pontoRelevante: `${pRec} ➔ ${pEnt}`,
+          pontoRecebimento: pRec,
+          pontoEntrega: pEnt,
+          trecho: primeiro.trecho,
+          modalidade: primeiro.modalidade,
+          totalSolicitacoes: itens.length,
+          capacidadeTotalSolicitada: capacidadeTotal,
+          statusPredominante: itens[0].status,
+          periodosDemandados: periodos.length > 0 ? periodos : ['Conforme Edital/Acordo'],
+        }
+      })
+
+      return resumo
+    } catch {
+      return []
+    }
   },
 
   /**
@@ -275,75 +305,89 @@ export const solicitacoesService = {
    * Sem dados pessoais (LGPD).
    */
   async obterResumoPorInstalacao(): Promise<ResumoPublicoInstalacao[]> {
-    const lista = await this.listar()
-
-    const mapa: {
-      'Trecho 1': SolicitacaoIncisoVII[]
-      'Trecho 3': SolicitacaoIncisoVII[]
-      'Outras Instalações': SolicitacaoIncisoVII[]
-    } = {
-      'Trecho 1': [],
-      'Trecho 3': [],
-      'Outras Instalações': [],
-    }
-
-    for (const item of lista) {
-      const t = (item.trecho || '').toLowerCase()
-      const pRec = (item.ponto_recebimento || '').toLowerCase()
-      const pEnt = (item.ponto_entrega || '').toLowerCase()
-
-      if (
-        t.includes('trecho 1') ||
-        t.includes('uruguaiana') ||
-        pRec.includes('libres') ||
-        pRec.includes('uruguaiana') ||
-        pEnt.includes('ute uruguaiana')
-      ) {
-        mapa['Trecho 1'].push(item)
-      } else if (
-        t.includes('trecho 3') ||
-        t.includes('triunfo') ||
-        pRec.includes('canoas') ||
-        pEnt.includes('triunfo') ||
-        pEnt.includes('polo')
-      ) {
-        mapa['Trecho 3'].push(item)
-      } else {
-        mapa['Outras Instalações'].push(item)
+    try {
+      const res = await fetch(`${pb.baseUrl}/backend/v1/public/solicitacoes-instalacao`)
+      if (res.ok) {
+        return (await res.json()) as ResumoPublicoInstalacao[]
       }
+    } catch {
+      // Fallback
     }
 
-    const descricoes: Record<keyof typeof mapa, string> = {
-      'Trecho 1':
-        'Gasoduto Uruguaiana (Extensão: 25 km, Diâmetro: 24", Paso de Los Libres ⇄ UTE Uruguaiana)',
-      'Trecho 3':
-        'Gasoduto Triunfo (Extensão: 25 km, Diâmetro: 18", Interconexão TBG Canoas ⇄ Polo Petroquímico de Triunfo)',
-      'Outras Instalações': 'Trecho 2 Planejado e Interconexões Complementares',
+    try {
+      const lista = await this.listar()
+
+      const mapa: {
+        'Trecho 1': SolicitacaoIncisoVII[]
+        'Trecho 3': SolicitacaoIncisoVII[]
+        'Outras Instalações': SolicitacaoIncisoVII[]
+      } = {
+        'Trecho 1': [],
+        'Trecho 3': [],
+        'Outras Instalações': [],
+      }
+
+      for (const item of lista) {
+        const t = (item.trecho || '').toLowerCase()
+        const pRec = (item.ponto_recebimento || '').toLowerCase()
+        const pEnt = (item.ponto_entrega || '').toLowerCase()
+
+        if (
+          t.includes('trecho 1') ||
+          t.includes('uruguaiana') ||
+          pRec.includes('libres') ||
+          pRec.includes('uruguaiana') ||
+          pEnt.includes('ute uruguaiana')
+        ) {
+          mapa['Trecho 1'].push(item)
+        } else if (
+          t.includes('trecho 3') ||
+          t.includes('triunfo') ||
+          pRec.includes('canoas') ||
+          pEnt.includes('triunfo') ||
+          pEnt.includes('polo')
+        ) {
+          mapa['Trecho 3'].push(item)
+        } else {
+          mapa['Outras Instalações'].push(item)
+        }
+      }
+
+      const descricoes: Record<keyof typeof mapa, string> = {
+        'Trecho 1':
+          'Gasoduto Uruguaiana (Extensão: 25 km, Diâmetro: 24", Paso de Los Libres ⇄ UTE Uruguaiana)',
+        'Trecho 3':
+          'Gasoduto Triunfo (Extensão: 25 km, Diâmetro: 18", Interconexão TBG Canoas ⇄ Polo Petroquímico de Triunfo)',
+        'Outras Instalações': 'Trecho 2 Planejado e Interconexões Complementares',
+      }
+
+      const resultado: ResumoPublicoInstalacao[] = []
+
+      for (const key of ['Trecho 1', 'Trecho 3', 'Outras Instalações'] as (keyof typeof mapa)[]) {
+        const itens = mapa[key]
+        if (itens.length === 0 && key === 'Outras Instalações') continue
+
+        const capacidadeTotal = itens.reduce((acc, curr) => acc + (Number(curr.capacidade) || 0), 0)
+        const modalidades = Array.from(new Set(itens.map((i) => i.modalidade)))
+        const periodos = Array.from(
+          new Set(itens.map((i) => i.periodo).filter((p): p is string => Boolean(p))),
+        )
+
+        resultado.push({
+          instalacao: key,
+          descricaoInstalacao: descricoes[key],
+          totalSolicitacoes: itens.length,
+          capacidadeTotalSolicitada: capacidadeTotal,
+          modalidadesPresentes:
+            modalidades.length > 0 ? modalidades : ['Nenhuma solicitação ativa'],
+          statusPredominante: itens.length > 0 ? itens[0].status : 'Disponível para Solicitações',
+          periodosDemandados: periodos.length > 0 ? periodos : ['Conforme Demanda / Planejamento'],
+        })
+      }
+
+      return resultado
+    } catch {
+      return []
     }
-
-    const resultado: ResumoPublicoInstalacao[] = []
-
-    for (const key of ['Trecho 1', 'Trecho 3', 'Outras Instalações'] as (keyof typeof mapa)[]) {
-      const itens = mapa[key]
-      if (itens.length === 0 && key === 'Outras Instalações') continue
-
-      const capacidadeTotal = itens.reduce((acc, curr) => acc + (Number(curr.capacidade) || 0), 0)
-      const modalidades = Array.from(new Set(itens.map((i) => i.modalidade)))
-      const periodos = Array.from(
-        new Set(itens.map((i) => i.periodo).filter((p): p is string => Boolean(p))),
-      )
-
-      resultado.push({
-        instalacao: key,
-        descricaoInstalacao: descricoes[key],
-        totalSolicitacoes: itens.length,
-        capacidadeTotalSolicitada: capacidadeTotal,
-        modalidadesPresentes: modalidades.length > 0 ? modalidades : ['Nenhuma solicitação ativa'],
-        statusPredominante: itens.length > 0 ? itens[0].status : 'Disponível para Solicitações',
-        periodosDemandados: periodos.length > 0 ? periodos : ['Conforme Demanda / Planejamento'],
-      })
-    }
-
-    return resultado
   },
 }

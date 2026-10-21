@@ -12,7 +12,7 @@ import {
   type ResumoPublicoInstalacao,
   type ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
-import { cessoesService, type OfertaCessaoIncisoVIII } from '@/services/cessoes'
+import { cessoesService, type OfertaCessaoPublica } from '@/services/cessoes'
 import { Radio, Layers } from 'lucide-react'
 import BoletimEletronico from '@/components/BoletimEletronicoOficial'
 import PlataformaEletronica from '@/components/PlataformaEletronicaOficial'
@@ -60,8 +60,8 @@ export default function Transparencia() {
   const [resumoInstalacaoVII, setResumoInstalacaoVII] = useState<ResumoPublicoInstalacao[]>([])
   const [carregandoResumoVII, setCarregandoResumoVII] = useState(false)
 
-  // Ofertas de Cessão do Inciso VIII
-  const [ofertasCessao, setOfertasCessao] = useState<OfertaCessaoIncisoVIII[]>([])
+  // Ofertas de Cessão do Inciso VIII (Públicas, sem e-mail/contato pessoal)
+  const [ofertasCessao, setOfertasCessao] = useState<OfertaCessaoPublica[]>([])
   const [carregandoCessoes, setCarregandoCessoes] = useState(false)
   const [mostrarFormCessao, setMostrarFormCessao] = useState(false)
   const [formCessao, setFormCessao] = useState({
@@ -92,11 +92,11 @@ export default function Transparencia() {
     }
   }, [])
 
-  // Carregar ofertas de cessão do Inciso VIII
+  // Carregar ofertas de cessão do Inciso VIII (dados públicos higienizados pela LGPD)
   const carregarOfertasCessao = useCallback(async () => {
     setCarregandoCessoes(true)
     try {
-      const lista = await cessoesService.listar()
+      const lista = await cessoesService.listarPublico()
       setOfertasCessao(lista)
     } catch {
       // Ignora erro

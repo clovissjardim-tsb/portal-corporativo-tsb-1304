@@ -30,7 +30,7 @@ import type {
   ResumoPublicoInstalacao,
   ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
-import type { OfertaCessaoIncisoVIII } from '@/services/cessoes'
+import type { OfertaCessaoPublica } from '@/services/cessoes'
 
 export interface PlataformaEletronicaProps {
   // Sub-abas
@@ -86,7 +86,7 @@ export interface PlataformaEletronicaProps {
   carregarResumoVII: () => void
 
   // Inciso VIII
-  ofertasCessao: OfertaCessaoIncisoVIII[]
+  ofertasCessao: OfertaCessaoPublica[]
   carregandoCessoes: boolean
   carregarOfertasCessao: () => void
   mostrarFormCessao: boolean
@@ -1533,9 +1533,12 @@ export default function PlataformaEletronica({
                       <div className="space-y-1.5">
                         <Label
                           htmlFor="contatoCessao"
-                          className="text-xs font-semibold text-slate-700"
+                          className="text-xs font-semibold text-slate-700 flex items-center justify-between"
                         >
-                          Contato Comercial *
+                          <span>Contato Comercial *</span>
+                          <span className="text-[10px] text-emerald-700 font-semibold">
+                            Sigilo LGPD
+                          </span>
                         </Label>
                         <Input
                           id="contatoCessao"
@@ -1548,6 +1551,10 @@ export default function PlataformaEletronica({
                           className="text-xs bg-white"
                           disabled={submetendoCessao}
                         />
+                        <span className="text-[10px] text-slate-500 block">
+                          Uso estrito e exclusivo da área operacional TSB. Jamais divulgado
+                          publicamente.
+                        </span>
                       </div>
                     </div>
 
@@ -1593,22 +1600,25 @@ export default function PlataformaEletronica({
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-[#0a2540] text-white font-semibold">
                     <tr>
+                      <th className="p-3 border-r border-slate-700/60">Referência</th>
                       <th className="p-3 border-r border-slate-700/60">Carregador Cedente</th>
-                      <th className="p-3 border-r border-slate-700/60">Trecho</th>
+                      <th className="p-3 border-r border-slate-700/60">Trecho / Instalação</th>
                       <th className="p-3 text-right border-r border-slate-700/60">
                         Capacidade Ociosa
                       </th>
-                      <th className="p-3 border-r border-slate-700/60">Período Contratual</th>
-                      <th className="p-3 border-r border-slate-700/60">Contato</th>
-                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 border-r border-slate-700/60">Período Ofertado</th>
+                      <th className="p-3 text-center">Status Operacional</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {ofertasCessao.length > 0 ? (
                       ofertasCessao.map((oferta) => (
                         <tr key={oferta.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-mono font-bold text-[#0a2540]">
+                            {oferta.referencia || `CES-${oferta.id.substring(0, 8).toUpperCase()}`}
+                          </td>
                           <td className="p-3">
-                            <div className="font-semibold text-[#0a2540]">{oferta.cedente}</div>
+                            <div className="font-semibold text-slate-800">{oferta.cedente}</div>
                             {oferta.observacoes && (
                               <div className="text-[11px] text-slate-500">{oferta.observacoes}</div>
                             )}
@@ -1618,18 +1628,6 @@ export default function PlataformaEletronica({
                             {oferta.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
                           </td>
                           <td className="p-3 text-slate-700">{oferta.periodo_contratual}</td>
-                          <td className="p-3">
-                            {oferta.contato.includes('@') ? (
-                              <a
-                                href={`mailto:${oferta.contato}`}
-                                className="text-[#0284c7] font-medium hover:underline"
-                              >
-                                {oferta.contato}
-                              </a>
-                            ) : (
-                              <span className="text-slate-800">{oferta.contato}</span>
-                            )}
-                          </td>
                           <td className="p-3 text-center">
                             <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                               {oferta.status || 'Disponível'}
