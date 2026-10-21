@@ -421,10 +421,20 @@ export default function PlataformaEletronica({
                             III
                           </td>
                           <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo ||
-                                'III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e capacidade ociosa por ponto relevante.'}
-                            </span>
+                            <div className="space-y-1">
+                              <span className="font-semibold text-[#0a2540]">
+                                {item?.titulo ||
+                                  'III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e capacidade ociosa por ponto relevante.'}
+                              </span>
+                              <div className="p-2 rounded bg-sky-50/70 border border-sky-200/80 text-[11px] text-sky-950 leading-relaxed">
+                                <span className="font-semibold text-[#0a2540]">
+                                  Previsão de Disponibilidade (Padrão TBG):
+                                </span>{' '}
+                                A previsão rolante de 7 anos (capacidade firme) e 2 anos (capacidade
+                                não-firme) é publicada neste documento oficial em PDF e atualizada
+                                periodicamente pela área técnica da TSB.
+                              </div>
+                            </div>
                           </td>
                           <td className="p-3 text-center">
                             <a
@@ -922,221 +932,167 @@ export default function PlataformaEletronica({
                 )}
               </div>
 
-              {/* ITEM 3: RESUMO PÚBLICO DAS SOLICITAÇÕES POR PONTO RELEVANTE (ART. 9º, VII) */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="space-y-0.5">
-                    <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-[#059669]" />
-                      Resumo Público das Solicitações por Ponto Relevante (Art. 9º, VII)
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Agregação pública e anônima em estrita conformidade com a LGPD e Art. 9º, VII
-                      da Resolução ANP nº 11/2016.
-                    </p>
-                  </div>
-                  {carregarResumoVII && (
-                    <Button
+              {/* =====================================================================
+                  PADRÃO TBG: RESUMOS DO INCISO VII PUBLICADOS EM PDF ESTÁTICO
+                  SUBSTITUIÇÃO DAS TABELAS VIVAS PÚBLICAS POR CARDS DE DOCUMENTO OFICIAL
+                  ===================================================================== */}
+              <div className="space-y-4">
+                <div className="space-y-0.5 pb-2 border-b border-slate-200">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <Badge
                       variant="outline"
-                      size="sm"
-                      onClick={carregarResumoVII}
-                      disabled={carregandoResumoVII}
-                      className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
+                      className="bg-sky-50 text-[#143b73] border-sky-300 text-[10px] font-mono"
                     >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoResumoVII ? 'animate-spin' : ''}`}
-                      />
-                      Atualizar Resumo
-                    </Button>
-                  )}
-                </div>
-
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
-                      <tr>
-                        <th className="p-3 border-r border-slate-700/60">Ponto de Recebimento</th>
-                        <th className="p-3 border-r border-slate-700/60">Ponto de Entrega</th>
-                        <th className="p-3 border-r border-slate-700/60">Instalação / Trecho</th>
-                        <th className="p-3 border-r border-slate-700/60">Modalidade</th>
-                        <th className="p-3 text-center border-r border-slate-700/60">
-                          Total Solicitações
-                        </th>
-                        <th className="p-3 text-right border-r border-slate-700/60">
-                          Capacidade Solicitada (m³/dia)
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">Períodos Demandados</th>
-                        <th className="p-3 text-center">Status Predominante</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 bg-white">
-                      {resumoPublicoVII && resumoPublicoVII.length > 0 ? (
-                        resumoPublicoVII.map((item, idx) => (
-                          <tr
-                            key={`${item.pontoRelevante}_${item.modalidade}_${idx}`}
-                            className="hover:bg-slate-50 transition-colors"
-                          >
-                            <td className="p-3 font-semibold text-slate-800">
-                              {item.pontoRecebimento}
-                            </td>
-                            <td className="p-3 font-semibold text-slate-800">
-                              {item.pontoEntrega}
-                            </td>
-                            <td className="p-3 text-slate-700">{item.trecho}</td>
-                            <td className="p-3">
-                              <span className="inline-block text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded font-medium">
-                                {item.modalidade}
-                              </span>
-                            </td>
-                            <td className="p-3 text-center font-mono font-bold text-slate-800">
-                              {item.totalSolicitacoes}
-                            </td>
-                            <td className="p-3 text-right font-mono font-bold text-slate-900">
-                              {item.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
-                            </td>
-                            <td className="p-3 text-slate-600 text-[11px]">
-                              {item.periodosDemandados && item.periodosDemandados.length > 0
-                                ? item.periodosDemandados.join(', ')
-                                : '—'}
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block">
-                                {item.statusPredominante}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={8} className="p-8 text-center text-slate-500">
-                            {carregandoResumoVII ? (
-                              <div className="flex items-center justify-center gap-2">
-                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
-                                <span>
-                                  Carregando resumo de solicitações por ponto relevante...
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <p className="font-semibold text-slate-700">
-                                  Nenhuma solicitação registrada no momento.
-                                </p>
-                                <p className="text-[11px] text-slate-500">
-                                  As solicitações de acesso protocoladas junto à TSB serão agrupadas
-                                  e publicadas nesta seção preservando a LGPD.
-                                </p>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* ITEM 4: RESUMO DA DEMANDA POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
-              <div className="space-y-3">
-                <div className="space-y-0.5">
-                  <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-[#143b73]" />
-                    Resumo da Demanda por Instalação de Transporte (Trechos 1 e 3)
+                      Art. 9º, VII • Resolução ANP nº 11/2016
+                    </Badge>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Padrão TBG • Publicação em Documento Estático (PDF)
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
+                    <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                    Resumos Oficiais de Solicitações e Demanda por Instalação (PDF)
                   </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Consolidação da capacidade total solicitada e modalidades demandadas
-                    discriminadas por gasoduto integrante do sistema TSB.
+                  <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                    Em conformidade com a prática regulatória do setor e o Art. 9º, VII da Resolução
+                    ANP nº 11/2016, a TSB consolida periodicamente as solicitações de acesso e a
+                    demanda por trecho dutoviário em relatórios oficiais estáticos, garantindo a
+                    transparência pública e a confidencialidade preconizada pela LGPD.
                   </p>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
-                      <tr>
-                        <th className="p-3 border-r border-slate-700/60">
-                          Instalação de Transporte
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">
-                          Descrição Técnica da Instalação
-                        </th>
-                        <th className="p-3 text-center border-r border-slate-700/60">
-                          Total Solicitações
-                        </th>
-                        <th className="p-3 text-right border-r border-slate-700/60">
-                          Capacidade Total Solicitada (m³/dia)
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">Modalidades Presentes</th>
-                        <th className="p-3 border-r border-slate-700/60">Períodos Demandados</th>
-                        <th className="p-3 text-center">Status Predominante</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 bg-white">
-                      {resumoInstalacaoVII && resumoInstalacaoVII.length > 0 ? (
-                        resumoInstalacaoVII.map((inst, idx) => (
-                          <tr
-                            key={`${inst.instalacao}_${idx}`}
-                            className="hover:bg-slate-50 transition-colors"
-                          >
-                            <td className="p-3 font-bold text-[#0a2540]">{inst.instalacao}</td>
-                            <td className="p-3 text-slate-700">{inst.descricaoInstalacao}</td>
-                            <td className="p-3 text-center font-mono font-bold text-slate-800">
-                              {inst.totalSolicitacoes}
-                            </td>
-                            <td className="p-3 text-right font-mono font-bold text-slate-900">
-                              {inst.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
-                            </td>
-                            <td className="p-3">
-                              <div className="flex flex-wrap gap-1">
-                                {inst.modalidadesPresentes &&
-                                inst.modalidadesPresentes.length > 0 ? (
-                                  inst.modalidadesPresentes.map((mod, mIdx) => (
-                                    <span
-                                      key={mIdx}
-                                      className="inline-block text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded font-medium"
-                                    >
-                                      {mod}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-3 text-slate-600 text-[11px]">
-                              {inst.periodosDemandados && inst.periodosDemandados.length > 0
-                                ? inst.periodosDemandados.join(', ')
-                                : '—'}
-                            </td>
-                            <td className="p-3 text-center">
-                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block">
-                                {inst.statusPredominante}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* CARD 1: RESUMO DAS SOLICITAÇÕES POR PONTO RELEVANTE EM PDF */}
+                  {(() => {
+                    const itemDoc = incisosBdMap.get('resumo_solicitacoes_vii_pdf')
+                    const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
+                    const dataAtualizacao = itemDoc?.updated
+                      ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
+                      : null
+                    const dataReferencia = itemDoc?.periodo || null
+
+                    return (
+                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <Badge className="bg-[#0a2540] text-white text-[10px] font-bold">
+                              Art. 9º, VII • Pontos Relevantes
+                            </Badge>
+                            {dataReferencia && (
+                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                Ref.: {dataReferencia}
                               </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="p-8 text-center text-slate-500">
-                            {carregandoResumoVII ? (
-                              <div className="flex items-center justify-center gap-2">
-                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
-                                <span>Carregando resumo por instalação de transporte...</span>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <p className="font-semibold text-slate-700">
-                                  Nenhuma solicitação registrada no momento.
-                                </p>
-                                <p className="text-[11px] text-slate-500">
-                                  A consolidação por instalação de transporte (Trechos 1 e 3) será
-                                  exibida após o recebimento de solicitações.
-                                </p>
-                              </div>
                             )}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                          </div>
+                          <h4 className="font-bold text-sm text-[#0a1d37]">
+                            {itemDoc?.titulo ||
+                              'Resumo Público das Solicitações por Ponto Relevante'}
+                          </h4>
+                          <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                            {itemDoc?.descricao ||
+                              'Documento consolidado com a relação anônima e agregada das solicitações de acesso por ponto relevante de recebimento e entrega, em conformidade com o Art. 9º, VII da Resolução ANP nº 11/2016 e as diretrizes da LGPD.'}
+                          </p>
+                          <div className="text-[11px] text-slate-500 pt-1">
+                            {dataAtualizacao ? (
+                              <span>Última atualização: {dataAtualizacao}</span>
+                            ) : (
+                              <span className="italic">
+                                Atualização periódica pela equipe da TSB
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100">
+                          {doc.url ? (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                            >
+                              <FileDown className="h-4 w-4 text-sky-400" />
+                              {doc.nomeExibicao || 'Baixar Resumo em PDF'}
+                            </a>
+                          ) : (
+                            <div className="p-3 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
+                              <span className="font-semibold block text-slate-700">
+                                Ainda não há documento publicado.
+                              </span>
+                              <span>
+                                O demonstrativo de solicitações em PDF será publicado pela equipe da
+                                TSB.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* CARD 2: RESUMO DA DEMANDA POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
+                  {(() => {
+                    const itemDoc = incisosBdMap.get('resumo_demandas_trechos_vii_pdf')
+                    const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
+                    const dataAtualizacao = itemDoc?.updated
+                      ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
+                      : null
+                    const dataReferencia = itemDoc?.periodo || null
+
+                    return (
+                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <Badge className="bg-[#143b73] text-white text-[10px] font-bold">
+                              Art. 9º, VII • Trechos 1 e 3
+                            </Badge>
+                            {dataReferencia && (
+                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                Ref.: {dataReferencia}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-bold text-sm text-[#0a1d37]">
+                            {itemDoc?.titulo || 'Resumo da Demanda por Instalação de Transporte'}
+                          </h4>
+                          <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                            {itemDoc?.descricao ||
+                              'Demonstrativo consolidado em PDF da capacidade demandada por instalação dutoviária (Trecho 1: Uruguaiana-Triunfo e Trecho 3: Polo Petroquímico), atualizado pela equipe técnica da TSB.'}
+                          </p>
+                          <div className="text-[11px] text-slate-500 pt-1">
+                            {dataAtualizacao ? (
+                              <span>Última atualização: {dataAtualizacao}</span>
+                            ) : (
+                              <span className="italic">
+                                Atualização periódica pela equipe da TSB
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100">
+                          {doc.url ? (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                            >
+                              <FileDown className="h-4 w-4 text-sky-400" />
+                              {doc.nomeExibicao || 'Baixar Demanda Trechos 1 e 3 (PDF)'}
+                            </a>
+                          ) : (
+                            <div className="p-3 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
+                              <span className="font-semibold block text-slate-700">
+                                Ainda não há documento publicado.
+                              </span>
+                              <span>O relatório por trecho será publicado pela equipe da TSB.</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
 
@@ -1250,115 +1206,100 @@ export default function PlataformaEletronica({
                 </div>
               </div>
 
-              {/* TABELA PÚBLICA DE OFERTAS ATIVAS DE CESSÃO DE CAPACIDADE */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="space-y-0.5">
-                    <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-[#059669]" />
-                      Ofertas Ativas de Cessão de Capacidade (Resumo Público)
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Exibição restrita a dados técnico-operacionais (LGPD). Apenas ofertas
-                      aprovadas e publicadas pela TSB.
-                    </p>
-                  </div>
-                  {carregarOfertasCessao && (
-                    <Button
+              {/* =====================================================================
+                  PADRÃO TBG: RESUMO DO INCISO VIII PUBLICADO EM PDF ESTÁTICO
+                  SUBSTITUIÇÃO DA TABELA VIVA PÚBLICA POR CARD DE DOCUMENTO OFICIAL
+                  ===================================================================== */}
+              <div className="space-y-4">
+                <div className="space-y-0.5 pb-2 border-b border-slate-200">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <Badge
                       variant="outline"
-                      size="sm"
-                      onClick={carregarOfertasCessao}
-                      disabled={carregandoCessoes}
-                      className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
+                      className="bg-sky-50 text-[#143b73] border-sky-300 text-[10px] font-mono"
                     >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoCessoes ? 'animate-spin' : ''}`}
-                      />
-                      Atualizar Resumo
-                    </Button>
-                  )}
+                      Art. 9º, VIII • Resolução ANP nº 11/2016
+                    </Badge>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Padrão TBG • Publicação em Documento Estático (PDF)
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
+                    <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                    Resumo Público das Ofertas Ativas de Cessão de Capacidade (PDF)
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                    A TSB publica o resumo consolidado das ofertas ativas de cessão de capacidade
+                    contratada informadas por carregadores, após análise de conformidade técnica e
+                    operacional. A publicação é realizada no padrão de documento estático,
+                    assegurando o sigilo comercial e as regras de proteção de dados (LGPD).
+                  </p>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
-                      <tr>
-                        <th className="p-3 border-r border-slate-700/60">Referência</th>
-                        <th className="p-3 border-r border-slate-700/60">Carregador Cedente</th>
-                        <th className="p-3 border-r border-slate-700/60">Trecho / Instalação</th>
-                        <th className="p-3 text-right border-r border-slate-700/60">
-                          Capacidade Ociosa
-                        </th>
-                        <th className="p-3 border-r border-slate-700/60">Período Ofertado</th>
-                        <th className="p-3 text-center">Status Operacional</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 bg-white">
-                      {ofertasCessao.length > 0 ? (
-                        ofertasCessao.map((oferta) => (
-                          <tr key={oferta.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3 font-mono font-bold text-[#0a2540]">
-                              {oferta.referencia ||
-                                `CES-${oferta.id.substring(0, 8).toUpperCase()}`}
-                            </td>
-                            <td className="p-3">
-                              <div className="font-semibold text-slate-800">{oferta.cedente}</div>
-                              {oferta.modalidade && (
-                                <span className="inline-block mt-0.5 text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded font-medium">
-                                  {oferta.modalidade}
-                                </span>
-                              )}
-                              {oferta.observacoes && (
-                                <div className="text-[11px] text-slate-500 mt-0.5">
-                                  {oferta.observacoes}
-                                </div>
-                              )}
-                            </td>
-                            <td className="p-3 text-slate-700">
-                              <div className="font-medium">{oferta.trecho}</div>
-                              {(oferta.ponto_recebimento || oferta.ponto_entrega) && (
-                                <div className="text-[10px] text-slate-500">
-                                  {oferta.ponto_recebimento || 'Recebimento Conforme Contrato'}{' '}
-                                  &rarr; {oferta.ponto_entrega || 'Entrega Conforme Contrato'}
-                                </div>
-                              )}
-                            </td>
-                            <td className="p-3 text-right font-mono font-bold text-slate-900">
-                              {oferta.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
-                            </td>
-                            <td className="p-3 text-slate-700">{oferta.periodo_contratual}</td>
-                            <td className="p-3 text-center">
-                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                {oferta.status || 'Disponível'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={6} className="p-8 text-center text-slate-500">
-                            {carregandoCessoes ? (
-                              <div className="flex items-center justify-center gap-2">
-                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
-                                <span>Carregando ofertas de cessão publicadas...</span>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <p className="font-semibold text-slate-700">
-                                  Nenhuma oferta ativa de cessão publicada no momento.
-                                </p>
-                                <p className="text-[11px] text-slate-500">
-                                  Carregadores interessados em ceder capacidade podem utilizar o
-                                  formulário-padrão acima para submissão à TSB.
-                                </p>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                {(() => {
+                  const itemDoc = incisosBdMap.get('resumo_cessoes_viii_pdf')
+                  const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
+                  const dataAtualizacao = itemDoc?.updated
+                    ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
+                    : null
+                  const dataReferencia = itemDoc?.periodo || null
+
+                  return (
+                    <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-lg shadow-sm space-y-4 max-w-2xl">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Badge className="bg-[#0a2540] text-white text-[10px] font-bold">
+                            Documento Oficial • Inciso VIII
+                          </Badge>
+                          {dataReferencia && (
+                            <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              Período de Referência: {dataReferencia}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-sm sm:text-base text-[#0a1d37]">
+                          {itemDoc?.titulo || 'Ofertas Ativas de Cessão de Capacidade Contratada'}
+                        </h4>
+                        <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                          {itemDoc?.descricao ||
+                            'Publicação oficial das ofertas ativas de capacidade ociosa informadas por carregadores à TSB, elaborada e atualizada manualmente após verificação de conformidade regulatória (Art. 9º, VIII da Resolução ANP nº 11/2016).'}
+                        </p>
+                        <div className="text-[11px] text-slate-500 pt-1">
+                          {dataAtualizacao ? (
+                            <span>Última atualização: {dataAtualizacao}</span>
+                          ) : (
+                            <span className="italic">
+                              Atualização periódica pela equipe técnica da TSB
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100">
+                        {doc.url ? (
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                          >
+                            <FileDown className="h-4 w-4 text-sky-400" />
+                            {doc.nomeExibicao || 'Baixar Resumo de Ofertas Ativas (PDF)'}
+                          </a>
+                        ) : (
+                          <div className="p-4 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
+                            <span className="font-semibold block text-slate-700">
+                              Ainda não há ofertas ativas publicadas.
+                            </span>
+                            <span>
+                              Quando houver ofertas ativas comunicadas e validadas, o documento
+                              oficial em PDF será disponibilizado aqui.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}

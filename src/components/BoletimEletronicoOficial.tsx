@@ -254,6 +254,19 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     }
   }, [cabecalhosBdMap])
 
+  // Bloco Cabeçalho Contratos de Transporte (Item II + Art. 2º Lei 14.134/2021)
+  const headerContratos = useMemo(() => {
+    const item = cabecalhosBdMap.get('boletim_contratos_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_contratos_header
+    return {
+      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
+      descricao:
+        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
+      item,
+      ativo: item ? item.ativo !== false : true,
+    }
+  }, [cabecalhosBdMap])
+
   // Bloco Seção II Cabeçalho
   const headerSecao2 = useMemo(() => {
     const item = cabecalhosBdMap.get('boletim_secao2_header')
@@ -1147,6 +1160,115 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   </table>
                 </div>
 
+                {/* =====================================================================
+                    SEÇÃO: CONTRATOS DE SERVIÇO DE TRANSPORTE (ITEM II + ART. 2º LEI 14.134/2021)
+                    PADRÃO TBG: DOCUMENTO ESTÁTICO EM PDF PUBLICADO E EDITÁVEL PELA EQUIPE
+                    ===================================================================== */}
+                {headerContratos.ativo && (
+                  <div className="pt-6 space-y-3 border-t border-slate-200">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <Badge
+                            variant="outline"
+                            className="bg-sky-50 text-[#143b73] border-sky-300 text-[10px] font-mono"
+                          >
+                            Item II, Portaria ANP nº 1/2003 • Art. 2º da Lei nº 14.134/2021
+                          </Badge>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            Padrão TBG • Documento Estático
+                          </span>
+                        </div>
+                        <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
+                          {headerContratos.titulo}
+                        </h3>
+                        <div className="w-full h-px bg-slate-200 mt-2 mb-2" />
+                        <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                          {headerContratos.descricao}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* SLOT DE DOCUMENTO INTEGRADO AO PADRÃO DO BOLETIM */}
+                    {(() => {
+                      const itemContrato = secao1BdMap.get('contratos_transporte_documento')
+                      const doc = resolverUrlDocumento(
+                        itemContrato,
+                        itemContrato?.url_externa || '',
+                      )
+                      const dataAtualizacao = itemContrato?.updated
+                        ? new Date(itemContrato.updated).toLocaleDateString('pt-BR')
+                        : null
+
+                      return (
+                        <div className="overflow-x-auto border border-slate-200 rounded-md">
+                          <table className="w-full text-xs text-left border-collapse">
+                            <thead className="bg-[#0a1d37] text-white font-semibold font-display">
+                              <tr>
+                                <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
+                                  Documento / Especificação Regulamentar
+                                </th>
+                                <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
+                                  Arquivo
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 bg-white">
+                              {doc.url ? (
+                                <tr className="hover:bg-slate-50 transition-colors">
+                                  <td className="p-3 text-slate-800">
+                                    <div className="space-y-1">
+                                      <div className="font-semibold text-[#0a2540]">
+                                        {itemContrato?.titulo ||
+                                          'Contratos de Serviço de Transporte Celebrados'}
+                                      </div>
+                                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                                        {itemContrato?.descricao ||
+                                          'Histórico e dados consolidados dos contratos de transporte celebrados: partes contratantes, vigências, capacidades contratadas e condições tarifárias.'}
+                                      </p>
+                                      {dataAtualizacao && (
+                                        <div className="text-[10px] text-slate-500 font-mono pt-0.5">
+                                          Última atualização: {dataAtualizacao}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="p-3 text-center">
+                                    <a
+                                      href={doc.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
+                                    >
+                                      <FileDown className="h-3.5 w-3.5" />
+                                      {doc.nomeExibicao || '- Baixar Documento'}
+                                    </a>
+                                  </td>
+                                </tr>
+                              ) : (
+                                <tr>
+                                  <td
+                                    colSpan={2}
+                                    className="p-6 text-center text-slate-500 bg-slate-50/60"
+                                  >
+                                    <p className="font-semibold text-slate-700">
+                                      Ainda não há contratos publicados.
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 mt-1">
+                                      Os documentos históricos e consolidados de contratos serão
+                                      disponibilizados nesta seção pela equipe de regulação da TSB.
+                                    </p>
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+
                 {/* NAVEGAÇÃO DISCRETA NO FINAL DA SEÇÃO I */}
                 <div className="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 text-xs text-slate-600">
                   <span className="text-slate-500 text-[11px]">
@@ -1562,8 +1684,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     </div>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
                       Os relatórios de monitoramento de utilização de capacidade são elaborados
-                      mensalmente, submetidos formalmente à ANP e disponibilizados ao público logo
-                      após o envio.
+                      mensalmente, submetidos formalmente à ANP e disponibilizados ao público após
+                      homologação pela ANP.
                     </p>
                   </div>
                   <div className="p-3 bg-white rounded border border-slate-200 text-xs text-slate-700 space-y-1">

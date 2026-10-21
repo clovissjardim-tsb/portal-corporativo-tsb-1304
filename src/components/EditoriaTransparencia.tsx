@@ -75,8 +75,9 @@ export function EditoriaTransparencia() {
   const [formAno, setFormAno] = useState('2026')
   const [formMes, setFormMes] = useState('Setembro')
   const [formChavePeriodo, setFormChavePeriodo] = useState('2026-09')
+  const [formPeriodo, setFormPeriodo] = useState('')
 
-  // Documento secundário (quando aplicável: item f ou inciso V)
+  // Segundo documento opcional
   const [formUrlSecundaria, setFormUrlSecundaria] = useState('')
   const [formNomeUrlSecundaria, setFormNomeUrlSecundaria] = useState('')
 
@@ -154,6 +155,7 @@ export function EditoriaTransparencia() {
     setFormAno(item.ano || '2026')
     setFormMes(item.mes || 'Setembro')
     setFormChavePeriodo(item.chave_periodo || '2026-09')
+    setFormPeriodo(item.periodo || '')
 
     setFormUrlSecundaria(item.url_secundaria || '')
     setFormNomeUrlSecundaria(item.nome_url_secundaria || '')
@@ -271,6 +273,7 @@ export function EditoriaTransparencia() {
         ano: ehRelatorioMensal ? formAno : undefined,
         mes: ehRelatorioMensal ? formMes : undefined,
         chave_periodo: ehRelatorioMensal ? formChavePeriodo : undefined,
+        periodo: formPeriodo.trim() || undefined,
         url_secundaria: formUrlSecundaria.trim() || undefined,
         nome_url_secundaria: formNomeUrlSecundaria.trim() || undefined,
         arquivo: arquivoSelecionado,
@@ -811,14 +814,14 @@ export function EditoriaTransparencia() {
                 </div>
               )}
 
-              {/* RÓTULO E ORDEM */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* RÓTULO, ORDEM, TEXTO DO BOTÃO E DATA DE REFERÊNCIA */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-700">Rótulo / Alínea</Label>
                   <Input
                     value={formRotulo}
                     onChange={(e) => setFormRotulo(e.target.value)}
-                    placeholder="Ex: a), VII, Setembro/2026"
+                    placeholder="Ex: a), VII, Contratos"
                     className="h-8 text-xs"
                   />
                 </div>
@@ -830,6 +833,17 @@ export function EditoriaTransparencia() {
                     value={formOrdem}
                     onChange={(e) => setFormOrdem(Number(e.target.value))}
                     className="h-8 text-xs font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-slate-700">
+                    Data de Referência (Opcional)
+                  </Label>
+                  <Input
+                    value={formPeriodo}
+                    onChange={(e) => setFormPeriodo(e.target.value)}
+                    placeholder="Ex: Março/2026 ou 2026"
+                    className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">

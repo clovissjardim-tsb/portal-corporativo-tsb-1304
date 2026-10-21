@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T20:38:50.342Z",
+  "generatedAt": "2026-10-21T21:09:03.769Z",
   "collections": [
     {
       "name": "users",
@@ -559,7 +559,8 @@
             "boletim_secao2",
             "plataforma_inciso",
             "cabecalho",
-            "monitoramento_congestionamento"
+            "monitoramento_congestionamento",
+            "boletim_contratos"
           ]
         },
         {

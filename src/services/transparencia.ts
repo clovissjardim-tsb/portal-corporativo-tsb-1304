@@ -5,6 +5,7 @@ export type SecaoTransparencia =
   | 'boletim_master'
   | 'boletim_secao1'
   | 'boletim_secao2'
+  | 'boletim_contratos'
   | 'monitoramento_congestionamento'
   | 'plataforma_inciso'
 
@@ -59,10 +60,40 @@ export const CABECALHOS_FALLBACK: Record<
       'As faixas de servidão administrativas dos gasodutos pertencem a terceiros ou ao poder público, constituindo áreas de utilidade pública legalmente gravadas para a segurança da população, do meio ambiente e da infraestrutura de transporte de gás natural. Conforme o Art. 46 da Resolução ANP nº 42/2012, qualquer interferência física nas faixas de dutos — incluindo obras de construção civil, plantio de árvores de porte, escavações, aterros, trânsito de máquinas pesadas ou instalação de cruzamentos de outras concessionárias — é estritamente condicionada à consulta, análise técnica e autorização formal prévia da Transportadora Sulbrasileira de Gás (TSB). Em caso de planejamento de intervenção, entre em contato imediatamente com a engenharia e segurança operacional da TSB através de regulacao@tsb.com.br.',
     nome_arquivo_custom: 'Ver Resolução ANP nº 42/2012',
   },
+  boletim_contratos_header: {
+    titulo: 'Contratos de Serviço de Transporte',
+    descricao:
+      'Em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021, a TSB disponibiliza o documento consolidado contendo as informações históricas de contratos celebrados, partes, vigências, capacidades contratadas e condições tarifárias.',
+    nome_arquivo_custom: 'Baixar Documento',
+  },
+  contratos_transporte_documento: {
+    titulo: 'Contratos de Serviço de Transporte Celebrados',
+    descricao:
+      'Histórico e dados consolidados dos contratos de transporte: carregador, tipo de serviço, prazos contratuais, evolução de capacidades contratadas, tarifas/descontos aplicados e relação societária entre transportador e carregador, em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021.',
+    nome_arquivo_custom: 'Baixar Documento',
+  },
+  resumo_solicitacoes_vii_pdf: {
+    titulo: 'Resumo Público das Solicitações por Ponto Relevante (Art. 9º, VII)',
+    descricao:
+      'Documento consolidado com a relação anônima e agregada das solicitações de acesso por ponto relevante de recebimento e entrega, em conformidade com o Art. 9º, VII da Resolução ANP nº 11/2016 e as diretrizes da LGPD.',
+    nome_arquivo_custom: 'Baixar Documento',
+  },
+  resumo_demandas_trechos_vii_pdf: {
+    titulo: 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3',
+    descricao:
+      'Demonstrativo consolidado em PDF da capacidade demandada por instalação dutoviária (Trecho 1: Uruguaiana-Triunfo e Trecho 3: Polo Petroquímico), atualizado pela equipe técnica da TSB.',
+    nome_arquivo_custom: 'Baixar Documento',
+  },
+  resumo_cessoes_viii_pdf: {
+    titulo: 'Ofertas Ativas de Cessão de Capacidade Contratada (Art. 9º, VIII)',
+    descricao:
+      'Publicação oficial das ofertas ativas de capacidade ociosa informadas por carregadores à TSB, elaborada e atualizada manualmente após verificação de conformidade regulatória (Art. 9º, VIII da Resolução ANP nº 11/2016).',
+    nome_arquivo_custom: 'Baixar Documento',
+  },
   monitoramento_congestionamento_header: {
     titulo: 'Monitoramento de Utilização da Capacidade e Congestionamento Físico e Contratual',
     descricao:
-      'Em cumprimento ao Art. 12 da Resolução ANP nº 11/2016, a TSB submete mensalmente à ANP e disponibiliza publicamente os relatórios de monitoramento de utilização de capacidade do sistema dutoviário (Art. 12, caput e §1º). Os relatórios retratam a consolidação do fluxo operacional e a verificação de eventuais congestionamentos físicos ou contratuais nos pontos de recepção e entrega dos Trechos 1 e 3 da malha dutoviária, assegurando ampla transparência ao mercado.',
+      'Em cumprimento ao Art. 12 da Resolução ANP nº 11/2016, a TSB submete mensalmente à ANP e disponibiliza publicamente os relatórios de monitoramento de utilização de capacidade do sistema dutoviário (Art. 12, caput e §1º) após homologação pela ANP. Os relatórios retratam a consolidação do fluxo operacional e a verificação de eventuais congestionamentos físicos ou contratuais nos pontos de recepção e entrega dos Trechos 1 e 3 da malha dutoviária, assegurando ampla transparência ao mercado.',
   },
   plataforma_topo: {
     titulo: 'Plataforma Eletrônica',
@@ -99,6 +130,7 @@ export interface ItemTransparencia {
   ano?: string
   mes?: string
   chave_periodo?: string
+  periodo?: string
   url_secundaria?: string
   nome_url_secundaria?: string
   arquivo_secundario?: string
@@ -121,6 +153,7 @@ export interface InputItemTransparencia {
   ano?: string
   mes?: string
   chave_periodo?: string
+  periodo?: string
   url_secundaria?: string
   nome_url_secundaria?: string
   arquivo?: File | null
@@ -284,6 +317,7 @@ export const transparenciaService = {
     if (dados.ano) formData.append('ano', dados.ano)
     if (dados.mes) formData.append('mes', dados.mes)
     if (dados.chave_periodo) formData.append('chave_periodo', dados.chave_periodo)
+    if (dados.periodo) formData.append('periodo', dados.periodo)
     if (dados.url_secundaria) formData.append('url_secundaria', dados.url_secundaria)
     if (dados.nome_url_secundaria) formData.append('nome_url_secundaria', dados.nome_url_secundaria)
 
