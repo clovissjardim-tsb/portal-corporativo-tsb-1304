@@ -573,7 +573,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 <thead className="bg-[#0a2540] text-white font-semibold font-display">
                   <tr>
                     <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
-                      Alínea / Discriminação Regulamentar (Portaria ANP nº 1/2003, Art. 2º, Item I)
+                      Alínea / Documento / Informação
                     </th>
                     <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
                       Arquivo / Acesso
@@ -1373,7 +1373,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                       <thead className="bg-[#0a2540] text-white font-semibold font-display">
                         <tr>
                           <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
-                            Documento / Especificação Regulamentar (Portaria ANP nº 1/2003, Item II)
+                            Documento / Informação
                           </th>
                           <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
                             Arquivo
@@ -1574,10 +1574,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     <thead className="bg-[#0a1d37] text-white font-semibold font-display">
                       <tr>
                         <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
-                          Relatório de Utilização &amp; Congestionamento (Art. 12)
+                          Relatório de Utilização &amp; Congestionamento
                         </th>
                         <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wider uppercase text-[11px]">
-                          Documento
+                          Documento / Acesso
                         </th>
                       </tr>
                     </thead>
