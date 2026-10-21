@@ -19,11 +19,13 @@ import {
 import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
 import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
 import { EditoriaTransparencia } from '@/components/EditoriaTransparencia'
+import { ConducaoCicloPOCC } from '@/components/ConducaoCicloPOCC'
 import {
   ShieldAlert,
   ShieldCheck,
   FileText,
   Clock,
+  Scale,
   ArrowRight,
   X,
   AlertTriangle,
@@ -79,8 +81,8 @@ export default function Gestao() {
   const [sulgasObs, setSulgasObs] = useState('')
   const [prontoContratacaoTentado, setProntoContratacaoTentado] = useState(false)
 
-  // Aba ativa na Gestão Interna: 'solicitacoes' | 'tarifa' | 'transparencia'
-  const [abaAtiva, setAbaAtiva] = useState<'solicitacoes' | 'tarifa' | 'transparencia'>(
+  // Aba ativa na Gestão Interna: 'solicitacoes' | 'pocc' | 'tarifa' | 'transparencia'
+  const [abaAtiva, setAbaAtiva] = useState<'solicitacoes' | 'pocc' | 'tarifa' | 'transparencia'>(
     'solicitacoes',
   )
 
@@ -431,6 +433,22 @@ export default function Gestao() {
                   Fila Inciso VII (SLA 20d)
                   <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
                     {solicitacoes.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAbaAtiva('pocc')}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
+                    abaAtiva === 'pocc'
+                      ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Scale className="h-4 w-4 text-amber-400" />
+                  Condução do Ciclo POCC (Art. 37-A / 38-A)
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-[#0a2540] font-bold">
+                    5 Etapas
                   </span>
                 </button>
 
@@ -966,6 +984,9 @@ export default function Gestao() {
                   </form>
                 </div>
               )}
+
+              {/* ABA 2: CONDUÇÃO DO CICLO POCC (ARTS. 37-A E 38-A) */}
+              {abaAtiva === 'pocc' && <ConducaoCicloPOCC />}
 
               {/* ABA 3: EDITORIA DE TRANSPARÊNCIA (BOLETIM E PLATAFORMA) */}
               {abaAtiva === 'transparencia' && <EditoriaTransparencia />}

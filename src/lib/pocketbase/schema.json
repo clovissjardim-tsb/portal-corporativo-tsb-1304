@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T10:54:26.142Z",
+  "generatedAt": "2026-10-21T14:23:04.510Z",
   "collections": [
     {
       "name": "users",
@@ -37,6 +37,36 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "razao_social",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "autorizacao_anp",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -568,6 +598,534 @@
         "CREATE UNIQUE INDEX idx_transparencia_secao_chave ON transparencia_conteudo (secao, chave)",
         "CREATE INDEX idx_transparencia_secao_ordem ON transparencia_conteudo (secao, ordem)",
         "CREATE INDEX idx_transparencia_periodo ON transparencia_conteudo (chave_periodo)"
+      ]
+    },
+    {
+      "name": "poc_documentos",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "ciclo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "categoria",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "edital",
+            "regulamento",
+            "minuta_contrato_transporte",
+            "proposta_tarifaria",
+            "procedimentos_operacionais",
+            "cronograma",
+            "comunicados",
+            "faq",
+            "resultado_manifestacao",
+            "resultado_final"
+          ]
+        },
+        {
+          "name": "chave",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ordem",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "url_externa",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nome_arquivo_custom",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_poc_docs_ciclo_chave ON poc_documentos (ciclo, chave)",
+        "CREATE INDEX idx_poc_docs_ciclo_ordem ON poc_documentos (ciclo, ordem)"
+      ]
+    },
+    {
+      "name": "poc_cronograma",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "ciclo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "numero_etapa",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "titulo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "inciso_legal",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "periodo_estimado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_etapa",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Concluída", "Fase Ativa", "Em Andamento", "Pendente"]
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_poc_crono_ciclo_etapa ON poc_cronograma (ciclo, numero_etapa)"
+      ]
+    },
+    {
+      "name": "poc_manifestacoes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "protocolo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ciclo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "razao_social",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel_nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "autorizacao_anp",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_solicitada",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "modalidade",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Firme Ordinário", "Extraordinário", "Interruptível"]
+        },
+        {
+          "name": "trecho",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ponto_recebimento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_entrega",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "periodo_vigencia",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Recebida - Em Análise",
+            "Habilitada para Etapa II",
+            "Em Ajuste Cadastral",
+            "Indeferida"
+          ]
+        },
+        {
+          "name": "observacoes_internas",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "declaracao_anp_aceita",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_poc_manif_protocolo ON poc_manifestacoes (protocolo)",
+        "CREATE INDEX idx_poc_manif_user_ciclo ON poc_manifestacoes (user_id, ciclo)",
+        "CREATE INDEX idx_poc_manif_status ON poc_manifestacoes (status)"
+      ]
+    },
+    {
+      "name": "poc_propostas_vinculantes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "manifestacao_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "poc_manifestacoes"
+        },
+        {
+          "name": "protocolo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ciclo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "razao_social",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rep_legal_nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rep_legal_cpf",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rep_legal_rg",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rep_legal_endereco",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rep_legal_cargo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantia_tipo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Fiança Bancária",
+            "Seguro Garantia",
+            "Depósito Caução",
+            "Carta de Crédito"
+          ]
+        },
+        {
+          "name": "garantia_valor",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "garantia_instituicao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantia_vigencia",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantia_arquivo",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "documento_proposta",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_proposta",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tarifa_aceita",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "trecho",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ponto_recebimento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_entrega",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Proposta Recebida",
+            "Garantia em Análise",
+            "Capacidade Alocada (Art. 37-A, III)",
+            "Aguardando Assinatura (Art. 37-A, IV)",
+            "Contrato Celebrado e Enviado à ANP (Art. 37-A, V)",
+            "Indeferida"
+          ]
+        },
+        {
+          "name": "parecer_alocacao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_alocada",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_poc_prop_protocolo ON poc_propostas_vinculantes (protocolo)",
+        "CREATE INDEX idx_poc_prop_user_ciclo ON poc_propostas_vinculantes (user_id, ciclo)",
+        "CREATE INDEX idx_poc_prop_status ON poc_propostas_vinculantes (status)"
       ]
     }
   ]

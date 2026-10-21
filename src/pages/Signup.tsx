@@ -17,6 +17,11 @@ import { UserPlus, AlertCircle, ArrowLeft } from 'lucide-react'
 
 export default function Signup() {
   const [name, setName] = useState('')
+  const [razaoSocial, setRazaoSocial] = useState('')
+  const [cnpj, setCnpj] = useState('')
+  const [responsavel, setResponsavel] = useState('')
+  const [telefone, setTelefone] = useState('')
+  const [autorizacaoAnp, setAutorizacaoAnp] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -42,7 +47,12 @@ export default function Signup() {
 
     try {
       await pb.collection('users').create({
-        name: name.trim(),
+        name: (responsavel || name).trim(),
+        razao_social: razaoSocial.trim(),
+        cnpj: cnpj.trim(),
+        responsavel: (responsavel || name).trim(),
+        telefone: telefone.trim(),
+        autorizacao_anp: autorizacaoAnp.trim(),
         email: email.trim(),
         password,
         passwordConfirm,
@@ -91,29 +101,93 @@ export default function Signup() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo / Razão Social</Label>
-              <Input
-                id="name"
-                required
-                placeholder="Ex: João da Silva / Petróleo S.A."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="razaoSocial">Razão Social da Empresa *</Label>
+                <Input
+                  id="razaoSocial"
+                  required
+                  placeholder="Ex: GasBrasil Comercializadora S.A."
+                  value={razaoSocial}
+                  onChange={(e) => {
+                    setRazaoSocial(e.target.value)
+                    if (!name) setName(e.target.value)
+                  }}
+                  disabled={loading}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail Corporativo</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                placeholder="usuario@empresa.com.br"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="cnpj">CNPJ *</Label>
+                <Input
+                  id="cnpj"
+                  required
+                  placeholder="00.000.000/0001-00"
+                  value={cnpj}
+                  onChange={(e) => setCnpj(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="responsavel">Nome do Responsável *</Label>
+                <Input
+                  id="responsavel"
+                  required
+                  placeholder="Ex: Carlos Eduardo Silveira"
+                  value={responsavel}
+                  onChange={(e) => {
+                    setResponsavel(e.target.value)
+                    setName(e.target.value)
+                  }}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email">E-mail Corporativo (Login) *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  placeholder="responsavel@empresa.com.br"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="telefone">Telefone de Contato *</Label>
+                <Input
+                  id="telefone"
+                  required
+                  placeholder="(51) 3333-4444"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="autorizacaoAnp" className="flex items-center justify-between">
+                  <span>Nº de Autorização ANP como Carregador</span>
+                  <span className="text-[11px] text-slate-500 font-normal">
+                    Opcional no cadastro inicial
+                  </span>
+                </Label>
+                <Input
+                  id="autorizacaoAnp"
+                  placeholder="Ex: ANP-AUT-2024-089 (se já possuir)"
+                  value={autorizacaoAnp}
+                  onChange={(e) => setAutorizacaoAnp(e.target.value)}
+                  disabled={loading}
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Art. 37-A, § 5º, I: O acesso ao POCC é liberado no cadastro. A condição de
+                  Carregador habilitado se consolida ao longo do ciclo até a assinatura.
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">

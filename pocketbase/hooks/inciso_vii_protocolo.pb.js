@@ -174,6 +174,236 @@ onRecordCreate((e) => {
   }
 }, 'solicitacoes_inciso_vii')
 
+// 1.1 Hook automático após criação de Manifestação de Interesse no POC (POCC - Art. 37-A, §5º, I)
+onRecordCreate((e) => {
+  e.next()
+
+  try {
+    const record = e.record
+    const destinatario = record.getString('email')
+    const protocolo = record.getString('protocolo')
+    const razaoSocial = record.getString('razao_social') || 'Carregador Interessado'
+    const responsavel = record.getString('responsavel_nome') || ''
+    const ciclo = record.getString('ciclo') || '2026/2027'
+    const modalidade = record.getString('modalidade') || 'Firme Ordinário'
+    const trecho = record.getString('trecho') || 'Gasoduto TSB'
+    const pontoRecebimento = record.getString('ponto_recebimento') || 'Paso de Los Libres'
+    const pontoEntrega = record.getString('ponto_entrega') || 'Triunfo'
+    const capacidade = record.getFloat('capacidade_solicitada')
+      ? String(record.getFloat('capacidade_solicitada'))
+      : '-'
+
+    if (!destinatario || !protocolo) {
+      return
+    }
+
+    const senderAddress =
+      $os.getenv('SMTP_FROM_ADDRESS') ||
+      $os.getenv('SMTP_SENDER') ||
+      e.app.settings().meta.senderAddress ||
+      'site@tsb.com.br'
+    const senderName =
+      $os.getenv('SMTP_FROM_NAME') ||
+      e.app.settings().meta.senderName ||
+      'TSB - Transportadora Sulbrasileira de Gás'
+
+    const htmlBody = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprovante de Manifestação de Interesse - POCC TSB</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background-color:#0a2540;padding:24px 32px;color:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="margin:0;font-size:20px;font-weight:bold;color:#ffffff;">TSB</h1>
+                    <p style="margin:4px 0 0 0;font-size:12px;color:#93c5fd;">Transportadora Sulbrasileira de Gás S.A.</p>
+                  </td>
+                  <td align="right">
+                    <span style="display:inline-block;padding:4px 10px;background-color:#059669;color:#ffffff;font-size:11px;font-weight:bold;border-radius:4px;text-transform:uppercase;">
+                      POCC Ciclo ${ciclo}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;font-weight:600;">Protocolo Eletrônico de Manifestação (Art. 37-A, §5º, I)</p>
+              <h2 style="margin:6px 0 0 0;font-size:26px;color:#059669;font-family:'Courier New',Courier,monospace;letter-spacing:1px;font-weight:bold;">${protocolo}</h2>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px 0;font-size:14px;line-height:22px;color:#334155;">
+                Prezado(a) <strong>${responsavel || 'Representante'}</strong> (${razaoSocial}),
+              </p>
+              <p style="margin:0 0 20px 0;font-size:14px;line-height:22px;color:#334155;">
+                Confirmamos com sucesso o recebimento e o registro eletrônico da sua <strong>Manifestação de Interesse Não Vinculante</strong> no âmbito do <strong>Processo de Oferta e Contratação de Capacidade (POCC) — Ciclo ${ciclo}</strong>, conforme os Arts. 37-A e 38-A da Resolução ANP nº 11/2016 (inseridos pela Resolução ANP nº 961/2023).
+              </p>
+              <div style="margin:20px 0;background-color:#eff6ff;border-left:4px solid #0284c7;padding:14px;border-radius:0 6px 6px 0;">
+                <p style="margin:0;font-size:13px;color:#1e40af;font-weight:bold;">Próxima Etapa Regulamentar</p>
+                <p style="margin:4px 0 0 0;font-size:13px;color:#0f172a;line-height:18px;">
+                  Etapa II: Consulta Pública Tarifária (Art. 37-A, §3º) e Aprovação das Tarifas de Referência pela ANP combinada com eventual redistribuição de capacidade (Art. 37-A, §5º, II).
+                </p>
+              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;border:1px solid #e2e8f0;border-radius:6px;border-collapse:collapse;">
+                <tr style="background-color:#f8fafc;">
+                  <td colspan="2" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:bold;color:#475569;text-transform:uppercase;">
+                    Resumo dos Dados da Manifestação
+                  </td>
+                </tr>
+                <tr>
+                  <td width="42%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Razão Social:</td>
+                  <td width="58%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${razaoSocial}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Modalidade:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${modalidade}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Capacidade Solicitada:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${capacidade} m³/dia</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Trecho / Rota:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${trecho} (${pontoRecebimento} &rarr; ${pontoEntrega})</td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:#64748b;">
+                A manifestação não vinculante atesta o interesse preliminar e habilita o agente a submeter, oportunamente na Etapa III, a sua Proposta Garantida Vinculante na plataforma eletrônica restrita da TSB.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#0a2540;padding:20px 32px;color:#94a3b8;font-size:11px;">
+              <p style="margin:0 0 4px 0;color:#e2e8f0;font-weight:600;">Transportadora Sulbrasileira de Gás S.A. - TSB</p>
+              <p style="margin:0;color:#64748b;">Comprovante oficial emitido pelo módulo POC do Portal Corporativo TSB.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+    const message = new MailerMessage({
+      from: {
+        address: senderAddress,
+        name: senderName,
+      },
+      to: [{ address: destinatario }],
+      subject: `[TSB - POCC] Confirmação de Manifestação de Interesse - Protocolo ${protocolo}`,
+      html: htmlBody,
+    })
+
+    e.app.newMailClient().send(message)
+    console.log(`[SMTP TSB] E-mail de manifestação POCC ${protocolo} enviado para ${destinatario}`)
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    console.error(`[SMTP TSB] Falha ao enviar e-mail de manifestação POCC: ${errMsg}`)
+  }
+}, 'poc_manifestacoes')
+
+// 1.2 Hook automático após criação de Proposta Garantida Vinculante (Art. 37-A, §5º, III)
+onRecordCreate((e) => {
+  e.next()
+
+  try {
+    const record = e.record
+    const destinatario = record.getString('email') || ''
+    const protocolo = record.getString('protocolo')
+    const razaoSocial = record.getString('razao_social') || 'Carregador'
+    const repLegalNome = record.getString('rep_legal_nome') || ''
+    const ciclo = record.getString('ciclo') || '2026/2027'
+    const garantiaTipo = record.getString('garantia_tipo') || '-'
+    const garantiaValor = record.getFloat('garantia_valor')
+      ? String(record.getFloat('garantia_valor'))
+      : '-'
+    const capacidade = record.getFloat('capacidade_proposta')
+      ? String(record.getFloat('capacidade_proposta'))
+      : '-'
+
+    // Busca e-mail do usuário criador se não estiver no registro
+    let userEmail = destinatario
+    if (!userEmail) {
+      try {
+        const userId = record.getString('user_id')
+        if (userId) {
+          const userRec = e.app.findRecordById('users', userId)
+          userEmail = userRec.getString('email')
+        }
+      } catch (_) {}
+    }
+
+    if (!userEmail || !protocolo) {
+      return
+    }
+
+    const senderAddress =
+      $os.getenv('SMTP_FROM_ADDRESS') ||
+      $os.getenv('SMTP_SENDER') ||
+      e.app.settings().meta.senderAddress ||
+      'site@tsb.com.br'
+    const senderName =
+      $os.getenv('SMTP_FROM_NAME') ||
+      e.app.settings().meta.senderName ||
+      'TSB - Transportadora Sulbrasileira de Gás'
+
+    const htmlBody = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Comprovante de Proposta Vinculante - POCC TSB</title></head>
+<body style="font-family:Arial,sans-serif;background-color:#f1f5f9;margin:0;padding:24px;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+    <div style="background:#0a2540;color:#fff;padding:20px 24px;">
+      <h2 style="margin:0;font-size:18px;">TSB - Proposta Garantida Vinculante Recebida</h2>
+      <p style="margin:4px 0 0 0;font-size:12px;color:#93c5fd;">Art. 37-A, §5º, III e Art. 38-A, II da Res. ANP nº 11/2016</p>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:13px;color:#334155;">Prezados da <strong>${razaoSocial}</strong> (Representante: ${repLegalNome}),</p>
+      <p style="font-size:13px;color:#334155;">Confirmamos a recepção formal da sua <strong>Proposta Garantida Vinculante</strong> no Ciclo POCC ${ciclo}.</p>
+      <div style="background:#f8fafc;border-left:4px solid #059669;padding:12px;margin:16px 0;">
+        <p style="margin:0;font-size:11px;color:#64748b;text-transform:uppercase;">Protocolo Vinculante</p>
+        <p style="margin:2px 0 0 0;font-size:20px;font-weight:bold;color:#059669;font-family:monospace;">${protocolo}</p>
+      </div>
+      <table width="100%" cellpadding="6" style="font-size:12px;border-collapse:collapse;border:1px solid #e2e8f0;">
+        <tr><td style="color:#64748b;border-bottom:1px solid #e2e8f0;">Capacidade Proposta:</td><td style="font-weight:bold;border-bottom:1px solid #e2e8f0;">${capacidade} m³/dia</td></tr>
+        <tr><td style="color:#64748b;border-bottom:1px solid #e2e8f0;">Garantia Financeira:</td><td style="font-weight:bold;border-bottom:1px solid #e2e8f0;">${garantiaTipo} (R$ ${garantiaValor})</td></tr>
+        <tr><td style="color:#64748b;">Representante Legal:</td><td style="font-weight:bold;">${repLegalNome}</td></tr>
+      </table>
+      <p style="margin:20px 0 0 0;font-size:12px;color:#64748b;">Sua garantia e documentos comprobatórios serão analisados pela Comissão do POCC para a Alocação Definitiva de Capacidade.</p>
+    </div>
+    <div style="background:#0a2540;color:#94a3b8;padding:12px 24px;font-size:11px;">
+      Transportadora Sulbrasileira de Gás S.A. - TSB
+    </div>
+  </div>
+</body>
+</html>`
+
+    const message = new MailerMessage({
+      from: { address: senderAddress, name: senderName },
+      to: [{ address: userEmail }],
+      subject: `[TSB - POCC] Proposta Garantida Vinculante - Protocolo ${protocolo}`,
+      html: htmlBody,
+    })
+
+    e.app.newMailClient().send(message)
+    console.log(`[SMTP TSB] E-mail de proposta vinculante ${protocolo} enviado para ${userEmail}`)
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    console.error(`[SMTP TSB] Falha ao enviar e-mail de proposta vinculante: ${errMsg}`)
+  }
+}, 'poc_propostas_vinculantes')
+
 // 2. Hook de atualização: Dispara e-mail de CÓPIA À ANP quando desfecho for Aprofundamento (II) ou Negativa (III) (Art. 10, §3º)
 onRecordUpdate((e) => {
   e.next()
