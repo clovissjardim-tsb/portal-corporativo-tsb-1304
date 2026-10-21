@@ -17,6 +17,7 @@ import {
   PlusCircle,
   Layers,
   Download,
+  FileSpreadsheet,
 } from 'lucide-react'
 import {
   transparenciaService,
@@ -281,40 +282,47 @@ export default function PlataformaEletronica({
               )
             })()}
           </div>
+        </div>
 
-          {/* SUB-ABAS / SELETOR DE NAVEGAÇÃO DA PLATAFORMA */}
-          <div className="flex flex-wrap gap-2 pt-6 mt-4 border-t border-slate-700/60">
+        {/* SUB-ABAS DE NAVEGAÇÃO DA PLATAFORMA */}
+        <div className="bg-slate-100/80 px-6 sm:px-8 border-b border-slate-200">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-3">
             <button
               type="button"
               onClick={() => setSubAba('i_vi')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
                 subAba === 'i_vi'
-                  ? 'bg-white text-[#0a2540] shadow-sm font-bold'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20 hover:text-white'
+                  ? 'bg-[#0a1d37] text-white shadow-sm'
+                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
               }`}
             >
-              Incisos I a VI (Documentos &amp; Estudos Regulatórios)
+              <FileText className="h-3.5 w-3.5 text-sky-400" />
+              Incisos I a VI (Documentos &amp; Estudos)
             </button>
+
             <button
               type="button"
               onClick={() => setSubAba('vii')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
                 subAba === 'vii'
-                  ? 'bg-white text-[#0a2540] shadow-sm font-bold'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20 hover:text-white'
+                  ? 'bg-[#0a1d37] text-white shadow-sm'
+                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
               }`}
             >
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
               Inciso VII (Solicitação de Acesso &amp; Resumo Público)
             </button>
+
             <button
               type="button"
               onClick={() => setSubAba('viii')}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
                 subAba === 'viii'
-                  ? 'bg-white text-[#0a2540] shadow-sm font-bold'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20 hover:text-white'
+                  ? 'bg-[#0a1d37] text-white shadow-sm'
+                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
               }`}
             >
+              <Layers className="h-3.5 w-3.5 text-sky-400" />
               Inciso VIII (Ofertas de Cessão de Capacidade)
             </button>
           </div>
@@ -330,7 +338,7 @@ export default function PlataformaEletronica({
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex-1">
-                    <h2 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                    <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
                       {headerIncisos1a6.titulo}
                     </h2>
                     <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
