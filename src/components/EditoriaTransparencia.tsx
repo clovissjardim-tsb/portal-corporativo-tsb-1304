@@ -51,7 +51,7 @@ const MESES = [
 export function EditoriaTransparencia() {
   const { toast } = useToast()
 
-  // Seletor de módulo: 'cabecalho' | 'boletim_master' | 'boletim_secao1' | 'boletim_secao2' | 'monitoramento_congestionamento' | 'plataforma_inciso'
+  // Seletor de módulo: 'cabecalho' | 'boletim_secao1' | 'boletim_contratos' | 'boletim_secao2' | 'monitoramento_congestionamento' | 'plataforma_inciso' | 'boletim_master'
   const [subSecaoAtiva, setSubSecaoAtiva] = useState<SecaoTransparencia>('cabecalho')
 
   const [itens, setItens] = useState<ItemTransparencia[]>([])
@@ -117,7 +117,21 @@ export function EditoriaTransparencia() {
   // Itens filtrados pela subseção atual
   const itensSecao = useMemo(() => {
     return itens
-      .filter((it) => it.secao === subSecaoAtiva)
+      .filter((it) => {
+        if (subSecaoAtiva === 'boletim_contratos') {
+          // Aceita tanto secao === 'boletim_contratos' quanto o slot histórico salvo como contratos_transporte_documento
+          return (
+            it.secao === 'boletim_contratos' ||
+            (it.secao === 'boletim_secao1' && it.chave === 'contratos_transporte_documento')
+          )
+        }
+        if (subSecaoAtiva === 'boletim_secao1') {
+          // Exclui o slot de contratos quando estiver visualizando o Item I, para mantê-lo limpo com as 10 alíneas
+          if (it.chave === 'contratos_transporte_documento') return false
+          return it.secao === 'boletim_secao1'
+        }
+        return it.secao === subSecaoAtiva
+      })
       .filter((it) => {
         if (!filtroPesquisa.trim()) return true
         const termo = filtroPesquisa.toLowerCase()
@@ -344,13 +358,18 @@ export function EditoriaTransparencia() {
   const contagens = useMemo(() => {
     return {
       cabecalho: itens.filter((i) => i.secao === 'cabecalho').length,
-      boletim_master: itens.filter((i) => i.secao === 'boletim_master').length,
       boletim_secao1: itens.filter((i) => i.secao === 'boletim_secao1').length,
+      boletim_contratos: itens.filter(
+        (i) =>
+          i.secao === 'boletim_contratos' ||
+          (i.secao === 'boletim_secao1' && i.chave === 'contratos_transporte_documento'),
+      ).length,
       boletim_secao2: itens.filter((i) => i.secao === 'boletim_secao2').length,
       monitoramento_congestionamento: itens.filter(
         (i) => i.secao === 'monitoramento_congestionamento',
       ).length,
       plataforma_inciso: itens.filter((i) => i.secao === 'plataforma_inciso').length,
+      boletim_master: itens.filter((i) => i.secao === 'boletim_master').length,
     }
   }, [itens])
 
@@ -403,38 +422,38 @@ export function EditoriaTransparencia() {
         <button
           type="button"
           onClick={() => {
-            setSubSecaoAtiva('boletim_master')
+            setSubSecaoAtiva('boletim_secao1')
             setFiltroPesquisa('')
           }}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            subSecaoAtiva === 'boletim_master'
-              ? 'bg-[#0a2540] text-white shadow-xs'
+            subSecaoAtiva === 'boletim_secao1'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
-          <Radio className="h-3.5 w-3.5" />
-          Boletim: Contrato Master
+          <FileText className="h-3.5 w-3.5 text-sky-400" />
+          Item I — Instalações &amp; Serviços (Alíneas a–j)
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
-            {contagens.boletim_master}
+            {contagens.boletim_secao1}
           </span>
         </button>
 
         <button
           type="button"
           onClick={() => {
-            setSubSecaoAtiva('boletim_secao1')
+            setSubSecaoAtiva('boletim_contratos')
             setFiltroPesquisa('')
           }}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            subSecaoAtiva === 'boletim_secao1'
-              ? 'bg-[#0a2540] text-white shadow-xs'
+            subSecaoAtiva === 'boletim_contratos'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
-          <FileText className="h-3.5 w-3.5" />
-          Boletim: Seção I (Alíneas a–j)
+          <Radio className="h-3.5 w-3.5 text-sky-400" />
+          Item II — Contratos de Serviço de Transporte
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
-            {contagens.boletim_secao1}
+            {contagens.boletim_contratos}
           </span>
         </button>
 
@@ -446,12 +465,12 @@ export function EditoriaTransparencia() {
           }}
           className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
             subSecaoAtiva === 'boletim_secao2'
-              ? 'bg-[#0a2540] text-white shadow-xs'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
         >
-          <Calendar className="h-3.5 w-3.5" />
-          Boletim: Seção II (Relatórios Mensais)
+          <Calendar className="h-3.5 w-3.5 text-sky-400" />
+          Alínea h) — Quantidades Programadas e Realizadas
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
             {contagens.boletim_secao2}
           </span>
@@ -716,7 +735,7 @@ export function EditoriaTransparencia() {
                   {modoNovoRelatorio
                     ? subSecaoAtiva === 'monitoramento_congestionamento'
                       ? 'Adicionar Relatório de Congestionamento (Art. 12)'
-                      : 'Adicionar Relatório Mensal (Seção II)'
+                      : 'Adicionar Relatório de Quantidades (Alínea h)'
                     : itemEmEdicao?.titulo}
                 </h3>
               </div>

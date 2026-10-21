@@ -36,14 +36,14 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Baixar Arquivo',
   },
   boletim_secao1_header: {
-    titulo: 'I - Instalações de Transporte e Serviços Prestados, atualizadas permanentemente',
+    titulo: 'I. Instalações de Transporte e Serviços Prestados',
     descricao:
-      'Informações sobre instalações de transporte dutoviário, modelos contratuais, mapas e termos gerais de serviço.',
+      'Atualizado permanentemente. Reúne termos gerais, modelos contratuais, acordos de conexão e operacionais, mapas, capacidades técnicas e disponíveis, quantidades operadas e expansões planejadas.',
   },
   boletim_secao2_header: {
-    titulo: 'II - Quantidades Programadas e realizadas nos Trechos 1 e 3',
+    titulo: 'Quantidades programadas e realizadas (dados diários do mês anterior)',
     descricao:
-      'Série histórica e demonstrativos mensais de quantidades programadas e realizadas de gás natural nos pontos de recepção e entrega.',
+      'Série histórica e demonstrativos mensais de quantidades programadas e realizadas de gás natural nos pontos de recepção e entrega dos Trechos 1 e 3.',
     url_externa: 'https://www.tsb.com.br/boletim-eletronico/',
     nome_arquivo_custom: 'Consultar no Site Oficial',
   },
@@ -61,15 +61,15 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Ver Resolução ANP nº 42/2012',
   },
   boletim_contratos_header: {
-    titulo: 'Contratos de Serviço de Transporte',
+    titulo: 'II. Contratos de Serviço de Transporte',
     descricao:
-      'Em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021, a TSB disponibiliza o documento consolidado contendo as informações históricas de contratos celebrados, partes, vigências, capacidades contratadas e condições tarifárias.',
+      'Atualizado a cada novo contrato ou alteração. Em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021, reúne informações sobre contratos de serviço de transporte celebrados, contemplando: nome do Carregador, tipo de serviço contratado, datas de início e término de vigência, evolução das capacidades contratadas ao longo do prazo contratual, tarifas e descontos pactuados, e indicação de relação acionária direta ou indireta entre Transportador e Carregador.',
     nome_arquivo_custom: 'Baixar Documento',
   },
   contratos_transporte_documento: {
-    titulo: 'Contratos de Serviço de Transporte Celebrados',
+    titulo: 'Resumo dos Contratos e Tarifas Vigentes',
     descricao:
-      'Histórico e dados consolidados dos contratos de transporte: carregador, tipo de serviço, prazos contratuais, evolução de capacidades contratadas, tarifas/descontos aplicados e relação societária entre transportador e carregador, em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021.',
+      'Histórico consolidado dos contratos de serviço de transporte celebrados pela TSB: nome do Carregador, modalidade de serviço, prazos de vigência, evolução de capacidade contratada, tarifas e descontos pactuados e relação societária (Item II da Portaria ANP nº 1/2003 e Art. 2º da Lei nº 14.134/2021).',
     nome_arquivo_custom: 'Baixar Documento',
   },
   resumo_solicitacoes_vii_pdf: {
