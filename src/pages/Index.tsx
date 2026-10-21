@@ -1,13 +1,45 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Building2, Network, Headphones, Shield, ArrowRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+  Building2,
+  Network,
+  Headphones,
+  Shield,
+  ArrowRight,
+  ShieldAlert,
+  FileDown,
+} from 'lucide-react'
 import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
 import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
+import {
+  transparenciaService,
+  resolverUrlDocumento,
+  CABECALHOS_FALLBACK,
+  type ItemTransparencia,
+} from '@/services/transparencia'
 
 export default function Index() {
   const [tarifa, setTarifa] = useState<QuadroTarifa | null>(null)
   const [carregandoTarifa, setCarregandoTarifa] = useState(true)
+  const [avisoServidaoItem, setAvisoServidaoItem] = useState<ItemTransparencia | null>(null)
+
+  useEffect(() => {
+    let ativo = true
+    transparenciaService
+      .obterPorChave('cabecalho', 'aviso_faixas_servidao')
+      .then((item) => {
+        if (ativo) setAvisoServidaoItem(item)
+      })
+      .catch(() => {
+        // fallback é utilizado
+      })
+
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   useEffect(() => {
     let ativo = true
@@ -114,25 +146,70 @@ export default function Index() {
         </Card>
 
         {/* CARD 2: Malha de Gasodutos */}
-        <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white">
-          <CardHeader className="pb-3 flex flex-row items-center gap-3 space-y-0">
-            <div className="p-2.5 rounded-lg bg-emerald-50 text-[#059669]">
-              <Network className="h-6 w-6" />
+        <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 bg-white flex flex-col justify-between">
+          <div>
+            <CardHeader className="pb-3 flex flex-row items-center gap-3 space-y-0">
+              <div className="p-2.5 rounded-lg bg-emerald-50 text-[#059669]">
+                <Network className="h-6 w-6" />
+              </div>
+              <CardTitle className="text-lg font-bold text-[#0a1d37] font-display">
+                Malha de Gasodutos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-600 leading-relaxed space-y-2">
+              <p>
+                O sistema dutoviário da TSB abrange trechos estratégicos entre a fronteira oeste
+                (Uruguaiana) e o Polo Petroquímico de Triunfo/Porto Alegre.
+              </p>
+              <p>
+                Operamos com modernas Estações de Medição e Regulagem de Pressão (EMEDs), sistemas
+                de supervisão SCADA de alta precisão e integridade estrutural contínua de dutos.
+              </p>
+            </CardContent>
+          </div>
+
+          {/* AVISO DISCRETO DE FAIXAS DE SERVIDÃO (RES. ANP 42/2012, ART. 46) JUNTO AO CARD */}
+          {avisoServidaoItem?.ativo !== false && (
+            <div className="p-3.5 m-4 mt-0 rounded-md bg-blue-50/80 border border-blue-200/90 text-xs text-slate-700 space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-[#0a1d37]">
+                <ShieldAlert className="h-3.5 w-3.5 text-[#e30613] shrink-0" />
+                <span className="font-display">Segurança das Faixas de Servidão</span>
+                <Badge
+                  variant="outline"
+                  className="bg-white text-[#143b73] border-blue-300 text-[9px] font-mono ml-auto"
+                >
+                  Res. 42/2012
+                </Badge>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-snug line-clamp-3">
+                {avisoServidaoItem?.descricao ||
+                  CABECALHOS_FALLBACK.aviso_faixas_servidao.descricao}
+              </p>
+              <div className="pt-0.5 flex items-center justify-between">
+                <Link
+                  to="/transparencia"
+                  className="text-[10px] font-bold text-[#143b73] hover:underline"
+                >
+                  Ver no Boletim &rarr;
+                </Link>
+                {(() => {
+                  const doc = resolverUrlDocumento(avisoServidaoItem, '')
+                  if (!doc.url) return null
+                  return (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-slate-500 hover:text-[#143b73] inline-flex items-center gap-1"
+                    >
+                      <FileDown className="h-3 w-3" />
+                      {doc.nomeExibicao || 'Resolução ANP'}
+                    </a>
+                  )
+                })()}
+              </div>
             </div>
-            <CardTitle className="text-lg font-bold text-[#0a1d37] font-display">
-              Malha de Gasodutos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-slate-600 leading-relaxed space-y-2">
-            <p>
-              O sistema dutoviário da TSB abrange trechos estratégicos entre a fronteira oeste
-              (Uruguaiana) e o Polo Petroquímico de Triunfo/Porto Alegre.
-            </p>
-            <p>
-              Operamos com modernas Estações de Medição e Regulagem de Pressão (EMEDs), sistemas de
-              supervisão SCADA de alta precisão e integridade estrutural contínua de dutos.
-            </p>
-          </CardContent>
+          )}
         </Card>
 
         {/* CARD 3: Atendimento ao Cliente */}

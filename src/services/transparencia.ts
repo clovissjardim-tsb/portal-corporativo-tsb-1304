@@ -5,6 +5,7 @@ export type SecaoTransparencia =
   | 'boletim_master'
   | 'boletim_secao1'
   | 'boletim_secao2'
+  | 'monitoramento_congestionamento'
   | 'plataforma_inciso'
 
 /**
@@ -44,6 +45,24 @@ export const CABECALHOS_FALLBACK: Record<
       'Série histórica e demonstrativos mensais de quantidades programadas e realizadas de gás natural nos pontos de recepção e entrega.',
     url_externa: 'https://www.tsb.com.br/boletim-eletronico/',
     nome_arquivo_custom: 'Consultar no Site Oficial',
+  },
+  boletim_explicativo_capacidade_g: {
+    titulo:
+      'Entendimento Conceitual sobre Capacidade Firme e Simulação Termo-Hidráulica (Padrão NTS)',
+    descricao:
+      'A Capacidade Técnica Máxima (CTM) resulta da simulação termo-hidráulica do gasoduto considerando pressões, vazões nominais e o perfil operacional de entrada e saída. A Capacidade Comercial (CC) é obtida deduzindo-se da capacidade técnica o consumo operacional/gás combustível e as margens prudenciais de segurança do sistema dutoviário. Os percentuais de capacidade firme, interrompível e de curto prazo (contratos com vigência inferior a um ano) devem ser informados aos agentes e à ANP, em conformidade com a Portaria ANP nº 1/2003 (Art. 2º, I, "g") e a Resolução ANP nº 11/2016.',
+  },
+  aviso_faixas_servidao: {
+    titulo:
+      'Aviso Regulatório: Segurança e Integridade das Faixas de Servidão de Gasodutos (Resolução ANP nº 42/2012, Art. 46)',
+    descricao:
+      'As faixas de servidão administrativas dos gasodutos pertencem a terceiros ou ao poder público, constituindo áreas de utilidade pública legalmente gravadas para a segurança da população, do meio ambiente e da infraestrutura de transporte de gás natural. Conforme o Art. 46 da Resolução ANP nº 42/2012, qualquer interferência física nas faixas de dutos — incluindo obras de construção civil, plantio de árvores de porte, escavações, aterros, trânsito de máquinas pesadas ou instalação de cruzamentos de outras concessionárias — é estritamente condicionada à consulta, análise técnica e autorização formal prévia da Transportadora Sulbrasileira de Gás (TSB). Em caso de planejamento de intervenção, entre em contato imediatamente com a engenharia e segurança operacional da TSB através de regulacao@tsb.com.br.',
+    nome_arquivo_custom: 'Ver Resolução ANP nº 42/2012',
+  },
+  monitoramento_congestionamento_header: {
+    titulo: 'Monitoramento de Utilização da Capacidade e Congestionamento Físico e Contratual',
+    descricao:
+      'Em cumprimento ao Art. 12 da Resolução ANP nº 11/2016, a TSB submete mensalmente à ANP e disponibiliza publicamente os relatórios de monitoramento de utilização de capacidade do sistema dutoviário (Art. 12, caput e §1º). Os relatórios retratam a consolidação do fluxo operacional e a verificação de eventuais congestionamentos físicos ou contratuais nos pontos de recepção e entrega dos Trechos 1 e 3 da malha dutoviária, assegurando ampla transparência ao mercado.',
   },
   plataforma_topo: {
     titulo: 'Plataforma Eletrônica',

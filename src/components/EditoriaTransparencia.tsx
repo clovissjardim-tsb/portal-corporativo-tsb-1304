@@ -30,6 +30,7 @@ import {
   Search,
   Check,
   Calendar,
+  Activity,
 } from 'lucide-react'
 
 const MESES = [
@@ -50,7 +51,7 @@ const MESES = [
 export function EditoriaTransparencia() {
   const { toast } = useToast()
 
-  // Seletor de módulo: 'cabecalho' | 'boletim_master' | 'boletim_secao1' | 'boletim_secao2' | 'plataforma_inciso'
+  // Seletor de módulo: 'cabecalho' | 'boletim_master' | 'boletim_secao1' | 'boletim_secao2' | 'monitoramento_congestionamento' | 'plataforma_inciso'
   const [subSecaoAtiva, setSubSecaoAtiva] = useState<SecaoTransparencia>('cabecalho')
 
   const [itens, setItens] = useState<ItemTransparencia[]>([])
@@ -70,7 +71,7 @@ export function EditoriaTransparencia() {
   const [formNomeArquivoCustom, setFormNomeArquivoCustom] = useState('')
   const [formAtivo, setFormAtivo] = useState(true)
 
-  // Seção II específico
+  // Seção II e Monitoramento de Congestionamento específico
   const [formAno, setFormAno] = useState('2026')
   const [formMes, setFormMes] = useState('Setembro')
   const [formChavePeriodo, setFormChavePeriodo] = useState('2026-09')
@@ -127,7 +128,10 @@ export function EditoriaTransparencia() {
         )
       })
       .sort((a, b) => {
-        if (subSecaoAtiva === 'boletim_secao2') {
+        if (
+          subSecaoAtiva === 'boletim_secao2' ||
+          subSecaoAtiva === 'monitoramento_congestionamento'
+        ) {
           // ordenar por chave_periodo decrescente por padrão
           return (b.chave_periodo || '').localeCompare(a.chave_periodo || '')
         }
@@ -162,8 +166,8 @@ export function EditoriaTransparencia() {
     setModalAberto(true)
   }
 
-  // Abrir modal para novo relatório da Seção II
-  const abrirNovoRelatorioSecao2 = () => {
+  // Abrir modal para novo relatório da Seção II ou Monitoramento de Congestionamento
+  const abrirNovoRelatorio = (tipo: 'boletim_secao2' | 'monitoramento_congestionamento') => {
     setItemEmEdicao(null)
     setModoNovoRelatorio(true)
 
@@ -171,19 +175,31 @@ export function EditoriaTransparencia() {
     const anoAtualStr = String(agora.getFullYear())
     const mesNum = agora.getMonth() + 1
     const mesAtualStr = MESES[mesNum - 1]
-    const chave = `${anoAtualStr}-${String(mesNum).padStart(2, '0')}`
+    const chavePeriodo = `${anoAtualStr}-${String(mesNum).padStart(2, '0')}`
 
     setFormAno(anoAtualStr)
     setFormMes(mesAtualStr)
-    setFormChavePeriodo(chave)
+    setFormChavePeriodo(chavePeriodo)
     setFormRotulo(`${mesAtualStr}/${anoAtualStr}`)
-    setFormTitulo(
-      `Quantidades programadas e realizadas nos pontos de recepção e entrega -${mesAtualStr}/${anoAtualStr}`,
-    )
-    setFormDescricao('Relatório de quantidades programadas e realizadas nos Trechos 1 e 3.')
+
+    if (tipo === 'monitoramento_congestionamento') {
+      setFormTitulo(
+        `Relatório de Monitoramento de Utilização da Capacidade e Congestionamento - ${mesAtualStr}/${anoAtualStr}`,
+      )
+      setFormDescricao(
+        'Relatório mensal consolidado do fluxo operacional e monitoramento de capacidade conforme Art. 12 da Resolução ANP nº 11/2016.',
+      )
+      setFormNomeArquivoCustom(`Monitoramento_Congestionamento_${mesAtualStr}${anoAtualStr}.pdf`)
+    } else {
+      setFormTitulo(
+        `Quantidades programadas e realizadas nos pontos de recepção e entrega -${mesAtualStr}/${anoAtualStr}`,
+      )
+      setFormDescricao('Relatório de quantidades programadas e realizadas nos Trechos 1 e 3.')
+      setFormNomeArquivoCustom(`Art_2o_Alinea-I_Item_h_${mesAtualStr}${anoAtualStr}.pdf`)
+    }
+
     setFormOrdem(1)
     setFormUrlExterna('')
-    setFormNomeArquivoCustom(`Art_2o_Alinea-I_Item_h_${mesAtualStr}${anoAtualStr}.pdf`)
     setFormAtivo(true)
 
     setFormUrlSecundaria('')
@@ -234,8 +250,13 @@ export function EditoriaTransparencia() {
     try {
       let chave = itemEmEdicao?.chave || ''
       if (modoNovoRelatorio) {
-        chave = `mes_${formChavePeriodo.replace('-', '_')}`
+        const prefixo =
+          subSecaoAtiva === 'monitoramento_congestionamento' ? 'congestionamento' : 'mes'
+        chave = `${prefixo}_${formChavePeriodo.replace('-', '_')}`
       }
+
+      const ehRelatorioMensal =
+        subSecaoAtiva === 'boletim_secao2' || subSecaoAtiva === 'monitoramento_congestionamento'
 
       const inputDados = {
         secao: subSecaoAtiva,
@@ -247,9 +268,9 @@ export function EditoriaTransparencia() {
         url_externa: formUrlExterna.trim(),
         nome_arquivo_custom: formNomeArquivoCustom.trim(),
         ativo: formAtivo,
-        ano: subSecaoAtiva === 'boletim_secao2' ? formAno : undefined,
-        mes: subSecaoAtiva === 'boletim_secao2' ? formMes : undefined,
-        chave_periodo: subSecaoAtiva === 'boletim_secao2' ? formChavePeriodo : undefined,
+        ano: ehRelatorioMensal ? formAno : undefined,
+        mes: ehRelatorioMensal ? formMes : undefined,
+        chave_periodo: ehRelatorioMensal ? formChavePeriodo : undefined,
         url_secundaria: formUrlSecundaria.trim() || undefined,
         nome_url_secundaria: formNomeUrlSecundaria.trim() || undefined,
         arquivo: arquivoSelecionado,
@@ -323,6 +344,9 @@ export function EditoriaTransparencia() {
       boletim_master: itens.filter((i) => i.secao === 'boletim_master').length,
       boletim_secao1: itens.filter((i) => i.secao === 'boletim_secao1').length,
       boletim_secao2: itens.filter((i) => i.secao === 'boletim_secao2').length,
+      monitoramento_congestionamento: itens.filter(
+        (i) => i.secao === 'monitoramento_congestionamento',
+      ).length,
       plataforma_inciso: itens.filter((i) => i.secao === 'plataforma_inciso').length,
     }
   }, [itens])
@@ -433,6 +457,25 @@ export function EditoriaTransparencia() {
         <button
           type="button"
           onClick={() => {
+            setSubSecaoAtiva('monitoramento_congestionamento')
+            setFiltroPesquisa('')
+          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            subSecaoAtiva === 'monitoramento_congestionamento'
+              ? 'bg-[#0a1d37] text-white shadow-xs font-bold'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          <Activity className="h-3.5 w-3.5 text-amber-400" />
+          Monitoramento de Congestionamento (Art. 12)
+          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-200 text-[#0a2540] font-bold">
+            {contagens.monitoramento_congestionamento}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
             setSubSecaoAtiva('plataforma_inciso')
             setFiltroPesquisa('')
           }}
@@ -465,11 +508,21 @@ export function EditoriaTransparencia() {
 
         {subSecaoAtiva === 'boletim_secao2' && (
           <Button
-            onClick={abrirNovoRelatorioSecao2}
+            onClick={() => abrirNovoRelatorio('boletim_secao2')}
             className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold h-9 shrink-0 inline-flex items-center gap-1.5"
           >
             <PlusCircle className="h-4 w-4" />
             Adicionar Relatório Mensal
+          </Button>
+        )}
+
+        {subSecaoAtiva === 'monitoramento_congestionamento' && (
+          <Button
+            onClick={() => abrirNovoRelatorio('monitoramento_congestionamento')}
+            className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold h-9 shrink-0 inline-flex items-center gap-1.5"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Adicionar Relatório de Congestionamento
           </Button>
         )}
       </div>
@@ -515,7 +568,8 @@ export function EditoriaTransparencia() {
                           {item.descricao}
                         </p>
                       )}
-                      {subSecaoAtiva === 'boletim_secao2' && (
+                      {(subSecaoAtiva === 'boletim_secao2' ||
+                        subSecaoAtiva === 'monitoramento_congestionamento') && (
                         <div className="text-[10px] text-[#0284c7] font-mono mt-1">
                           Período: {item.chave_periodo || `${item.ano}-${item.mes}`}
                         </div>
@@ -657,7 +711,9 @@ export function EditoriaTransparencia() {
                 </span>
                 <h3 className="text-lg font-bold">
                   {modoNovoRelatorio
-                    ? 'Adicionar Relatório Mensal (Seção II)'
+                    ? subSecaoAtiva === 'monitoramento_congestionamento'
+                      ? 'Adicionar Relatório de Congestionamento (Art. 12)'
+                      : 'Adicionar Relatório Mensal (Seção II)'
                     : itemEmEdicao?.titulo}
                 </h3>
               </div>
@@ -698,8 +754,9 @@ export function EditoriaTransparencia() {
                 </label>
               </div>
 
-              {/* CAMPOS ESPECÍFICOS DE MÊS/ANO DA SEÇÃO II */}
-              {subSecaoAtiva === 'boletim_secao2' && (
+              {/* CAMPOS ESPECÍFICOS DE MÊS/ANO DA SEÇÃO II E MONITORAMENTO DE CONGESTIONAMENTO */}
+              {(subSecaoAtiva === 'boletim_secao2' ||
+                subSecaoAtiva === 'monitoramento_congestionamento') && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-sky-50/60 border border-sky-200 rounded-lg">
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold text-slate-700">Ano *</Label>
