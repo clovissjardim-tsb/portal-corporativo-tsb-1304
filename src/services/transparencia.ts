@@ -75,7 +75,7 @@ export const CABECALHOS_FALLBACK: Record<
   plataforma_incisos_i_vi_header: {
     titulo: 'Exigências Legais do Art. 9º da Resolução ANP nº 11/2016',
     descricao:
-      'Documentação oficial e estudos técnicos disponibilizados pela Transportadora Sulbrasileira de Gás - TSB em atendimento aos incisos I a VI do Art. 9º da Resolução ANP nº 11/2016. Clique nos botões correspondentes para baixar os arquivos ou consultar os estudos oficiais.',
+      'Documentação oficial e estudos técnicos disponibilizados pela Transportadora Sulbrasileira de Gás - TSB em atendimento aos incisos I a VIII do Art. 9º da Resolução ANP nº 11/2016. Clique nos botões correspondentes para baixar os arquivos ou consultar os estudos oficiais.',
   },
 }
 

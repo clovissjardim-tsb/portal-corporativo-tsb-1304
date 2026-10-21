@@ -284,50 +284,6 @@ export default function PlataformaEletronica({
           </div>
         </div>
 
-        {/* SUB-ABAS DE NAVEGAÇÃO DA PLATAFORMA */}
-        <div className="bg-slate-100/80 px-6 sm:px-8 border-b border-slate-200">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-3">
-            <button
-              type="button"
-              onClick={() => setSubAba('i_vi')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAba === 'i_vi'
-                  ? 'bg-[#0a1d37] text-white shadow-sm'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5 text-sky-400" />
-              Incisos I a VI (Documentos &amp; Estudos)
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSubAba('vii')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAba === 'vii'
-                  ? 'bg-[#0a1d37] text-white shadow-sm'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
-              Inciso VII (Solicitação de Acesso &amp; Resumo Público)
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSubAba('viii')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAba === 'viii'
-                  ? 'bg-[#0a1d37] text-white shadow-sm'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5 text-sky-400" />
-              Inciso VIII (Ofertas de Cessão de Capacidade)
-            </button>
-          </div>
-        </div>
-
         {/* CONTEÚDO PRINCIPAL */}
         <div className="p-6 sm:p-8 space-y-10">
           {/* ========================================================
@@ -961,6 +917,24 @@ export default function PlataformaEletronica({
                   </div>
                 )}
               </div>
+
+              {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}
+              <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setSubAba('i_vi')}
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                >
+                  &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubAba('viii')}
+                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:text-[#0369a1] font-semibold transition-colors"
+                >
+                  Ir para Inciso VIII (Ofertas de Cessão) &rarr;
+                </button>
+              </div>
             </div>
           )}
 
@@ -1162,6 +1136,24 @@ export default function PlataformaEletronica({
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}
+              <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setSubAba('i_vi')}
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                >
+                  &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubAba('vii')}
+                  className="inline-flex items-center gap-1.5 text-[#059669] hover:text-[#047857] font-semibold transition-colors"
+                >
+                  Ir para Inciso VII (Solicitação de Acesso) &rarr;
+                </button>
               </div>
             </div>
           )}
