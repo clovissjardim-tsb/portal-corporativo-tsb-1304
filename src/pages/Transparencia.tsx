@@ -30,23 +30,7 @@ export default function Transparencia() {
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
   const [filtroMesMensal, setFiltroMesMensal] = useState('Setembro')
 
-  // Formulário do Inciso VII (Arts. 9º e 10 da Res. ANP 11/2016)
-  const [formVII, setFormVII] = useState({
-    razao_social: '',
-    cnpj: '',
-    email: '',
-    modalidade: '' as '' | ModalidadeSolicitacao,
-    capacidade: '',
-    trecho: '',
-    ponto_recebimento: '',
-    ponto_entrega: '',
-    periodo: '',
-    garantias_seguranca_swap: '',
-  })
-  const [submetendoVII, setSubmetendoVII] = useState(false)
-  const [erroFormVII, setErroFormVII] = useState<string | null>(null)
-
-  // Consulta de protocolo Inciso VII
+  // Consulta de protocolo Inciso VII (mantida intacta)
   const [consultaProtocolo, setConsultaProtocolo] = useState('')
   const [consultandoSLA, setConsultandoSLA] = useState(false)
   const [resultadoConsulta, setResultadoConsulta] = useState<{
@@ -101,95 +85,6 @@ export default function Transparencia() {
       carregarOfertasCessao()
     }
   }, [activePilar, subAbaPlataforma, carregarResumoVII, carregarOfertasCessao])
-
-  // Submissão do Inciso VII (com período obrigatório)
-  const handleSubmeterVII = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErroFormVII(null)
-
-    if (
-      !formVII.razao_social ||
-      !formVII.cnpj ||
-      !formVII.email ||
-      !formVII.modalidade ||
-      !formVII.capacidade ||
-      !formVII.trecho ||
-      !formVII.ponto_recebimento ||
-      !formVII.ponto_entrega ||
-      !formVII.periodo
-    ) {
-      setErroFormVII(
-        'Por favor, preencha todos os campos obrigatórios marcados com *, incluindo Pontos de Recebimento e Entrega e o Período.',
-      )
-      return
-    }
-
-    if (formVII.modalidade === 'Troca Operacional' && !formVII.garantias_seguranca_swap.trim()) {
-      setErroFormVII(
-        'Para a modalidade de Troca Operacional (swap), é obrigatório indicar as garantias de segurança e confiabilidade da injeção e retirada (Art. 10, §1º).',
-      )
-      return
-    }
-
-    const capacidadeNum = Number(formVII.capacidade)
-    if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
-      setErroFormVII('A capacidade solicitada deve ser um número positivo.')
-      return
-    }
-
-    setSubmetendoVII(true)
-
-    try {
-      const nova = await solicitacoesService.criar({
-        razao_social: formVII.razao_social.trim(),
-        cnpj: formVII.cnpj.trim(),
-        email: formVII.email.trim(),
-        modalidade: formVII.modalidade as ModalidadeSolicitacao,
-        capacidade: capacidadeNum,
-        trecho: formVII.trecho.trim(),
-        ponto_recebimento: formVII.ponto_recebimento.trim(),
-        ponto_entrega: formVII.ponto_entrega.trim(),
-        periodo: formVII.periodo.trim(),
-        garantias_seguranca_swap:
-          formVII.modalidade === 'Troca Operacional'
-            ? formVII.garantias_seguranca_swap.trim()
-            : undefined,
-      })
-
-      toast({
-        title: 'Solicitação Submetida com Sucesso!',
-        description: `Protocolo ANP gerado: ${nova.protocolo}. E-mail de confirmação enviado para ${nova.email}. Prazo de resposta: 20 dias úteis.`,
-      })
-
-      // Limpa formulário
-      setFormVII({
-        razao_social: '',
-        cnpj: '',
-        email: '',
-        modalidade: '',
-        capacidade: '',
-        trecho: '',
-        ponto_recebimento: '',
-        ponto_entrega: '',
-        periodo: '',
-        garantias_seguranca_swap: '',
-      })
-
-      // Atualiza o resumo agregado e a consulta
-      carregarResumoVII()
-      setConsultaProtocolo(nova.protocolo)
-      setResultadoConsulta({
-        buscado: true,
-        encontrado: true,
-        dados: nova,
-      })
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao submeter solicitação de acesso.'
-      setErroFormVII(msg)
-    } finally {
-      setSubmetendoVII(false)
-    }
-  }
 
   // Consulta de SLA / Protocolo
   const handleVerificarSLA = async (e: React.FormEvent) => {
@@ -311,11 +206,6 @@ export default function Transparencia() {
         <PlataformaEletronica
           subAba={subAbaPlataforma}
           setSubAba={setSubAbaPlataforma}
-          formVII={formVII}
-          setFormVII={setFormVII}
-          submetendoVII={submetendoVII}
-          erroFormVII={erroFormVII}
-          handleSubmeterVII={handleSubmeterVII}
           consultaProtocolo={consultaProtocolo}
           setConsultaProtocolo={setConsultaProtocolo}
           consultandoSLA={consultandoSLA}

@@ -15,6 +15,7 @@ import {
   type DesfechoTipo,
   type StatusSolicitacao,
   type ManifestacaoSulgasStatus,
+  type ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
 import { cessoesService, type OfertaCessaoIncisoVIII } from '@/services/cessoes'
 import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
@@ -48,6 +49,7 @@ import {
   Handshake,
   Mail,
   UserCheck,
+  FileDown,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -95,6 +97,26 @@ export default function Gestao() {
   const [editandoEmailRecebimento, setEditandoEmailRecebimento] = useState(false)
   const [novoEmailRecebimento, setNovoEmailRecebimento] = useState('acesso@tsb.com.br')
   const [salvandoEmailRecebimento, setSalvandoEmailRecebimento] = useState(false)
+
+  // Modal / Formulário de Cadastro de Solicitação de Acesso a partir de PDF (Inciso VII - Modelo Misto)
+  const [modalSolicitacaoAberto, setModalSolicitacaoAberto] = useState(false)
+  const [salvandoSolicitacaoPdf, setSalvandoSolicitacaoPdf] = useState(false)
+  const [erroFormSolicitacaoPdf, setErroFormSolicitacaoPdf] = useState<string | null>(null)
+  const [arquivoPdfSolicitacao, setArquivoPdfSolicitacao] = useState<File | null>(null)
+  const [formSolicitacaoPdf, setFormSolicitacaoPdf] = useState({
+    razao_social: '',
+    cnpj: '',
+    representante_legal: '',
+    email: '',
+    telefone: '',
+    modalidade: 'Firme Ordinário' as ModalidadeSolicitacao,
+    capacidade: '',
+    trecho: 'Trecho 1 (Gasoduto Uruguaiana)',
+    ponto_recebimento: 'Paso de Los Libres (Fronteira Brasil/Argentina)',
+    ponto_entrega: 'Triunfo (Polo Petroquímico)',
+    periodo: '',
+    garantias_seguranca_swap: '',
+  })
 
   // Modal / Formulário de Cadastro e Edição de Oferta a partir de PDF
   const [modalCessaoAberto, setModalCessaoAberto] = useState(false)
@@ -179,6 +201,97 @@ export default function Gestao() {
       })
     } finally {
       setSalvandoEmailRecebimento(false)
+    }
+  }
+
+  const abrirModalNovaSolicitacao = () => {
+    setErroFormSolicitacaoPdf(null)
+    setArquivoPdfSolicitacao(null)
+    setFormSolicitacaoPdf({
+      razao_social: '',
+      cnpj: '',
+      representante_legal: '',
+      email: '',
+      telefone: '',
+      modalidade: 'Firme Ordinário',
+      capacidade: '',
+      trecho: 'Trecho 1 (Gasoduto Uruguaiana)',
+      ponto_recebimento: 'Paso de Los Libres (Fronteira Brasil/Argentina)',
+      ponto_entrega: 'Triunfo (Polo Petroquímico)',
+      periodo: '',
+      garantias_seguranca_swap: '',
+    })
+    setModalSolicitacaoAberto(true)
+  }
+
+  const salvarSolicitacaoPdfInterna = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErroFormSolicitacaoPdf(null)
+
+    if (
+      !formSolicitacaoPdf.razao_social.trim() ||
+      !formSolicitacaoPdf.cnpj.trim() ||
+      !formSolicitacaoPdf.email.trim() ||
+      !formSolicitacaoPdf.capacidade ||
+      !formSolicitacaoPdf.trecho.trim() ||
+      !formSolicitacaoPdf.ponto_recebimento.trim() ||
+      !formSolicitacaoPdf.ponto_entrega.trim() ||
+      !formSolicitacaoPdf.periodo.trim()
+    ) {
+      setErroFormSolicitacaoPdf('Preencha todos os campos obrigatórios marcados com *.')
+      return
+    }
+
+    const capNum = Number(formSolicitacaoPdf.capacidade)
+    if (isNaN(capNum) || capNum <= 0) {
+      setErroFormSolicitacaoPdf('A capacidade solicitada deve ser um número positivo.')
+      return
+    }
+
+    if (
+      formSolicitacaoPdf.modalidade === 'Troca Operacional' &&
+      !formSolicitacaoPdf.garantias_seguranca_swap.trim()
+    ) {
+      setErroFormSolicitacaoPdf(
+        'Para Troca Operacional (Swap - Art. 10, §1º), é obrigatório informar as garantias de segurança e confiabilidade operacional.',
+      )
+      return
+    }
+
+    setSalvandoSolicitacaoPdf(true)
+    try {
+      const nova = await solicitacoesService.criar({
+        razao_social: formSolicitacaoPdf.razao_social.trim(),
+        cnpj: formSolicitacaoPdf.cnpj.trim(),
+        representante_legal: formSolicitacaoPdf.representante_legal.trim() || undefined,
+        email: formSolicitacaoPdf.email.trim(),
+        telefone: formSolicitacaoPdf.telefone.trim() || undefined,
+        modalidade: formSolicitacaoPdf.modalidade,
+        capacidade: capNum,
+        trecho: formSolicitacaoPdf.trecho.trim(),
+        ponto_recebimento: formSolicitacaoPdf.ponto_recebimento.trim(),
+        ponto_entrega: formSolicitacaoPdf.ponto_entrega.trim(),
+        periodo: formSolicitacaoPdf.periodo.trim(),
+        garantias_seguranca_swap:
+          formSolicitacaoPdf.modalidade === 'Troca Operacional'
+            ? formSolicitacaoPdf.garantias_seguranca_swap.trim()
+            : undefined,
+        arquivo_formulario: arquivoPdfSolicitacao,
+      })
+
+      toast({
+        title: 'Solicitação Cadastrada com Sucesso!',
+        description: `Protocolo oficial: ${nova.protocolo}. E-mail de confirmação enviado via SMTP para ${nova.email}. SLA iniciado: 20 dias úteis.`,
+      })
+
+      setModalSolicitacaoAberto(false)
+      carregarSolicitacoes()
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Falha ao cadastrar solicitação do formulário PDF.'
+      setErroFormSolicitacaoPdf(msg)
+    } finally {
+      setSalvandoSolicitacaoPdf(false)
     }
   }
 
@@ -783,18 +896,28 @@ export default function Gestao() {
                       </p>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={carregarSolicitacoes}
-                      disabled={carregando}
-                      className="text-xs text-slate-700 h-8 self-start sm:self-auto"
-                    >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 mr-1.5 ${carregando ? 'animate-spin' : ''}`}
-                      />
-                      Atualizar Fila
-                    </Button>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <Button
+                        size="sm"
+                        onClick={abrirModalNovaSolicitacao}
+                        className="bg-[#0a1d37] hover:bg-[#1b4d96] text-white text-xs font-bold h-8 px-3.5 shadow-sm flex items-center gap-1.5"
+                      >
+                        <FileSignature className="h-3.5 w-3.5 text-sky-400" />
+                        Cadastrar Solicitação do PDF
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={carregarSolicitacoes}
+                        disabled={carregando}
+                        className="text-xs text-slate-700 h-8"
+                      >
+                        <RefreshCw
+                          className={`h-3.5 w-3.5 mr-1.5 ${carregando ? 'animate-spin' : ''}`}
+                        />
+                        Atualizar Fila
+                      </Button>
+                    </div>
                   </div>
 
                   {/* TABELA DE SOLICITAÇÕES COM PONTOS SEPARADOS E DESFECHOS */}
@@ -835,15 +958,45 @@ export default function Gestao() {
                                   </span>{' '}
                                   &bull; {item.capacidade?.toLocaleString('pt-BR')} m³/dia
                                 </div>
-                                {item.email_solicitante && (
+                                {item.representante_legal && (
+                                  <div className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
+                                    <UserCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                                    <span>Rep: {item.representante_legal}</span>
+                                  </div>
+                                )}
+                                {(item.email ||
+                                  (item as unknown as { email_solicitante?: string })
+                                    .email_solicitante) && (
                                   <div className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5 font-mono">
                                     <Mail className="h-3 w-3 text-sky-600 shrink-0" />
-                                    <span>{item.email_solicitante}</span>
-                                    {item.telefone_solicitante && (
+                                    <span>
+                                      {item.email ||
+                                        (item as unknown as { email_solicitante?: string })
+                                          .email_solicitante}
+                                    </span>
+                                    {(item.telefone ||
+                                      (item as unknown as { telefone_solicitante?: string })
+                                        .telefone_solicitante) && (
                                       <span className="text-slate-400">
-                                        &bull; {item.telefone_solicitante}
+                                        &bull;{' '}
+                                        {item.telefone ||
+                                          (item as unknown as { telefone_solicitante?: string })
+                                            .telefone_solicitante}
                                       </span>
                                     )}
+                                  </div>
+                                )}
+                                {item.arquivo_formulario && (
+                                  <div className="mt-1">
+                                    <a
+                                      href={solicitacoesService.obterUrlArquivo(item) || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0284c7] hover:underline"
+                                    >
+                                      <FileDown className="h-3 w-3" />
+                                      Ver PDF Assinado
+                                    </a>
                                   </div>
                                 )}
                               </td>
@@ -2002,6 +2155,397 @@ export default function Gestao() {
         </div>
       )}
 
+      {/* MODAL CADASTRO DE SOLICITAÇÃO DE ACESSO A PARTIR DE PDF (INCISO VII - MODELO MISTO) */}
+      {modalSolicitacaoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 relative max-h-[92vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setModalSolicitacaoAberto(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 text-[#0a1d37]">
+              <div className="p-2.5 bg-blue-50 rounded-lg text-[#0284c7]">
+                <FileSignature className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">
+                  Cadastrar Solicitação de Acesso (Recebida em PDF)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Resolução ANP nº 11/2016, Art. 9º, VII e Art. 10 • Modelo Misto TSB
+                </p>
+              </div>
+            </div>
+
+            {erroFormSolicitacaoPdf && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+                <span>{erroFormSolicitacaoPdf}</span>
+              </div>
+            )}
+
+            <form onSubmit={salvarSolicitacaoPdfInterna} className="space-y-4 text-xs">
+              {/* 1. DADOS CADASTRAIS DO SOLICITANTE */}
+              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <UserCheck className="h-4 w-4 text-[#0284c7]" />
+                  <span>1. Identificação do Carregador Solicitante (Conforme PDF Assinado)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solRazaoSocial"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Razão Social *
+                    </Label>
+                    <Input
+                      id="solRazaoSocial"
+                      required
+                      placeholder="Ex: Comercializadora de Energia S.A."
+                      value={formSolicitacaoPdf.razao_social}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          razao_social: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="solCnpj" className="text-[11px] font-semibold text-slate-700">
+                      CNPJ *
+                    </Label>
+                    <Input
+                      id="solCnpj"
+                      required
+                      placeholder="00.000.000/0001-00"
+                      value={formSolicitacaoPdf.cnpj}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({ ...formSolicitacaoPdf, cnpj: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="solRep" className="text-[11px] font-semibold text-slate-700">
+                      Representante Legal / Signatário
+                    </Label>
+                    <Input
+                      id="solRep"
+                      placeholder="Nome completo do signatário"
+                      value={formSolicitacaoPdf.representante_legal}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          representante_legal: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solEmail"
+                      className="text-[11px] font-semibold text-slate-700 flex items-center justify-between"
+                    >
+                      <span>E-mail Corporativo *</span>
+                      <span className="text-[10px] text-emerald-700 font-bold">Sigilo LGPD</span>
+                    </Label>
+                    <Input
+                      id="solEmail"
+                      type="email"
+                      required
+                      placeholder="regulacao@empresa.com.br"
+                      value={formSolicitacaoPdf.email}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({ ...formSolicitacaoPdf, email: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="solTel" className="text-[11px] font-semibold text-slate-700">
+                      Telefone Corporativo
+                    </Label>
+                    <Input
+                      id="solTel"
+                      placeholder="(00) 0000-0000"
+                      value={formSolicitacaoPdf.telefone}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({ ...formSolicitacaoPdf, telefone: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. DADOS TÉCNICOS DA SOLICITAÇÃO (ART. 10) */}
+              <div className="p-3.5 bg-blue-50/50 rounded-lg border border-blue-200/80 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <Layers className="h-4 w-4 text-[#1b4d96]" />
+                  <span>2. Especificações da Demanda (Art. 10 da Res. ANP nº 11/2016)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solModalidade"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Modalidade de Serviço *
+                    </Label>
+                    <select
+                      id="solModalidade"
+                      value={formSolicitacaoPdf.modalidade}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          modalidade: e.target.value as ModalidadeSolicitacao,
+                        })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Firme Ordinário">Firme Ordinário</option>
+                      <option value="Interruptível">Interruptível</option>
+                      <option value="Troca Operacional">
+                        Troca Operacional (Swap - Art. 10, §1º)
+                      </option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solCapacidade"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Capacidade Solicitada (m³/dia) *
+                    </Label>
+                    <Input
+                      id="solCapacidade"
+                      type="number"
+                      min="1"
+                      required
+                      placeholder="Ex: 150000"
+                      value={formSolicitacaoPdf.capacidade}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          capacidade: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="solTrecho" className="text-[11px] font-semibold text-slate-700">
+                      Instalação / Trecho *
+                    </Label>
+                    <select
+                      id="solTrecho"
+                      value={formSolicitacaoPdf.trecho}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({ ...formSolicitacaoPdf, trecho: e.target.value })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Trecho 1 (Gasoduto Uruguaiana)">
+                        Trecho 1 (Gasoduto Uruguaiana - 24")
+                      </option>
+                      <option value="Trecho 3 (Gasoduto Triunfo)">
+                        Trecho 3 (Gasoduto Triunfo - 18")
+                      </option>
+                      <option value="Uruguaiana -> Triunfo (Sistema Completo)">
+                        Uruguaiana -&gt; Triunfo (Sistema Completo TSB)
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solPontoRec"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Ponto de Recebimento (Injeção) *
+                    </Label>
+                    <select
+                      id="solPontoRec"
+                      value={formSolicitacaoPdf.ponto_recebimento}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          ponto_recebimento: e.target.value,
+                        })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Paso de Los Libres (Fronteira Brasil/Argentina)">
+                        Paso de Los Libres (Fronteira Brasil/Argentina)
+                      </option>
+                      <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
+                      <option value="EMED Uruguaiana">EMED Uruguaiana</option>
+                      <option value="EMED Triunfo">EMED Triunfo</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="solPontoEnt"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Ponto de Entrega (Retirada) *
+                    </Label>
+                    <select
+                      id="solPontoEnt"
+                      value={formSolicitacaoPdf.ponto_entrega}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          ponto_entrega: e.target.value,
+                        })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Triunfo (Polo Petroquímico)">
+                        Triunfo (Polo Petroquímico)
+                      </option>
+                      <option value="Uruguaiana (UTE Uruguaiana)">
+                        Uruguaiana (UTE Uruguaiana)
+                      </option>
+                      <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
+                      <option value="Paso de Los Libres">Paso de Los Libres</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="solPeriodo"
+                    className="text-[11px] font-semibold text-slate-700 flex items-center justify-between"
+                  >
+                    <span>Período(s) em que o serviço será requisitado (Art. 10, II) *</span>
+                    <span className="text-[10px] text-sky-700">Exigência Regulamentar</span>
+                  </Label>
+                  <Input
+                    id="solPeriodo"
+                    required
+                    placeholder="Ex: 01/01/2027 a 31/12/2027 ou Período Safra Out/2026 a Mar/2027"
+                    value={formSolicitacaoPdf.periodo}
+                    onChange={(e) =>
+                      setFormSolicitacaoPdf({ ...formSolicitacaoPdf, periodo: e.target.value })
+                    }
+                    className="bg-white h-8 text-xs"
+                  />
+                </div>
+
+                {formSolicitacaoPdf.modalidade === 'Troca Operacional' && (
+                  <div className="p-3 bg-purple-50/70 border border-purple-200 rounded space-y-1.5 animate-fade-in">
+                    <Label
+                      htmlFor="solGarantias"
+                      className="text-[11px] font-bold text-purple-900 flex items-center justify-between"
+                    >
+                      <span>
+                        Garantias de Segurança e Confiabilidade Operacional (Art. 10, §1º) *
+                      </span>
+                      <span className="text-[10px] text-purple-700">Obrigatório para Swap</span>
+                    </Label>
+                    <Textarea
+                      id="solGarantias"
+                      rows={2}
+                      placeholder="Descreva as garantias de suprimento e lastro físico nos pontos de injeção..."
+                      value={formSolicitacaoPdf.garantias_seguranca_swap}
+                      onChange={(e) =>
+                        setFormSolicitacaoPdf({
+                          ...formSolicitacaoPdf,
+                          garantias_seguranca_swap: e.target.value,
+                        })
+                      }
+                      className="bg-white text-xs resize-y"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 3. ANEXO DO FORMULÁRIO EM PDF ASSINADO RECEBIDO */}
+              <div className="p-3.5 bg-amber-50/50 rounded-lg border border-amber-200 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <FileText className="h-4 w-4 text-amber-600" />
+                  <span>3. Anexo do Formulário em PDF Assinado (Recebido por E-mail)</span>
+                </div>
+
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="uploadPdfSol"
+                    className="text-[11px] font-semibold text-slate-700"
+                  >
+                    Anexar Arquivo PDF Assinado pelo Solicitante (até 50 MB, sigilo interno)
+                  </Label>
+                  <Input
+                    id="uploadPdfSol"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      setArquivoPdfSolicitacao(file)
+                    }}
+                    className="bg-white h-8 text-xs file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[11px] file:bg-slate-100 file:text-slate-700 cursor-pointer"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    O arquivo fica protegido no backend da TSB, acessível somente à equipe interna
+                    autenticada.
+                  </p>
+                </div>
+              </div>
+
+              {/* BOTÕES DE SUBMISSÃO */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModalSolicitacaoAberto(false)}
+                  className="text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={salvandoSolicitacaoPdf}
+                  className="bg-[#0a1d37] hover:bg-[#143b73] text-white text-xs font-semibold px-5"
+                >
+                  {salvandoSolicitacaoPdf ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Cadastrando e Gerando Protocolo...
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck className="h-4 w-4 mr-1.5" />
+                      Protocolar Solicitação (SLA 20 Dias + Envio SMTP)
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* MODAL DETALHES E DELIBERAÇÃO COM OS 3 DESFECHOS OFICIAIS (ART. 10, §2º) */}
       {modalAberto && itemSelecionado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
@@ -2040,25 +2584,58 @@ export default function Gestao() {
               </div>
 
               {/* DADOS DE CONTATO E REPRESENTANTE (EXCLUSIVOS DO AMBIENTE AUTENTICADO - LGPD) */}
-              <div className="p-2.5 bg-blue-50/70 rounded border border-blue-200 mt-1">
-                <span className="text-blue-900 font-bold block mb-1 text-[11px] flex items-center gap-1">
+              <div className="p-2.5 bg-blue-50/70 rounded border border-blue-200 mt-1 space-y-1.5">
+                <span className="text-blue-900 font-bold block text-[11px] flex items-center gap-1">
                   <UserCheck className="h-3.5 w-3.5 text-blue-700" />
                   Contato do Solicitante / Representante Legal (Restrito - LGPD):
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-slate-500 block">Representante Legal:</span>
+                    <strong className="text-[#0a2540]">
+                      {itemSelecionado.representante_legal || 'Não informado'}
+                    </strong>
+                  </div>
                   <div>
                     <span className="text-slate-500 block">E-mail Cadastrado:</span>
                     <strong className="text-[#0a2540] font-mono">
-                      {itemSelecionado.email_solicitante || 'Não informado'}
+                      {itemSelecionado.email ||
+                        (itemSelecionado as unknown as { email_solicitante?: string })
+                          .email_solicitante ||
+                        'Não informado'}
                     </strong>
                   </div>
                   <div>
                     <span className="text-slate-500 block">Telefone:</span>
                     <strong className="text-[#0a2540]">
-                      {itemSelecionado.telefone_solicitante || 'Não informado'}
+                      {itemSelecionado.telefone ||
+                        (itemSelecionado as unknown as { telefone_solicitante?: string })
+                          .telefone_solicitante ||
+                        'Não informado'}
                     </strong>
                   </div>
                 </div>
+                {itemSelecionado.arquivo_formulario && (
+                  <div className="pt-1 border-t border-blue-200 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-600">
+                      Formulário PDF anexado no recebimento:
+                    </span>
+                    <a
+                      href={solicitacoesService.obterUrlArquivo(itemSelecionado) || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0284c7] hover:underline"
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                      Baixar/Visualizar PDF Assinado
+                    </a>
+                  </div>
+                )}
+                {itemSelecionado.operador_cadastro && (
+                  <div className="text-[10px] text-slate-500">
+                    Cadastrado pelo operador interno: {itemSelecionado.operador_cadastro}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

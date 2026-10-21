@@ -35,6 +35,11 @@ export interface SolicitacaoIncisoVII extends RecordModel {
   status: StatusSolicitacao
   sla_dias: number
   parecer_fundamentado?: string
+  // Modelo Misto (v0.0.26): campos cadastrais e anexo de formulário assinado
+  representante_legal?: string
+  telefone?: string
+  arquivo_formulario?: string
+  operador_cadastro?: string
   // Art. 10, §1º: Garantias de segurança e confiabilidade (Troca Operacional / Swap)
   garantias_seguranca_swap?: string
   // Art. 10, §2º: Desfechos padronizados
@@ -66,6 +71,10 @@ export type NovaSolicitacaoInput = {
   ponto_entrega: string
   periodo: string
   garantias_seguranca_swap?: string
+  representante_legal?: string
+  telefone?: string
+  arquivo_formulario?: File | null
+  status?: StatusSolicitacao
 }
 
 // Interface para agregação pública por Ponto Relevante (SEM dados pessoais - LGPD / Art. 9º, VII)
@@ -208,20 +217,67 @@ export const solicitacoesService = {
     }
   },
 
+  /**
+   * Cadastra nova solicitação de acesso a partir do formulário PDF assinado recebido por e-mail (Gestão Interna).
+   * Suporta anexo do próprio PDF assinado (até 50 MB, restrito a autenticados).
+   */
   async criar(data: NovaSolicitacaoInput): Promise<SolicitacaoIncisoVII> {
     const protocolo = gerarNumeroProtocolo()
-    const registro = await pb.collection<SolicitacaoIncisoVII>('solicitacoes_inciso_vii').create({
-      ...data,
-      protocolo,
-      status: 'Solicitação Recebida - Em Análise Técnica',
-      sla_dias: 20,
-      parecer_fundamentado:
-        'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.',
-      manifestacao_sulgas_status: 'Pendente',
-    })
+    const formData = new FormData()
+
+    formData.append('razao_social', data.razao_social)
+    formData.append('cnpj', data.cnpj)
+    formData.append('email', data.email)
+    formData.append('modalidade', data.modalidade)
+    formData.append('capacidade', String(data.capacidade))
+    formData.append('trecho', data.trecho)
+    formData.append('ponto_recebimento', data.ponto_recebimento)
+    formData.append('ponto_entrega', data.ponto_entrega)
+    formData.append('periodo', data.periodo)
+    formData.append('protocolo', protocolo)
+    formData.append('status', data.status || 'Solicitação Recebida - Em Análise Técnica')
+    formData.append('sla_dias', '20')
+    formData.append(
+      'parecer_fundamentado',
+      'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.',
+    )
+    formData.append('manifestacao_sulgas_status', 'Pendente')
+
+    if (data.garantias_seguranca_swap) {
+      formData.append('garantias_seguranca_swap', data.garantias_seguranca_swap)
+    }
+    if (data.representante_legal) {
+      formData.append('representante_legal', data.representante_legal)
+    }
+    if (data.telefone) {
+      formData.append('telefone', data.telefone)
+    }
+
+    // Grava identificação do operador autenticado
+    const authModel = pb.authStore.record
+    if (authModel) {
+      const opInfo = (authModel.name as string) || (authModel.email as string) || authModel.id
+      formData.append('operador_cadastro', opInfo)
+    }
+
+    if (data.arquivo_formulario) {
+      formData.append('arquivo_formulario', data.arquivo_formulario)
+    }
+
+    const registro = await pb
+      .collection<SolicitacaoIncisoVII>('solicitacoes_inciso_vii')
+      .create(formData)
 
     // O hook onRecordCreate no backend dispara o e-mail de protocolo automaticamente via SMTP corporativo
     return registro
+  },
+
+  /**
+   * Retorna a URL para download/visualização segura do arquivo de formulário PDF assinado anexado.
+   */
+  obterUrlArquivo(record: SolicitacaoIncisoVII): string | null {
+    if (!record.arquivo_formulario) return null
+    return pb.files.getURL(record, record.arquivo_formulario)
   },
 
   async atualizarStatus(

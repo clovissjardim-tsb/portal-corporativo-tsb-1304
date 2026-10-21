@@ -16,6 +16,7 @@ import {
   RefreshCw,
   PlusCircle,
   Layers,
+  Download,
 } from 'lucide-react'
 import {
   transparenciaService,
@@ -33,14 +34,15 @@ import type {
 import type { OfertaCessaoPublica } from '@/services/cessoes'
 import { cessoesService } from '@/services/cessoes'
 import { gerarFormularioCessaoPdf } from '@/services/formularioCessaoPdf'
+import { gerarFormularioAcessoPdf } from '@/services/formularioSolicitacaoAcessoPdf'
 
 export interface PlataformaEletronicaProps {
   // Sub-abas
   subAba: 'i_vi' | 'vii' | 'viii'
   setSubAba: (aba: 'i_vi' | 'vii' | 'viii') => void
 
-  // Inciso VII
-  formVII: {
+  // Inciso VII (opcional/legado para retrocompatibilidade)
+  formVII?: {
     razao_social: string
     cnpj: string
     email: string
@@ -52,7 +54,7 @@ export interface PlataformaEletronicaProps {
     periodo: string
     garantias_seguranca_swap: string
   }
-  setFormVII: React.Dispatch<
+  setFormVII?: React.Dispatch<
     React.SetStateAction<{
       razao_social: string
       cnpj: string
@@ -66,9 +68,9 @@ export interface PlataformaEletronicaProps {
       garantias_seguranca_swap: string
     }>
   >
-  submetendoVII: boolean
-  erroFormVII: string | null
-  handleSubmeterVII: (e: React.FormEvent) => void
+  submetendoVII?: boolean
+  erroFormVII?: string | null
+  handleSubmeterVII?: (e: React.FormEvent) => void
 
   // Consulta Inciso VII
   consultaProtocolo: string
@@ -119,11 +121,6 @@ export interface PlataformaEletronicaProps {
 export default function PlataformaEletronica({
   subAba,
   setSubAba,
-  formVII,
-  setFormVII,
-  submetendoVII,
-  erroFormVII,
-  handleSubmeterVII,
   consultaProtocolo,
   setConsultaProtocolo,
   consultandoSLA,
@@ -139,6 +136,7 @@ export default function PlataformaEletronica({
 }: PlataformaEletronicaProps) {
   const [emailRecebimentoCessoes, setEmailRecebimentoCessoes] = useState('acesso@tsb.com.br')
   const [gerandoPdfCessao, setGerandoPdfCessao] = useState(false)
+  const [gerandoPdfAcesso, setGerandoPdfAcesso] = useState(false)
 
   useEffect(() => {
     cessoesService.obterEmailRecebimento().then((em) => {
@@ -153,9 +151,22 @@ export default function PlataformaEletronica({
         emailDestino: emailRecebimentoCessoes,
       })
     } catch (err) {
-      console.error('Erro ao gerar PDF do formulário:', err)
+      console.error('Erro ao gerar PDF do formulário de cessão:', err)
     } finally {
       setGerandoPdfCessao(false)
+    }
+  }
+
+  const handleBaixarFormularioAcessoPdf = async () => {
+    setGerandoPdfAcesso(true)
+    try {
+      await gerarFormularioAcessoPdf({
+        emailDestino: emailRecebimentoCessoes,
+      })
+    } catch (err) {
+      console.error('Erro ao gerar PDF do formulário de solicitação de acesso:', err)
+    } finally {
+      setGerandoPdfAcesso(false)
     }
   }
   // Itens da Plataforma Eletrônica gerenciados pelo PocketBase
@@ -937,285 +948,109 @@ export default function PlataformaEletronica({
                 </div>
               </div>
 
-              {/* ITEM 2: FORMULÁRIO DO INCISO VII COM CAMPO PERÍODO (Art. 10, II) */}
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg">
-                <h3 className="text-base font-bold text-[#0a2540] mb-4 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[#0284c7]" />
-                  Formulário de Solicitação de Acesso Firme ou Interruptível (Art. 9º, VII)
-                </h3>
-
-                {erroFormVII && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
-                    <XCircle className="h-4 w-4 shrink-0" />
-                    <span>{erroFormVII}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmeterVII} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="razao_social"
-                        className="text-xs font-semibold text-slate-700"
-                      >
-                        Razão Social *
-                      </Label>
-                      <Input
-                        id="razao_social"
-                        required
-                        placeholder="Ex: Comercializadora de Energia S.A."
-                        value={formVII.razao_social}
-                        onChange={(e) => setFormVII({ ...formVII, razao_social: e.target.value })}
-                        className="text-xs bg-white"
-                        disabled={submetendoVII}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cnpj" className="text-xs font-semibold text-slate-700">
-                        CNPJ *
-                      </Label>
-                      <Input
-                        id="cnpj"
-                        required
-                        placeholder="00.000.000/0001-00"
-                        value={formVII.cnpj}
-                        onChange={(e) => setFormVII({ ...formVII, cnpj: e.target.value })}
-                        className="text-xs bg-white font-mono"
-                        disabled={submetendoVII}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="emailCorp" className="text-xs font-semibold text-slate-700">
-                        E-mail Corporativo *
-                      </Label>
-                      <Input
-                        id="emailCorp"
-                        type="email"
-                        required
-                        placeholder="regulacao@comercializadora.com.br"
-                        value={formVII.email}
-                        onChange={(e) => setFormVII({ ...formVII, email: e.target.value })}
-                        className="text-xs bg-white"
-                        disabled={submetendoVII}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="modalidade" className="text-xs font-semibold text-slate-700">
-                        Modalidade de Serviço *
-                      </Label>
-                      <select
-                        id="modalidade"
-                        required
-                        value={formVII.modalidade}
-                        onChange={(e) =>
-                          setFormVII({
-                            ...formVII,
-                            modalidade: e.target.value as ModalidadeSolicitacao,
-                          })
-                        }
-                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                        disabled={submetendoVII}
-                      >
-                        <option value="">Selecione a modalidade...</option>
-                        <option value="Firme Ordinário">Firme Ordinário</option>
-                        <option value="Interruptível">Interruptível</option>
-                        <option value="Troca Operacional">
-                          Troca Operacional (Swap - Art. 10, §1º)
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* ART. 10, IV: CAMPOS SEPARADOS DE PONTOS DE RECEBIMENTO E ENTREGA */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 bg-white border border-slate-200 rounded-md">
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="ponto_recebimento"
-                        className="text-xs font-semibold text-slate-700 flex items-center justify-between"
-                      >
-                        <span>Ponto(s) de Recebimento / Interconexão *</span>
-                        <span className="text-[10px] text-emerald-700 font-medium">
-                          Injeção (Entrada)
-                        </span>
-                      </Label>
-                      <select
-                        id="ponto_recebimento"
-                        required
-                        value={formVII.ponto_recebimento}
-                        onChange={(e) => {
-                          const pRec = e.target.value
-                          let trechoSugerido = formVII.trecho
-                          if (pRec.includes('Paso de Los Libres')) {
-                            trechoSugerido = 'Trecho 1 (Gasoduto Uruguaiana)'
-                          } else if (pRec.includes('Canoas')) {
-                            trechoSugerido = 'Trecho 3 (Gasoduto Triunfo)'
-                          }
-                          setFormVII({
-                            ...formVII,
-                            ponto_recebimento: pRec,
-                            trecho: trechoSugerido,
-                          })
-                        }}
-                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                        disabled={submetendoVII}
-                      >
-                        <option value="">Selecione o ponto de injeção...</option>
-                        <option value="Paso de Los Libres (Fronteira Brasil/Argentina)">
-                          Paso de Los Libres (Fronteira Brasil/Argentina)
-                        </option>
-                        <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
-                        <option value="EMED Uruguaiana">EMED Uruguaiana</option>
-                        <option value="EMED Triunfo">EMED Triunfo</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="ponto_entrega"
-                        className="text-xs font-semibold text-slate-700 flex items-center justify-between"
-                      >
-                        <span>Ponto(s) de Entrega / Interconexão *</span>
-                        <span className="text-[10px] text-blue-700 font-medium">
-                          Retirada (Saída)
-                        </span>
-                      </Label>
-                      <select
-                        id="ponto_entrega"
-                        required
-                        value={formVII.ponto_entrega}
-                        onChange={(e) => setFormVII({ ...formVII, ponto_entrega: e.target.value })}
-                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                        disabled={submetendoVII}
-                      >
-                        <option value="">Selecione o ponto de entrega...</option>
-                        <option value="Uruguaiana (UTE Uruguaiana)">
-                          Uruguaiana (UTE Uruguaiana)
-                        </option>
-                        <option value="Triunfo (Polo Petroquímico)">
-                          Triunfo (Polo Petroquímico)
-                        </option>
-                        <option value="Canoas (Interconexão TBG)">Canoas (Interconexão TBG)</option>
-                        <option value="Paso de Los Libres">Paso de Los Libres</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="capacidade" className="text-xs font-semibold text-slate-700">
-                        Capacidade Solicitada (m³/dia) *
-                      </Label>
-                      <Input
-                        id="capacidade"
-                        type="number"
-                        min="1"
-                        required
-                        placeholder="Ex: 150000"
-                        value={formVII.capacidade}
-                        onChange={(e) => setFormVII({ ...formVII, capacidade: e.target.value })}
-                        className="text-xs bg-white font-mono"
-                        disabled={submetendoVII}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="trecho" className="text-xs font-semibold text-slate-700">
-                        Instalação / Trecho de Transporte *
-                      </Label>
-                      <select
-                        id="trecho"
-                        required
-                        value={formVII.trecho}
-                        onChange={(e) => setFormVII({ ...formVII, trecho: e.target.value })}
-                        className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                        disabled={submetendoVII}
-                      >
-                        <option value="">Selecione o trecho...</option>
-                        <option value="Trecho 1 (Gasoduto Uruguaiana)">
-                          Trecho 1 (Gasoduto Uruguaiana - 24")
-                        </option>
-                        <option value="Trecho 3 (Gasoduto Triunfo)">
-                          Trecho 3 (Gasoduto Triunfo - 18")
-                        </option>
-                        <option value="Uruguaiana -> Triunfo (Sistema Completo)">
-                          Uruguaiana -&gt; Triunfo (Sistema Completo TSB)
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* ART. 10, §1º: GARANTIAS DE SEGURANÇA E CONFIABILIDADE QUANDO TROCA OPERACIONAL */}
-                  {formVII.modalidade === 'Troca Operacional' && (
-                    <div className="p-4 bg-purple-50/70 border border-purple-200 rounded-md space-y-2 animate-fade-in">
-                      <Label
-                        htmlFor="garantias_swap"
-                        className="text-xs font-bold text-purple-900 flex items-center justify-between"
-                      >
-                        <span>
-                          Garantias de Segurança e Confiabilidade Operacional (Art. 10, §1º) *
-                        </span>
-                        <span className="text-[10px] text-purple-700 font-medium">
-                          Obrigatório para Troca Operacional
-                        </span>
-                      </Label>
-                      <p className="text-[11px] text-purple-800 leading-relaxed">
-                        Conforme a Resolução ANP nº 11/2016, indique detalhadamente as salvaguardas
-                        e garantias operacionais que asseguram a injeção física no Ponto de
-                        Recebimento e a respectiva retirada no Ponto de Entrega, sem prejuízo à
-                        estabilidade hidráulica do sistema de transporte.
-                      </p>
-                      <textarea
-                        id="garantias_swap"
-                        required
-                        rows={3}
-                        placeholder="Descreva as fontes de suprimento de lastro, comprovação de disponibilidade contratual nos pontos de injeção, planos de contingência operacional e garantias financeiras..."
-                        value={formVII.garantias_seguranca_swap}
-                        onChange={(e) =>
-                          setFormVII({ ...formVII, garantias_seguranca_swap: e.target.value })
-                        }
-                        className="w-full p-2.5 text-xs bg-white border border-purple-200 rounded-md text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-600"
-                        disabled={submetendoVII}
-                      />
-                    </div>
-                  )}
-
-                  {/* CAMPO PERÍODO OBRIGATÓRIO (Art. 10, Inciso II da Resolução ANP nº 11/2016) */}
+              {/* ITEM 2: MODELO MISTO OFICIAL TSB (Art. 9º, VII e Art. 10 da Res. ANP 11/2016) */}
+              <div className="p-6 sm:p-7 bg-white border-2 border-[#1b4d96]/30 rounded-xl shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-200">
                   <div className="space-y-1.5">
-                    <Label
-                      htmlFor="periodo"
-                      className="text-xs font-semibold text-slate-700 flex items-center justify-between"
-                    >
-                      <span>Período(s) em que o serviço será requisitado *</span>
-                      <span className="text-[10px] text-[#0284c7]">
-                        Exigência legal: Art. 10, II da Res. 11/2016
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#e30613] text-white uppercase tracking-wider font-display">
+                        Modelo Regulatório TSB
                       </span>
-                    </Label>
-                    <Input
-                      id="periodo"
-                      required
-                      placeholder="Ex: 01/01/2027 a 31/12/2027 ou Período Safra Out/2026 a Mar/2027"
-                      value={formVII.periodo}
-                      onChange={(e) => setFormVII({ ...formVII, periodo: e.target.value })}
-                      className="text-xs bg-white"
-                      disabled={submetendoVII}
-                    />
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        Resolução ANP nº 11/2016 • Art. 10
+                      </span>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-[#0a1d37] font-display">
+                      Solicitação de Acesso Firme, Interruptível ou Troca Operacional (Swap)
+                    </h3>
+                    <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                      Em cumprimento estrito às exigências regulatórias da ANP e aos protocolos de
+                      segurança da informação e LGPD, a formalização de solicitações de acesso à
+                      capacidade de transporte da TSB adota o modelo misto: download do formulário
+                      oficial padronizado, assinatura física ou digital pelo representante legal e
+                      envio ao canal corporativo oficial.
+                    </p>
                   </div>
 
                   <Button
-                    type="submit"
-                    disabled={submetendoVII}
-                    className="w-full bg-[#0a1d37] hover:bg-[#143b73] text-white font-bold py-3 text-sm mt-4 shadow-sm font-display tracking-wide uppercase"
+                    type="button"
+                    onClick={handleBaixarFormularioAcessoPdf}
+                    disabled={gerandoPdfAcesso}
+                    className="bg-[#0a1d37] hover:bg-[#1b4d96] text-white font-bold text-xs sm:text-sm px-5 py-6 shrink-0 shadow-md flex items-center gap-2 font-display"
                   >
-                    {submetendoVII
-                      ? 'Submetendo Solicitação...'
-                      : 'Submeter Solicitação de Acesso (Gera Protocolo ANP)'}
+                    <Download className="h-4 w-4 text-sky-400" />
+                    {gerandoPdfAcesso
+                      ? 'Gerando Formulário PDF...'
+                      : 'Baixar Formulário Oficial (PDF)'}
                   </Button>
-                </form>
+                </div>
+
+                {/* FLUXO DIDÁTICO EM 4 PASSOS */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div className="w-7 h-7 rounded-full bg-[#0a1d37] text-white font-bold text-xs flex items-center justify-center font-display">
+                      1
+                    </div>
+                    <h4 className="font-bold text-xs text-[#0a1d37]">Baixar o Formulário</h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Faça o download do modelo oficial da TSB contendo os campos técnicos exigidos
+                      pelo Art. 10 (modalidade, pontos de injeção/retirada, capacidade e período).
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div className="w-7 h-7 rounded-full bg-[#1b4d96] text-white font-bold text-xs flex items-center justify-center font-display">
+                      2
+                    </div>
+                    <h4 className="font-bold text-xs text-[#0a1d37]">Preencher &amp; Assinar</h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Preencha os dados cadastrais da empresa e obtenha a assinatura do
+                      representante legal habilitado (assinatura com carimbo ou digital
+                      ICP-Brasil/Gov.br).
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white font-bold text-xs flex items-center justify-center font-display">
+                      3
+                    </div>
+                    <h4 className="font-bold text-xs text-[#0a1d37]">Enviar por E-mail</h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Envie o documento assinado em anexo para o canal corporativo oficial de
+                      recebimento:{' '}
+                      <strong className="text-[#0a1d37] break-all">
+                        {emailRecebimentoCessoes}
+                      </strong>
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-2">
+                    <div className="w-7 h-7 rounded-full bg-[#15803d] text-white font-bold text-xs flex items-center justify-center font-display">
+                      4
+                    </div>
+                    <h4 className="font-bold text-xs text-[#15803d]">
+                      Protocolo &amp; SLA 20 Dias
+                    </h4>
+                    <p className="text-[11px] text-emerald-900 leading-relaxed">
+                      A TSB cadastra a solicitação no sistema, emite o número oficial de protocolo
+                      com confirmação por e-mail e inicia a contagem do prazo regulatório de 20 dias
+                      úteis.
+                    </p>
+                  </div>
+                </div>
+
+                {/* NOTA DE CONFORMIDADE LGPD E SIGILO */}
+                <div className="p-3.5 bg-sky-50 border border-sky-200 rounded-md flex items-start gap-3">
+                  <ShieldCheck className="h-5 w-5 text-[#0284c7] shrink-0 mt-0.5" />
+                  <div className="text-xs text-sky-950 leading-relaxed">
+                    <strong>Privacidade e Sigilo Regulatório (LGPD):</strong> Os dados cadastrais,
+                    representantes legais e informações comerciais constantes do formulário são de
+                    uso estrito e confidencial da transportadora. As publicações exigidas pelo Art.
+                    9º, Inciso VII na Plataforma Eletrônica são divulgadas exclusivamente sob forma
+                    agregada por ponto relevante e trecho de transporte, garantindo o anonimato dos
+                    solicitantes.
+                  </div>
+                </div>
               </div>
 
               {/* ITEM 3: CONSULTA DE PROTOCOLO E SLA */}

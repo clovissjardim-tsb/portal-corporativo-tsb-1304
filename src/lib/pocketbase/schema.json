@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T18:10:32.192Z",
+  "generatedAt": "2026-10-21T18:25:31.078Z",
   "collections": [
     {
       "name": "users",
@@ -80,7 +80,7 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "",
+        "create": "@request.auth.id != ''",
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"
       },
@@ -275,6 +275,30 @@
         },
         {
           "name": "manifestacao_sulgas_observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_formulario",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_legal",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "operador_cadastro",
           "type": "text",
           "required": false,
           "system": false
