@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T17:52:43.071Z",
+  "generatedAt": "2026-10-21T18:10:32.192Z",
   "collections": [
     {
       "name": "users",
@@ -291,7 +291,7 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "",
+        "create": "@request.auth.id != ''",
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"
       },
@@ -352,6 +352,54 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "publicada",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_formulario",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "representante_legal",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "modalidade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_recebimento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_entrega",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "operador_cadastro",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

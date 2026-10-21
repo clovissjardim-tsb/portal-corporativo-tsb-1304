@@ -41,6 +41,9 @@ import {
   DollarSign,
   Save,
   Eye,
+  EyeOff,
+  PlusCircle,
+  Trash2,
   Layers,
   Handshake,
   Mail,
@@ -88,6 +91,32 @@ export default function Gestao() {
   // Fila de Cessões do Inciso VIII (Gestão Interna - com dados de contato protegidos pela LGPD)
   const [cessoesInternas, setCessoesInternas] = useState<OfertaCessaoIncisoVIII[]>([])
   const [carregandoCessoesInternas, setCarregandoCessoesInternas] = useState(false)
+  const [emailRecebimentoCessoes, setEmailRecebimentoCessoes] = useState('acesso@tsb.com.br')
+  const [editandoEmailRecebimento, setEditandoEmailRecebimento] = useState(false)
+  const [novoEmailRecebimento, setNovoEmailRecebimento] = useState('acesso@tsb.com.br')
+  const [salvandoEmailRecebimento, setSalvandoEmailRecebimento] = useState(false)
+
+  // Modal / Formulário de Cadastro e Edição de Oferta a partir de PDF
+  const [modalCessaoAberto, setModalCessaoAberto] = useState(false)
+  const [cessaoEmEdicao, setCessaoEmEdicao] = useState<OfertaCessaoIncisoVIII | null>(null)
+  const [salvandoCessao, setSalvandoCessao] = useState(false)
+  const [erroFormCessaoInterna, setErroFormCessaoInterna] = useState<string | null>(null)
+  const [formCessaoInterna, setFormCessaoInterna] = useState({
+    cedente: '',
+    cnpj: '',
+    representante_legal: '',
+    contato: '',
+    modalidade: 'Firme Ordinário',
+    capacidade_ociosa: '',
+    trecho: 'Uruguaiana -> Triunfo',
+    ponto_recebimento: 'Paso de Los Libres (RS)',
+    ponto_entrega: 'Triunfo - Polo Petroquímico (RS)',
+    periodo_contratual: '',
+    observacoes: '',
+    status: 'Disponível' as 'Disponível' | 'Em Negociação' | 'Concluída' | 'Cancelada',
+    publicada: true,
+  })
+  const [arquivoPdfUpload, setArquivoPdfUpload] = useState<File | null>(null)
 
   // Aba ativa na Gestão Interna: 'solicitacoes' | 'cessoes' | 'pocc' | 'tarifa' | 'transparencia'
   const [abaAtiva, setAbaAtiva] = useState<
@@ -111,18 +140,211 @@ export default function Gestao() {
     }
   }, [])
 
-  // Carregar ofertas de cessão com contato completo (Gestão Interna)
+  // Carregar ofertas de cessão com contato completo (Gestão Interna) e e-mail de recebimento
   const carregarCessoesInternas = useCallback(async () => {
     setCarregandoCessoesInternas(true)
     try {
-      const lista = await cessoesService.listarInterno()
+      const [lista, email] = await Promise.all([
+        cessoesService.listarInterno(),
+        cessoesService.obterEmailRecebimento(),
+      ])
       setCessoesInternas(lista)
+      if (email) {
+        setEmailRecebimentoCessoes(email)
+        setNovoEmailRecebimento(email)
+      }
     } catch {
       // Ignora erro
     } finally {
       setCarregandoCessoesInternas(false)
     }
   }, [])
+
+  const salvarNovoEmailRecebimento = async () => {
+    if (!novoEmailRecebimento.trim()) return
+    setSalvandoEmailRecebimento(true)
+    try {
+      const salvo = await cessoesService.salvarEmailRecebimento(novoEmailRecebimento)
+      setEmailRecebimentoCessoes(salvo)
+      setEditandoEmailRecebimento(false)
+      toast({
+        title: 'Canal Oficial Atualizado!',
+        description: `E-mail de recebimento definido para: ${salvo}`,
+      })
+    } catch {
+      toast({
+        title: 'Erro ao salvar e-mail',
+        description: 'Não foi possível atualizar o canal de recebimento.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSalvandoEmailRecebimento(false)
+    }
+  }
+
+  const abrirModalNovaCessao = () => {
+    setCessaoEmEdicao(null)
+    setErroFormCessaoInterna(null)
+    setArquivoPdfUpload(null)
+    setFormCessaoInterna({
+      cedente: '',
+      cnpj: '',
+      representante_legal: '',
+      contato: '',
+      modalidade: 'Firme Ordinário',
+      capacidade_ociosa: '',
+      trecho: 'Uruguaiana -> Triunfo',
+      ponto_recebimento: 'Paso de Los Libres (RS)',
+      ponto_entrega: 'Triunfo - Polo Petroquímico (RS)',
+      periodo_contratual: '',
+      observacoes: '',
+      status: 'Disponível',
+      publicada: true,
+    })
+    setModalCessaoAberto(true)
+  }
+
+  const abrirModalEditarCessao = (cessao: OfertaCessaoIncisoVIII) => {
+    setCessaoEmEdicao(cessao)
+    setErroFormCessaoInterna(null)
+    setArquivoPdfUpload(null)
+    setFormCessaoInterna({
+      cedente: cessao.cedente || '',
+      cnpj: cessao.cnpj || '',
+      representante_legal: cessao.representante_legal || '',
+      contato: cessao.contato || '',
+      modalidade: cessao.modalidade || 'Firme Ordinário',
+      capacidade_ociosa: cessao.capacidade_ociosa ? String(cessao.capacidade_ociosa) : '',
+      trecho: cessao.trecho || 'Uruguaiana -> Triunfo',
+      ponto_recebimento: cessao.ponto_recebimento || 'Paso de Los Libres (RS)',
+      ponto_entrega: cessao.ponto_entrega || 'Triunfo - Polo Petroquímico (RS)',
+      periodo_contratual: cessao.periodo_contratual || '',
+      observacoes: cessao.observacoes || '',
+      status: cessao.status || 'Disponível',
+      publicada: cessao.publicada !== false,
+    })
+    setModalCessaoAberto(true)
+  }
+
+  const salvarCessaoInterna = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErroFormCessaoInterna(null)
+
+    if (
+      !formCessaoInterna.cedente.trim() ||
+      !formCessaoInterna.trecho.trim() ||
+      !formCessaoInterna.capacidade_ociosa ||
+      !formCessaoInterna.periodo_contratual.trim() ||
+      !formCessaoInterna.contato.trim()
+    ) {
+      setErroFormCessaoInterna('Preencha os campos obrigatórios marcados com *.')
+      return
+    }
+
+    const capNum = Number(formCessaoInterna.capacidade_ociosa)
+    if (isNaN(capNum) || capNum <= 0) {
+      setErroFormCessaoInterna('A capacidade ociosa deve ser um número positivo.')
+      return
+    }
+
+    setSalvandoCessao(true)
+    try {
+      if (cessaoEmEdicao) {
+        // Atualizar
+        await cessoesService.editarInterno(cessaoEmEdicao.id, {
+          cedente: formCessaoInterna.cedente.trim(),
+          cnpj: formCessaoInterna.cnpj.trim() || undefined,
+          representante_legal: formCessaoInterna.representante_legal.trim() || undefined,
+          contato: formCessaoInterna.contato.trim(),
+          modalidade: formCessaoInterna.modalidade.trim() || undefined,
+          capacidade_ociosa: capNum,
+          trecho: formCessaoInterna.trecho.trim(),
+          ponto_recebimento: formCessaoInterna.ponto_recebimento.trim() || undefined,
+          ponto_entrega: formCessaoInterna.ponto_entrega.trim() || undefined,
+          periodo_contratual: formCessaoInterna.periodo_contratual.trim(),
+          observacoes: formCessaoInterna.observacoes.trim() || undefined,
+          status: formCessaoInterna.status,
+          publicada: formCessaoInterna.publicada,
+          arquivo_formulario: arquivoPdfUpload || undefined,
+        })
+        toast({
+          title: 'Oferta de Cessão Atualizada!',
+          description: `Oferta CES-${cessaoEmEdicao.id.substring(0, 8).toUpperCase()} salva com sucesso.`,
+        })
+      } else {
+        // Criar nova a partir do PDF
+        const nova = await cessoesService.cadastrarInterno({
+          cedente: formCessaoInterna.cedente.trim(),
+          cnpj: formCessaoInterna.cnpj.trim() || undefined,
+          representante_legal: formCessaoInterna.representante_legal.trim() || undefined,
+          contato: formCessaoInterna.contato.trim(),
+          modalidade: formCessaoInterna.modalidade.trim() || undefined,
+          capacidade_ociosa: capNum,
+          trecho: formCessaoInterna.trecho.trim(),
+          ponto_recebimento: formCessaoInterna.ponto_recebimento.trim() || undefined,
+          ponto_entrega: formCessaoInterna.ponto_entrega.trim() || undefined,
+          periodo_contratual: formCessaoInterna.periodo_contratual.trim(),
+          observacoes: formCessaoInterna.observacoes.trim() || undefined,
+          status: formCessaoInterna.status,
+          publicada: formCessaoInterna.publicada,
+          arquivo_formulario: arquivoPdfUpload,
+        })
+        toast({
+          title: 'Oferta Cadastrada com Sucesso!',
+          description: `Nova oferta cadastrada: CES-${nova.id.substring(0, 8).toUpperCase()} (${formCessaoInterna.publicada ? 'Publicada no portal' : 'Salva como Rascunho Oculto'}).`,
+        })
+      }
+      setModalCessaoAberto(false)
+      carregarCessoesInternas()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha ao salvar oferta de cessão.'
+      setErroFormCessaoInterna(msg)
+    } finally {
+      setSalvandoCessao(false)
+    }
+  }
+
+  const handleAlternarPublicada = async (cessao: OfertaCessaoIncisoVIII) => {
+    const novoValor = !(cessao.publicada ?? false)
+    try {
+      await cessoesService.togglePublicada(cessao.id, novoValor)
+      toast({
+        title: novoValor ? 'Oferta Publicada no Portal!' : 'Oferta Ocultada do Portal!',
+        description: `CES-${cessao.id.substring(0, 8).toUpperCase()} agora está ${novoValor ? 'visível publicamente' : 'oculta da consulta pública'}.`,
+      })
+      carregarCessoesInternas()
+    } catch {
+      toast({
+        title: 'Erro ao alterar visibilidade',
+        description: 'Não foi possível alterar a visibilidade da oferta.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleExcluirCessao = async (cessao: OfertaCessaoIncisoVIII) => {
+    if (
+      !window.confirm(
+        `Deseja realmente excluir a oferta CES-${cessao.id.substring(0, 8).toUpperCase()} de ${cessao.cedente}?`,
+      )
+    ) {
+      return
+    }
+    try {
+      await cessoesService.excluirInterno(cessao.id)
+      toast({
+        title: 'Oferta Excluída!',
+        description: `Oferta CES-${cessao.id.substring(0, 8).toUpperCase()} removida com sucesso.`,
+      })
+      carregarCessoesInternas()
+    } catch {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o registro.',
+        variant: 'destructive',
+      })
+    }
+  }
 
   // Carregar quadro de tarifa do backend
   const carregarTarifa = useCallback(async () => {
@@ -1034,127 +1256,319 @@ export default function Gestao() {
                 </div>
               )}
 
-              {/* ABA DE CESSÕES DO INCISO VIII (EXCLUSIVA DA GESTÃO INTERNA - COM DADOS DE CONTATO LGPD) */}
+              {/* ABA DE CESSÕES DO INCISO VIII (MODELO MISTO: RECEBER PDF -> CADASTRAR -> PUBLICAR) */}
               {abaAtiva === 'cessoes' && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 font-bold text-[#0a2540]">
-                        <Handshake className="h-4 w-4 text-emerald-600" />
+                  {/* CARD DE CONTROLE E FLUXO MISTO */}
+                  <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 rounded-lg text-xs text-slate-800 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 font-bold text-[#0a2540]">
+                          <Handshake className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm">
+                            Fila de Gestão do Inciso VIII (Modelo Misto: PDF &rarr; Publicação
+                            Automatizada)
+                          </span>
+                        </div>
+                        <p className="text-slate-600 text-xs leading-relaxed max-w-3xl">
+                          Fluxo seguro aprovado: Carregadores baixam o formulário oficial em PDF no
+                          portal, assinam e enviam por e-mail. A equipe TSB confere a conformidade,
+                          anexa o PDF assinado e decide quando publicar a oferta no resumo público.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          onClick={abrirModalNovaCessao}
+                          className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold h-8 shadow-xs inline-flex items-center gap-1.5"
+                        >
+                          <PlusCircle className="h-3.5 w-3.5" />
+                          Cadastrar Oferta do PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={carregarCessoesInternas}
+                          disabled={carregandoCessoesInternas}
+                          className="text-xs text-slate-700 h-8 bg-white"
+                        >
+                          <RefreshCw
+                            className={`h-3.5 w-3.5 mr-1.5 ${carregandoCessoesInternas ? 'animate-spin' : ''}`}
+                          />
+                          Atualizar
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* CANAL OFICIAL EDITÁVEL PARA RECEBIMENTO DE CESSÕES */}
+                    <div className="pt-2 border-t border-emerald-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-[#0284c7]" />
+                        <span className="font-semibold text-slate-700">
+                          Canal de E-mail de Recebimento TSB:
+                        </span>
+                        {!editandoEmailRecebimento ? (
+                          <span className="font-mono font-bold text-[#0a2540] bg-white px-2 py-0.5 rounded border border-slate-200">
+                            {emailRecebimentoCessoes}
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="email"
+                              value={novoEmailRecebimento}
+                              onChange={(e) => setNovoEmailRecebimento(e.target.value)}
+                              className="h-7 text-xs w-56 bg-white font-mono"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={salvarNovoEmailRecebimento}
+                              disabled={salvandoEmailRecebimento}
+                              className="h-7 px-2.5 text-xs bg-[#0a2540] text-white"
+                            >
+                              {salvandoEmailRecebimento ? 'Salvando...' : 'Salvar'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setNovoEmailRecebimento(emailRecebimentoCessoes)
+                                setEditandoEmailRecebimento(false)
+                              }}
+                              className="h-7 px-2 text-xs"
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        )}
+                        {!editandoEmailRecebimento && (
+                          <button
+                            type="button"
+                            onClick={() => setEditandoEmailRecebimento(true)}
+                            className="text-[11px] text-[#0284c7] hover:underline font-semibold ml-1"
+                          >
+                            (Editar Canal)
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                         <span>
-                          Fila e Controle de Ofertas de Cessão de Capacidade (Inciso VIII)
+                          Contatos &amp; Documentos visíveis apenas para operadores autenticados
+                          (LGPD)
                         </span>
                       </div>
-                      <p className="text-slate-600">
-                        Ambiente autenticado e restrito com acesso aos dados de contato comercial e
-                        representantes dos cedentes. Conforme a LGPD, estes dados jamais são
-                        expostos na consulta pública do portal.
-                      </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={carregarCessoesInternas}
-                      disabled={carregandoCessoesInternas}
-                      className="text-xs text-slate-700 h-8 self-start sm:self-auto shrink-0"
-                    >
-                      <RefreshCw
-                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoCessoesInternas ? 'animate-spin' : ''}`}
-                      />
-                      Atualizar Ofertas
-                    </Button>
                   </div>
 
-                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  {/* TABELA COMPLETA DE CESSÕES INTERNAS */}
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-2xs">
                     <table className="w-full text-xs text-left border-collapse">
                       <thead className="bg-[#f1f5f9] text-[#0a2540] font-bold border-b border-slate-200">
                         <tr>
                           <th className="p-3">Ref / ID</th>
-                          <th className="p-3">Cedente</th>
+                          <th className="p-3">Cedente &amp; CNPJ</th>
                           <th className="p-3">Trecho / Instalação</th>
                           <th className="p-3 text-right">Capacidade Ociosa</th>
                           <th className="p-3">Período</th>
                           <th className="p-3">Contato Comercial (LGPD)</th>
+                          <th className="p-3 text-center">Arquivo PDF</th>
+                          <th className="p-3 text-center">Visibilidade</th>
                           <th className="p-3 text-center">Status</th>
-                          <th className="p-3 text-right">Ação</th>
+                          <th className="p-3 text-right">Ações</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 bg-white">
                         {cessoesInternas.length > 0 ? (
-                          cessoesInternas.map((cessao) => (
-                            <tr key={cessao.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="p-3 font-mono font-bold text-[#0a2540]">
-                                CES-{cessao.id.substring(0, 8).toUpperCase()}
-                              </td>
-                              <td className="p-3">
-                                <div className="font-semibold text-slate-800">{cessao.cedente}</div>
-                                {cessao.observacoes && (
-                                  <div className="text-[11px] text-slate-500">
-                                    {cessao.observacoes}
+                          cessoesInternas.map((cessao) => {
+                            const isPublicada = cessao.publicada !== false
+                            const urlPdf = cessoesService.obterUrlArquivo(cessao)
+
+                            return (
+                              <tr key={cessao.id} className="hover:bg-slate-50 transition-colors">
+                                <td className="p-3 font-mono font-bold text-[#0a2540]">
+                                  CES-{cessao.id.substring(0, 8).toUpperCase()}
+                                  {cessao.operador_cadastro && (
+                                    <div className="text-[9px] text-slate-400 font-normal">
+                                      Op: {cessao.operador_cadastro}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3">
+                                  <div className="font-semibold text-slate-800">
+                                    {cessao.cedente}
                                   </div>
-                                )}
-                              </td>
-                              <td className="p-3 text-slate-700">{cessao.trecho}</td>
-                              <td className="p-3 text-right font-mono font-bold text-slate-900">
-                                {cessao.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
-                              </td>
-                              <td className="p-3 text-slate-700">{cessao.periodo_contratual}</td>
-                              <td className="p-3">
-                                <div className="font-mono text-xs text-blue-700 font-medium flex items-center gap-1">
-                                  <Mail className="h-3 w-3 text-blue-500 shrink-0" />
-                                  <a href={`mailto:${cessao.contato}`} className="hover:underline">
-                                    {cessao.contato}
-                                  </a>
-                                </div>
-                                <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5 mt-0.5">
-                                  <ShieldCheck className="h-2.5 w-2.5" /> Protegido LGPD
-                                </span>
-                              </td>
-                              <td className="p-3 text-center">
-                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  {cessao.status || 'Disponível'}
-                                </span>
-                              </td>
-                              <td className="p-3 text-right">
-                                <select
-                                  value={cessao.status || 'Disponível'}
-                                  onChange={async (e) => {
-                                    const novoSt = e.target.value as
-                                      | 'Disponível'
-                                      | 'Em Negociação'
-                                      | 'Concluída'
-                                      | 'Cancelada'
-                                    try {
-                                      await cessoesService.atualizarStatus(cessao.id, novoSt)
-                                      toast({
-                                        title: 'Status da Cessão Atualizado',
-                                        description: `Oferta CES-${cessao.id.substring(0, 8).toUpperCase()} alterada para "${novoSt}".`,
-                                      })
-                                      carregarCessoesInternas()
-                                    } catch {
-                                      toast({
-                                        title: 'Erro ao alterar status',
-                                        description: 'Não foi possível atualizar a cessão.',
-                                        variant: 'destructive',
-                                      })
+                                  {cessao.cnpj && (
+                                    <div className="text-[10px] font-mono text-slate-500">
+                                      CNPJ: {cessao.cnpj}
+                                    </div>
+                                  )}
+                                  {cessao.representante_legal && (
+                                    <div className="text-[10px] text-slate-500">
+                                      Rep: {cessao.representante_legal}
+                                    </div>
+                                  )}
+                                  {cessao.modalidade && (
+                                    <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded font-medium">
+                                      {cessao.modalidade}
+                                    </span>
+                                  )}
+                                  {cessao.observacoes && (
+                                    <div className="text-[11px] text-slate-500 mt-0.5">
+                                      {cessao.observacoes}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-slate-700">
+                                  <div className="font-medium">{cessao.trecho}</div>
+                                  {(cessao.ponto_recebimento || cessao.ponto_entrega) && (
+                                    <div className="text-[10px] text-slate-500">
+                                      {cessao.ponto_recebimento || 'Recebimento Conforme Contrato'}{' '}
+                                      &rarr; {cessao.ponto_entrega || 'Entrega Conforme Contrato'}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right font-mono font-bold text-slate-900">
+                                  {cessao.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
+                                </td>
+                                <td className="p-3 text-slate-700">{cessao.periodo_contratual}</td>
+                                <td className="p-3">
+                                  <div className="font-mono text-xs text-blue-700 font-medium flex items-center gap-1">
+                                    <Mail className="h-3 w-3 text-blue-500 shrink-0" />
+                                    <a
+                                      href={`mailto:${cessao.contato}`}
+                                      className="hover:underline"
+                                    >
+                                      {cessao.contato}
+                                    </a>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5 mt-0.5">
+                                    <ShieldCheck className="h-2.5 w-2.5" /> Protegido LGPD
+                                  </span>
+                                </td>
+                                <td className="p-3 text-center">
+                                  {urlPdf ? (
+                                    <a
+                                      href={urlPdf}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 font-semibold text-[11px] border border-sky-200"
+                                      title="Abrir PDF assinado recebido"
+                                    >
+                                      <FileText className="h-3 w-3" />
+                                      Ver PDF
+                                    </a>
+                                  ) : (
+                                    <span className="text-[10px] text-slate-400 italic">
+                                      Sem anexo
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="p-3 text-center">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleAlternarPublicada(cessao)}
+                                    className={`h-7 px-2.5 text-[11px] font-semibold border ${
+                                      isPublicada
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                                        : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+                                    }`}
+                                    title={
+                                      isPublicada
+                                        ? 'Clique para ocultar do portal público'
+                                        : 'Clique para publicar no portal público'
                                     }
-                                  }}
-                                  className="h-7 text-[11px] rounded border border-slate-300 bg-white px-2 text-slate-700 font-medium"
-                                >
-                                  <option value="Disponível">Disponível</option>
-                                  <option value="Em Negociação">Em Negociação</option>
-                                  <option value="Concluída">Concluída</option>
-                                  <option value="Cancelada">Cancelada</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))
+                                  >
+                                    {isPublicada ? (
+                                      <>
+                                        <Eye className="h-3 w-3 mr-1 text-emerald-600" />
+                                        Publicada
+                                      </>
+                                    ) : (
+                                      <>
+                                        <EyeOff className="h-3 w-3 mr-1 text-amber-600" />
+                                        Oculta
+                                      </>
+                                    )}
+                                  </Button>
+                                </td>
+                                <td className="p-3 text-center">
+                                  <select
+                                    value={cessao.status || 'Disponível'}
+                                    onChange={async (e) => {
+                                      const novoSt = e.target.value as
+                                        | 'Disponível'
+                                        | 'Em Negociação'
+                                        | 'Concluída'
+                                        | 'Cancelada'
+                                      try {
+                                        await cessoesService.atualizarStatus(cessao.id, novoSt)
+                                        toast({
+                                          title: 'Status da Cessão Atualizado',
+                                          description: `Oferta CES-${cessao.id.substring(0, 8).toUpperCase()} alterada para "${novoSt}".`,
+                                        })
+                                        carregarCessoesInternas()
+                                      } catch {
+                                        toast({
+                                          title: 'Erro ao alterar status',
+                                          description: 'Não foi possível atualizar a cessão.',
+                                          variant: 'destructive',
+                                        })
+                                      }
+                                    }}
+                                    className="h-7 text-[11px] rounded border border-slate-300 bg-white px-2 text-slate-700 font-medium"
+                                  >
+                                    <option value="Disponível">Disponível</option>
+                                    <option value="Em Negociação">Em Negociação</option>
+                                    <option value="Concluída">Concluída</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                  </select>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => abrirModalEditarCessao(cessao)}
+                                      className="h-7 px-2 text-slate-700 hover:text-slate-900"
+                                      title="Editar dados da oferta"
+                                    >
+                                      <FileSignature className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleExcluirCessao(cessao)}
+                                      className="h-7 px-2 text-red-600 hover:text-red-800 hover:bg-red-50"
+                                      title="Excluir oferta"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })
                         ) : (
                           <tr>
-                            <td colSpan={8} className="p-6 text-center text-slate-500">
-                              {carregandoCessoesInternas
-                                ? 'Carregando ofertas de cessão...'
-                                : 'Nenhuma oferta de cessão registrada.'}
+                            <td colSpan={10} className="p-8 text-center text-slate-500">
+                              {carregandoCessoesInternas ? (
+                                <div className="flex items-center justify-center gap-2">
+                                  <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
+                                  <span>Carregando ofertas de cessão...</span>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <p className="font-semibold text-slate-700">
+                                    Nenhuma oferta de cessão cadastrada.
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    Ao receber o formulário em PDF assinado por e-mail, clique em
+                                    &quot;Cadastrar Oferta do PDF&quot; para inserir e publicar.
+                                  </p>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )}
@@ -1173,6 +1587,420 @@ export default function Gestao() {
           )}
         </CardContent>
       </Card>
+
+      {/* MODAL CADASTRO / EDIÇÃO DE OFERTA DE CESSÃO A PARTIR DE FORMULÁRIO PDF (MODELO MISTO) */}
+      {modalCessaoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 border border-slate-200 relative max-h-[92vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setModalCessaoAberto(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 text-[#0a1d37]">
+              <div className="p-2.5 bg-emerald-50 rounded-lg text-emerald-700">
+                <FileSignature className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">
+                  {cessaoEmEdicao ? 'Editar Oferta de Cessão' : 'Cadastrar Oferta a partir de PDF'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Resolução ANP nº 11/2016, Art. 9º, VIII e Art. 10 • Modelo Misto TSB
+                </p>
+              </div>
+            </div>
+
+            {erroFormCessaoInterna && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+                <span>{erroFormCessaoInterna}</span>
+              </div>
+            )}
+
+            <form onSubmit={salvarCessaoInterna} className="space-y-4 text-xs">
+              {/* 1. DADOS CADASTRAIS DO CEDENTE */}
+              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <UserCheck className="h-4 w-4 text-[#0284c7]" />
+                  <span>1. Identificação do Carregador Cedente (Conforme PDF Assinado)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cedenteNome"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Razão Social do Cedente *
+                    </Label>
+                    <Input
+                      id="cedenteNome"
+                      required
+                      placeholder="Ex: Petrobras S.A. ou Carregador Alfa Ltda."
+                      value={formCessaoInterna.cedente}
+                      onChange={(e) =>
+                        setFormCessaoInterna({ ...formCessaoInterna, cedente: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cedenteCnpj"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      CNPJ do Cedente
+                    </Label>
+                    <Input
+                      id="cedenteCnpj"
+                      placeholder="00.000.000/0000-00"
+                      value={formCessaoInterna.cnpj}
+                      onChange={(e) =>
+                        setFormCessaoInterna({ ...formCessaoInterna, cnpj: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cedenteRep"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Representante Legal / Signatário
+                    </Label>
+                    <Input
+                      id="cedenteRep"
+                      placeholder="Nome completo do signatário do PDF"
+                      value={formCessaoInterna.representante_legal}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          representante_legal: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cedenteContato"
+                      className="text-[11px] font-semibold text-slate-700 flex items-center justify-between"
+                    >
+                      <span>E-mail / Contato Comercial *</span>
+                      <span className="text-[10px] text-emerald-700 font-bold">Sigilo LGPD</span>
+                    </Label>
+                    <Input
+                      id="cedenteContato"
+                      required
+                      placeholder="comercial@carregador.com.br"
+                      value={formCessaoInterna.contato}
+                      onChange={(e) =>
+                        setFormCessaoInterna({ ...formCessaoInterna, contato: e.target.value })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. DADOS TÉCNICOS DA CAPACIDADE (ART. 10) */}
+              <div className="p-3.5 bg-blue-50/50 rounded-lg border border-blue-200/80 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <Layers className="h-4 w-4 text-[#1b4d96]" />
+                  <span>2. Dados Operacionais da Oferta (Art. 10 da Res. ANP nº 11/2016)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cessaoModalidade"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Modalidade de Serviço *
+                    </Label>
+                    <select
+                      id="cessaoModalidade"
+                      value={formCessaoInterna.modalidade}
+                      onChange={(e) =>
+                        setFormCessaoInterna({ ...formCessaoInterna, modalidade: e.target.value })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Firme Ordinário">Firme Ordinário</option>
+                      <option value="Interruptível">Interruptível</option>
+                      <option value="Extraordinário">Extraordinário</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cessaoCapacidade"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Capacidade Ociosa (m³/dia) *
+                    </Label>
+                    <Input
+                      id="cessaoCapacidade"
+                      type="number"
+                      min="1"
+                      required
+                      placeholder="Ex: 25000"
+                      value={formCessaoInterna.capacidade_ociosa}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          capacidade_ociosa: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cessaoTrecho"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Trecho do Gasoduto *
+                    </Label>
+                    <select
+                      id="cessaoTrecho"
+                      value={formCessaoInterna.trecho}
+                      onChange={(e) =>
+                        setFormCessaoInterna({ ...formCessaoInterna, trecho: e.target.value })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Uruguaiana -> Triunfo">Uruguaiana -&gt; Triunfo</option>
+                      <option value="EMED Triunfo -> Polo Petroquímico">
+                        EMED Triunfo -&gt; Polo Petroquímico
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cessaoPontoRec"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Ponto de Recebimento (Injeção)
+                    </Label>
+                    <Input
+                      id="cessaoPontoRec"
+                      placeholder="Ex: Paso de Los Libres (RS)"
+                      value={formCessaoInterna.ponto_recebimento}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          ponto_recebimento: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="cessaoPontoEnt"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Ponto de Entrega (Retirada)
+                    </Label>
+                    <Input
+                      id="cessaoPontoEnt"
+                      placeholder="Ex: Triunfo - Polo Petroquímico (RS)"
+                      value={formCessaoInterna.ponto_entrega}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          ponto_entrega: e.target.value,
+                        })
+                      }
+                      className="bg-white h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="cessaoPeriodo"
+                    className="text-[11px] font-semibold text-slate-700"
+                  >
+                    Período Contratual Ofertado *
+                  </Label>
+                  <Input
+                    id="cessaoPeriodo"
+                    required
+                    placeholder="Ex: Nov/2026 a Fev/2027 ou 01/11/2026 a 28/02/2027"
+                    value={formCessaoInterna.periodo_contratual}
+                    onChange={(e) =>
+                      setFormCessaoInterna({
+                        ...formCessaoInterna,
+                        periodo_contratual: e.target.value,
+                      })
+                    }
+                    className="bg-white h-8 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="cessaoObs" className="text-[11px] font-semibold text-slate-700">
+                    Observações e Condições Operacionais Relevantes
+                  </Label>
+                  <Textarea
+                    id="cessaoObs"
+                    rows={2}
+                    placeholder="Ex: Cessão total ou parcial divisível. Sem restrições sazonais de pressão."
+                    value={formCessaoInterna.observacoes}
+                    onChange={(e) =>
+                      setFormCessaoInterna({ ...formCessaoInterna, observacoes: e.target.value })
+                    }
+                    className="bg-white text-xs resize-y"
+                  />
+                </div>
+              </div>
+
+              {/* 3. UPLOAD DO PDF ASSINADO RECEBIDO + STATUS DE PUBLICAÇÃO */}
+              <div className="p-3.5 bg-amber-50/50 rounded-lg border border-amber-200 space-y-3">
+                <div className="font-bold text-[#0a1d37] flex items-center gap-1.5 text-xs">
+                  <FileText className="h-4 w-4 text-amber-600" />
+                  <span>3. Anexo do Formulário em PDF &amp; Visibilidade Pública</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="uploadPdfCessao"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Anexar PDF Assinado Recebido (até 50 MB, sigilo interno)
+                    </Label>
+                    <Input
+                      id="uploadPdfCessao"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null
+                        setArquivoPdfUpload(file)
+                      }}
+                      className="bg-white h-8 text-xs file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[11px] file:bg-slate-100 file:text-slate-700 cursor-pointer"
+                    />
+                    {cessaoEmEdicao?.arquivo_formulario && !arquivoPdfUpload && (
+                      <span className="text-[10px] text-emerald-700 block mt-0.5">
+                        PDF já anexado no cadastro ({cessaoEmEdicao.arquivo_formulario}). Selecione
+                        outro apenas se desejar substituir.
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="statusOpCessao"
+                      className="text-[11px] font-semibold text-slate-700"
+                    >
+                      Status Operacional da Oferta
+                    </Label>
+                    <select
+                      id="statusOpCessao"
+                      value={formCessaoInterna.status}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          status: e.target.value as
+                            | 'Disponível'
+                            | 'Em Negociação'
+                            | 'Concluída'
+                            | 'Cancelada',
+                        })
+                      }
+                      className="w-full h-8 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800"
+                    >
+                      <option value="Disponível">Disponível</option>
+                      <option value="Em Negociação">Em Negociação</option>
+                      <option value="Concluída">Concluída</option>
+                      <option value="Cancelada">Cancelada</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* BOTÃO/TOGGLE PUBLICADA */}
+                <div className="pt-2 flex items-center justify-between p-2.5 bg-white rounded border border-slate-200">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      {formCessaoInterna.publicada ? (
+                        <Eye className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-amber-600" />
+                      )}
+                      <span>Publicar imediatamente na tabela pública do Portal?</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {formCessaoInterna.publicada
+                        ? 'Sim, a oferta aparecerá na tabela pública do Inciso VIII (somente dados operacionais).'
+                        : 'Não, manter salva como rascunho interno oculto até confirmação técnica.'}
+                    </p>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formCessaoInterna.publicada}
+                      onChange={(e) =>
+                        setFormCessaoInterna({
+                          ...formCessaoInterna,
+                          publicada: e.target.checked,
+                        })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* BOTÕES DE SUBMISSÃO */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModalCessaoAberto(false)}
+                  className="text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={salvandoCessao}
+                  className="bg-[#0a1d37] hover:bg-[#143b73] text-white text-xs font-semibold px-5"
+                >
+                  {salvandoCessao ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Salvando Oferta...
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck className="h-4 w-4 mr-1.5" />
+                      {cessaoEmEdicao ? 'Salvar Alterações' : 'Cadastrar e Publicar Oferta'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DETALHES E DELIBERAÇÃO COM OS 3 DESFECHOS OFICIAIS (ART. 10, §2º) */}
       {modalAberto && itemSelecionado && (

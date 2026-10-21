@@ -63,17 +63,6 @@ export default function Transparencia() {
   // Ofertas de Cessão do Inciso VIII (Públicas, sem e-mail/contato pessoal)
   const [ofertasCessao, setOfertasCessao] = useState<OfertaCessaoPublica[]>([])
   const [carregandoCessoes, setCarregandoCessoes] = useState(false)
-  const [mostrarFormCessao, setMostrarFormCessao] = useState(false)
-  const [formCessao, setFormCessao] = useState({
-    cedente: '',
-    trecho: '',
-    capacidade_ociosa: '',
-    periodo_contratual: '',
-    contato: '',
-    observacoes: '',
-  })
-  const [submetendoCessao, setSubmetendoCessao] = useState(false)
-  const [erroFormCessao, setErroFormCessao] = useState<string | null>(null)
 
   // Carregar dados de resumo público do Inciso VII (Pontos e Instalações de Transporte)
   const carregarResumoVII = useCallback(async () => {
@@ -232,62 +221,6 @@ export default function Transparencia() {
     }
   }
 
-  // Submissão do Formulário de Cessão (Inciso VIII)
-  const handleSubmeterCessao = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErroFormCessao(null)
-
-    if (
-      !formCessao.cedente ||
-      !formCessao.trecho ||
-      !formCessao.capacidade_ociosa ||
-      !formCessao.periodo_contratual ||
-      !formCessao.contato
-    ) {
-      setErroFormCessao('Por favor, preencha todos os campos obrigatórios da oferta de cessão.')
-      return
-    }
-
-    const capacidadeNum = Number(formCessao.capacidade_ociosa)
-    if (isNaN(capacidadeNum) || capacidadeNum <= 0) {
-      setErroFormCessao('A capacidade ociosa deve ser um número positivo.')
-      return
-    }
-
-    setSubmetendoCessao(true)
-    try {
-      await cessoesService.criar({
-        cedente: formCessao.cedente.trim(),
-        trecho: formCessao.trecho.trim(),
-        capacidade_ociosa: capacidadeNum,
-        periodo_contratual: formCessao.periodo_contratual.trim(),
-        contato: formCessao.contato.trim(),
-        observacoes: formCessao.observacoes.trim() || undefined,
-      })
-
-      toast({
-        title: 'Oferta de Cessão Publicada com Sucesso!',
-        description: 'A oferta já está visível no painel público do Inciso VIII.',
-      })
-
-      setFormCessao({
-        cedente: '',
-        trecho: '',
-        capacidade_ociosa: '',
-        periodo_contratual: '',
-        contato: '',
-        observacoes: '',
-      })
-      setMostrarFormCessao(false)
-      carregarOfertasCessao()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao registrar oferta de cessão.'
-      setErroFormCessao(msg)
-    } finally {
-      setSubmetendoCessao(false)
-    }
-  }
-
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CABEÇALHO DO MÓDULO */}
@@ -395,13 +328,6 @@ export default function Transparencia() {
           ofertasCessao={ofertasCessao}
           carregandoCessoes={carregandoCessoes}
           carregarOfertasCessao={carregarOfertasCessao}
-          mostrarFormCessao={mostrarFormCessao}
-          setMostrarFormCessao={setMostrarFormCessao}
-          formCessao={formCessao}
-          setFormCessao={setFormCessao}
-          submetendoCessao={submetendoCessao}
-          erroFormCessao={erroFormCessao}
-          handleSubmeterCessao={handleSubmeterCessao}
         />
       )}{' '}
     </div>

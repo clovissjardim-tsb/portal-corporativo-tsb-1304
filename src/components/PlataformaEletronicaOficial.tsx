@@ -31,6 +31,8 @@ import type {
   ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
 import type { OfertaCessaoPublica } from '@/services/cessoes'
+import { cessoesService } from '@/services/cessoes'
+import { gerarFormularioCessaoPdf } from '@/services/formularioCessaoPdf'
 
 export interface PlataformaEletronicaProps {
   // Sub-abas
@@ -88,10 +90,10 @@ export interface PlataformaEletronicaProps {
   // Inciso VIII
   ofertasCessao: OfertaCessaoPublica[]
   carregandoCessoes: boolean
-  carregarOfertasCessao: () => void
-  mostrarFormCessao: boolean
-  setMostrarFormCessao: (val: boolean) => void
-  formCessao: {
+  carregarOfertasCessao?: () => void
+  mostrarFormCessao?: boolean
+  setMostrarFormCessao?: (val: boolean) => void
+  formCessao?: {
     cedente: string
     trecho: string
     capacidade_ociosa: string
@@ -99,7 +101,7 @@ export interface PlataformaEletronicaProps {
     contato: string
     observacoes: string
   }
-  setFormCessao: React.Dispatch<
+  setFormCessao?: React.Dispatch<
     React.SetStateAction<{
       cedente: string
       trecho: string
@@ -109,9 +111,9 @@ export interface PlataformaEletronicaProps {
       observacoes: string
     }>
   >
-  submetendoCessao: boolean
-  erroFormCessao: string | null
-  handleSubmeterCessao: (e: React.FormEvent) => void
+  submetendoCessao?: boolean
+  erroFormCessao?: string | null
+  handleSubmeterCessao?: (e: React.FormEvent) => void
 }
 
 export default function PlataformaEletronica({
@@ -133,14 +135,29 @@ export default function PlataformaEletronica({
   carregarResumoVII,
   ofertasCessao,
   carregandoCessoes,
-  mostrarFormCessao,
-  setMostrarFormCessao,
-  formCessao,
-  setFormCessao,
-  submetendoCessao,
-  erroFormCessao,
-  handleSubmeterCessao,
+  carregarOfertasCessao,
 }: PlataformaEletronicaProps) {
+  const [emailRecebimentoCessoes, setEmailRecebimentoCessoes] = useState('acesso@tsb.com.br')
+  const [gerandoPdfCessao, setGerandoPdfCessao] = useState(false)
+
+  useEffect(() => {
+    cessoesService.obterEmailRecebimento().then((em) => {
+      if (em) setEmailRecebimentoCessoes(em)
+    })
+  }, [])
+
+  const handleBaixarFormularioPdf = async () => {
+    setGerandoPdfCessao(true)
+    try {
+      await gerarFormularioCessaoPdf({
+        emailDestino: emailRecebimentoCessoes,
+      })
+    } catch (err) {
+      console.error('Erro ao gerar PDF do formulário:', err)
+    } finally {
+      setGerandoPdfCessao(false)
+    }
+  }
   // Itens da Plataforma Eletrônica gerenciados pelo PocketBase
   const [itensBd, setItensBd] = useState<ItemTransparencia[]>([])
 
@@ -649,7 +666,7 @@ export default function PlataformaEletronica({
                             onClick={() => setSubAba('viii')}
                             className="text-[11px] font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
                           >
-                            &rarr; Ver painel de ofertas e cadastrar cessão
+                            &rarr; Ver resumo de ofertas e baixar formulário-padrão (PDF)
                           </button>
                           <span className="text-slate-300">•</span>
                           <a
@@ -669,7 +686,7 @@ export default function PlataformaEletronica({
                           onClick={() => setSubAba('viii')}
                           className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5"
                         >
-                          <PlusCircle className="h-3.5 w-3.5" />
+                          <FileText className="h-3.5 w-3.5" />
                           Painel de Cessão
                         </Button>
                       </td>
@@ -1415,237 +1432,199 @@ export default function PlataformaEletronica({
                 )
               })()}
 
-              {/* BARRA DE AÇÕES */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h3 className="text-sm font-bold text-[#0a2540]">
-                  Ofertas Ativas de Cessão de Capacidade
-                </h3>
-                <Button
-                  onClick={() => setMostrarFormCessao(!mostrarFormCessao)}
-                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold h-8"
-                >
-                  <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
-                  {mostrarFormCessao ? 'Fechar Formulário' : 'Publicar Oferta de Cessão'}
-                </Button>
+              {/* NOVO MODELO MISTO: CARD DE DOWNLOAD DO FORMULÁRIO-PADRÃO + INSTRUÇÕES DE ENVIO */}
+              <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 rounded-lg space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a1d37] text-white">
+                        Fluxo Oficial • Modelo Misto
+                      </span>
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        Resolução ANP nº 11/2016, Art. 9º, VIII e Art. 10
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-[#0a1d37] flex items-center gap-2">
+                      <FileDown className="h-5 w-5 text-[#0284c7]" />
+                      Formulário-Padrão TSB para Comunicação de Cessão de Capacidade
+                    </h3>
+                    <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+                      A comunicação de cessão é feita mediante formulário-padrão assinado pelo
+                      representante legal, enviado ao canal oficial da TSB; após verificação da
+                      conformidade regulatória pela equipe técnica, a oferta é publicada neste
+                      resumo oficial.
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 flex flex-col sm:flex-row gap-2">
+                    <Button
+                      onClick={handleBaixarFormularioPdf}
+                      disabled={gerandoPdfCessao}
+                      className="bg-[#0a1d37] hover:bg-[#143b73] text-white text-xs font-semibold h-9 px-4 shadow-sm inline-flex items-center gap-2 border border-slate-700"
+                    >
+                      <FileDown className={`h-4 w-4 ${gerandoPdfCessao ? 'animate-bounce' : ''}`} />
+                      {gerandoPdfCessao ? 'Gerando PDF Oficial...' : 'Baixar Formulário (PDF)'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* PASSO A PASSO REGULATÓRIO */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-200/80 text-xs">
+                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-sky-100 text-[#0284c7] font-bold text-[11px] flex items-center justify-center shrink-0">
+                        1
+                      </span>
+                      <span>Baixe e Preencha</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Faça o download do formulário oficial em PDF e preencha as características da
+                      cessão (modalidade, trecho, capacidade e período).
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#059669] font-bold text-[11px] flex items-center justify-center shrink-0">
+                        2
+                      </span>
+                      <span>Assine e Envie por E-mail</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      Assine com carimbo ou certificado digital (Gov.br/ICP) e envie para:{' '}
+                      <a
+                        href={`mailto:${emailRecebimentoCessoes}`}
+                        className="font-bold text-[#0284c7] hover:underline"
+                      >
+                        {emailRecebimentoCessoes}
+                      </a>
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 text-[#1b4d96] font-bold text-[11px] flex items-center justify-center shrink-0">
+                        3
+                      </span>
+                      <span>Publicação Automatizada</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      A TSB valida os dados operacionais e publica a oferta no resumo abaixo,
+                      resguardando os dados de contato sob sigilo da LGPD.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* FORMULÁRIO PÚBLICO DE COMUNICAÇÃO DE CESSÃO */}
-              {mostrarFormCessao && (
-                <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-4 animate-fade-in">
-                  <h4 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-[#0284c7]" />
-                    Formulário de Comunicação de Cessão de Capacidade (Inciso VIII)
-                  </h4>
-
-                  {erroFormCessao && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-2">
-                      <XCircle className="h-4 w-4 shrink-0" />
-                      <span>{erroFormCessao}</span>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSubmeterCessao} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="cedente" className="text-xs font-semibold text-slate-700">
-                          Carregador Cedente *
-                        </Label>
-                        <Input
-                          id="cedente"
-                          required
-                          placeholder="Ex: Carregador Industrial Sul S.A."
-                          value={formCessao.cedente}
-                          onChange={(e) =>
-                            setFormCessao({ ...formCessao, cedente: e.target.value })
-                          }
-                          className="text-xs bg-white"
-                          disabled={submetendoCessao}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="trechoCessao"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          Trecho do Gasoduto *
-                        </Label>
-                        <select
-                          id="trechoCessao"
-                          required
-                          value={formCessao.trecho}
-                          onChange={(e) => setFormCessao({ ...formCessao, trecho: e.target.value })}
-                          className="w-full h-9 px-3 rounded-md border border-slate-200 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                          disabled={submetendoCessao}
-                        >
-                          <option value="">Selecione o trecho...</option>
-                          <option value="Uruguaiana -> Triunfo">Uruguaiana -&gt; Triunfo</option>
-                          <option value="EMED Triunfo -> Polo Petroquímico">
-                            EMED Triunfo -&gt; Polo Petroquímico
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="capacidadeCessao"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          Capacidade Ociosa (m³/dia) *
-                        </Label>
-                        <Input
-                          id="capacidadeCessao"
-                          type="number"
-                          min="1"
-                          required
-                          placeholder="Ex: 25000"
-                          value={formCessao.capacidade_ociosa}
-                          onChange={(e) =>
-                            setFormCessao({ ...formCessao, capacidade_ociosa: e.target.value })
-                          }
-                          className="text-xs bg-white font-mono"
-                          disabled={submetendoCessao}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="periodoCessao"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          Período Contratual *
-                        </Label>
-                        <Input
-                          id="periodoCessao"
-                          required
-                          placeholder="Ex: Nov/2026 a Fev/2027"
-                          value={formCessao.periodo_contratual}
-                          onChange={(e) =>
-                            setFormCessao({ ...formCessao, periodo_contratual: e.target.value })
-                          }
-                          className="text-xs bg-white"
-                          disabled={submetendoCessao}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="contatoCessao"
-                          className="text-xs font-semibold text-slate-700 flex items-center justify-between"
-                        >
-                          <span>Contato Comercial *</span>
-                          <span className="text-[10px] text-emerald-700 font-semibold">
-                            Sigilo LGPD
-                          </span>
-                        </Label>
-                        <Input
-                          id="contatoCessao"
-                          required
-                          placeholder="comercial@empresa.com.br"
-                          value={formCessao.contato}
-                          onChange={(e) =>
-                            setFormCessao({ ...formCessao, contato: e.target.value })
-                          }
-                          className="text-xs bg-white"
-                          disabled={submetendoCessao}
-                        />
-                        <span className="text-[10px] text-slate-500 block">
-                          Uso estrito e exclusivo da área operacional TSB. Jamais divulgado
-                          publicamente.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="obsCessao" className="text-xs font-semibold text-slate-700">
-                        Observações Adicionais (opcional)
-                      </Label>
-                      <Input
-                        id="obsCessao"
-                        placeholder="Ex: Disponibilidade para cessão parcial ou total."
-                        value={formCessao.observacoes}
-                        onChange={(e) =>
-                          setFormCessao({ ...formCessao, observacoes: e.target.value })
-                        }
-                        className="text-xs bg-white"
-                        disabled={submetendoCessao}
+              {/* TABELA PÚBLICA DE OFERTAS ATIVAS DE CESSÃO DE CAPACIDADE */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="space-y-0.5">
+                    <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                      Ofertas Ativas de Cessão de Capacidade (Resumo Público)
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Exibição restrita a dados técnico-operacionais (LGPD). Apenas ofertas
+                      aprovadas e publicadas pela TSB.
+                    </p>
+                  </div>
+                  {carregarOfertasCessao && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarOfertasCessao}
+                      disabled={carregandoCessoes}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoCessoes ? 'animate-spin' : ''}`}
                       />
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setMostrarFormCessao(false)}
-                        className="text-xs"
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={submetendoCessao}
-                        className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold"
-                      >
-                        {submetendoCessao ? 'Publicando...' : 'Publicar Oferta de Cessão'}
-                      </Button>
-                    </div>
-                  </form>
+                      Atualizar Resumo
+                    </Button>
+                  )}
                 </div>
-              )}
 
-              {/* TABELA DE OFERTAS DE CESSÃO */}
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-[#0a2540] text-white font-semibold">
-                    <tr>
-                      <th className="p-3 border-r border-slate-700/60">Referência</th>
-                      <th className="p-3 border-r border-slate-700/60">Carregador Cedente</th>
-                      <th className="p-3 border-r border-slate-700/60">Trecho / Instalação</th>
-                      <th className="p-3 text-right border-r border-slate-700/60">
-                        Capacidade Ociosa
-                      </th>
-                      <th className="p-3 border-r border-slate-700/60">Período Ofertado</th>
-                      <th className="p-3 text-center">Status Operacional</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {ofertasCessao.length > 0 ? (
-                      ofertasCessao.map((oferta) => (
-                        <tr key={oferta.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 font-mono font-bold text-[#0a2540]">
-                            {oferta.referencia || `CES-${oferta.id.substring(0, 8).toUpperCase()}`}
-                          </td>
-                          <td className="p-3">
-                            <div className="font-semibold text-slate-800">{oferta.cedente}</div>
-                            {oferta.observacoes && (
-                              <div className="text-[11px] text-slate-500">{oferta.observacoes}</div>
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
+                      <tr>
+                        <th className="p-3 border-r border-slate-700/60">Referência</th>
+                        <th className="p-3 border-r border-slate-700/60">Carregador Cedente</th>
+                        <th className="p-3 border-r border-slate-700/60">Trecho / Instalação</th>
+                        <th className="p-3 text-right border-r border-slate-700/60">
+                          Capacidade Ociosa
+                        </th>
+                        <th className="p-3 border-r border-slate-700/60">Período Ofertado</th>
+                        <th className="p-3 text-center">Status Operacional</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {ofertasCessao.length > 0 ? (
+                        ofertasCessao.map((oferta) => (
+                          <tr key={oferta.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-3 font-mono font-bold text-[#0a2540]">
+                              {oferta.referencia ||
+                                `CES-${oferta.id.substring(0, 8).toUpperCase()}`}
+                            </td>
+                            <td className="p-3">
+                              <div className="font-semibold text-slate-800">{oferta.cedente}</div>
+                              {oferta.modalidade && (
+                                <span className="inline-block mt-0.5 text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded font-medium">
+                                  {oferta.modalidade}
+                                </span>
+                              )}
+                              {oferta.observacoes && (
+                                <div className="text-[11px] text-slate-500 mt-0.5">
+                                  {oferta.observacoes}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-700">
+                              <div className="font-medium">{oferta.trecho}</div>
+                              {(oferta.ponto_recebimento || oferta.ponto_entrega) && (
+                                <div className="text-[10px] text-slate-500">
+                                  {oferta.ponto_recebimento || 'Recebimento Conforme Contrato'}{' '}
+                                  &rarr; {oferta.ponto_entrega || 'Entrega Conforme Contrato'}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">
+                              {oferta.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
+                            </td>
+                            <td className="p-3 text-slate-700">{oferta.periodo_contratual}</td>
+                            <td className="p-3 text-center">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {oferta.status || 'Disponível'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-slate-500">
+                            {carregandoCessoes ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
+                                <span>Carregando ofertas de cessão publicadas...</span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-slate-700">
+                                  Nenhuma oferta ativa de cessão publicada no momento.
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  Carregadores interessados em ceder capacidade podem utilizar o
+                                  formulário-padrão acima para submissão à TSB.
+                                </p>
+                              </div>
                             )}
                           </td>
-                          <td className="p-3 text-slate-700">{oferta.trecho}</td>
-                          <td className="p-3 text-right font-mono font-bold text-slate-900">
-                            {oferta.capacidade_ociosa.toLocaleString('pt-BR')} m³/dia
-                          </td>
-                          <td className="p-3 text-slate-700">{oferta.periodo_contratual}</td>
-                          <td className="p-3 text-center">
-                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              {oferta.status || 'Disponível'}
-                            </span>
-                          </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="p-6 text-center text-slate-500">
-                          {carregandoCessoes
-                            ? 'Carregando ofertas de cessão...'
-                            : 'Nenhuma oferta de cessão cadastrada no momento.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

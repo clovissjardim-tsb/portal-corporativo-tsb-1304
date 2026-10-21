@@ -639,9 +639,16 @@ routerAdd('POST', '/backend/v1/test-smtp', (c) => {
 // dados pessoais (e-mail, telefone, CPF, nome de pessoa física) em ambiente público.
 
 // 4.1 Ofertas Ativas de Cessão de Capacidade (Inciso VIII) - Sem e-mail / sem dados pessoais
+// Modelo Misto: Apenas ofertas explicitamente publicadas pela Gestão Interna (publicada = true)
 routerAdd('GET', '/backend/v1/public/ofertas-cessao', (c) => {
   try {
-    const records = c.app.findRecordsByFilter('ofertas_cessao_inciso_viii', '', '-created', 200, 0)
+    const records = c.app.findRecordsByFilter(
+      'ofertas_cessao_inciso_viii',
+      'publicada = true',
+      '-created',
+      200,
+      0,
+    )
 
     const sanitizadas = records.map((r) => {
       // Gerador de identificador referencial da oferta (ex: CES-2026-N7S7)
@@ -653,6 +660,9 @@ routerAdd('GET', '/backend/v1/public/ofertas-cessao', (c) => {
         trecho: r.getString('trecho'),
         capacidade_ociosa: r.getFloat('capacidade_ociosa'),
         periodo_contratual: r.getString('periodo_contratual'),
+        modalidade: r.getString('modalidade'),
+        ponto_recebimento: r.getString('ponto_recebimento'),
+        ponto_entrega: r.getString('ponto_entrega'),
         observacoes: r.getString('observacoes'),
         status: r.getString('status') || 'Disponível',
         created: r.getString('created'),
