@@ -77,13 +77,6 @@ export const CABECALHOS_FALLBACK: Record<
     descricao:
       'Documentação oficial e estudos técnicos disponibilizados pela Transportadora Sulbrasileira de Gás - TSB em atendimento aos incisos I a VI do Art. 9º da Resolução ANP nº 11/2016. Clique nos botões correspondentes para baixar os arquivos ou consultar os estudos oficiais.',
   },
-  plataforma_inciso_vii_header: {
-    titulo: 'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016',
-    descricao:
-      'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.',
-    url_externa: 'http://tsb.com.br:8443/Home/Solicitacao',
-    nome_arquivo_custom: 'Acessar sistema oficial alternativo TSB (:8443)',
-  },
 }
 
 export interface ItemTransparencia {

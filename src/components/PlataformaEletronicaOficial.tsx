@@ -221,24 +221,6 @@ export default function PlataformaEletronica({
     }
   }, [incisosBdMap])
 
-  const headerIncisoVII = useMemo(() => {
-    const item = incisosBdMap.get('plataforma_inciso_vii_header')
-    const fallback = CABECALHOS_FALLBACK.plataforma_inciso_vii_header
-    return {
-      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
-      descricao:
-        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
-      url_externa:
-        item?.ativo !== false && item?.url_externa ? item.url_externa : fallback.url_externa || '',
-      nome_arquivo_custom:
-        item?.ativo !== false && item?.nome_arquivo_custom
-          ? item.nome_arquivo_custom
-          : fallback.nome_arquivo_custom || '',
-      item,
-      ativo: item ? item.ativo !== false : true,
-    }
-  }, [incisosBdMap])
-
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB (IGUAL AO BOLETIM ELETRÔNICO OFICIAL) */}
@@ -636,18 +618,8 @@ export default function PlataformaEletronica({
                             onClick={() => setSubAba('vii')}
                             className="text-[11px] font-semibold text-[#059669] hover:underline inline-flex items-center gap-1"
                           >
-                            &rarr; Abrir formulário público e resumo regulatório
+                            &rarr; Abrir modelo oficial (PDF) e consulta regulatória
                           </button>
-                          <span className="text-slate-300">•</span>
-                          <a
-                            href="http://tsb.com.br:8443/Home/Solicitacao"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[11px] text-slate-500 hover:text-slate-700 hover:underline inline-flex items-center gap-1"
-                          >
-                            Sistema legado TSB :8443
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
                         </div>
                       </td>
                       <td className="p-3 text-center">
@@ -679,16 +651,6 @@ export default function PlataformaEletronica({
                           >
                             &rarr; Ver resumo de ofertas e baixar formulário-padrão (PDF)
                           </button>
-                          <span className="text-slate-300">•</span>
-                          <a
-                            href="http://tsb.com.br:8443/Home/Ofertas"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[11px] text-slate-500 hover:text-slate-700 hover:underline inline-flex items-center gap-1"
-                          >
-                            Sistema legado TSB :8443
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
                         </div>
                       </td>
                       <td className="p-3 text-center">
@@ -709,69 +671,10 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 2: INCISO VII (SISTEMA INTEGRADO + LINK OFICIAL)
+              SUB-ABA 2: INCISO VII (MODELO MISTO OFICIAL TSB)
               ======================================================== */}
           {subAba === 'vii' && (
             <div className="space-y-8">
-              {/* BANNER COM AMPARO LEGAL E LINK AO SISTEMA OFICIAL */}
-              {(() => {
-                const itemVII = incisosBdMap.get('inciso_vii')
-                const linkLegado =
-                  headerIncisoVII.url_externa ||
-                  itemVII?.url_externa ||
-                  'http://tsb.com.br:8443/Home/Solicitacao'
-                const nomeLinkLegado =
-                  headerIncisoVII.nome_arquivo_custom ||
-                  itemVII?.nome_arquivo_custom ||
-                  'Acessar sistema oficial alternativo TSB (:8443)'
-                const textoIntro =
-                  headerIncisoVII.descricao ||
-                  itemVII?.descricao ||
-                  'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.'
-                const tituloBanner =
-                  headerIncisoVII.titulo ||
-                  itemVII?.titulo ||
-                  'Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016'
-
-                const docHeader = headerIncisoVII.item
-                  ? resolverUrlDocumento(headerIncisoVII.item, '')
-                  : null
-
-                return (
-                  <div className="p-4 bg-[#f0fdf4] border-l-4 border-l-[#059669] border border-emerald-200 rounded-r-lg space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-[#059669] font-bold text-sm">
-                        <Info className="h-4 w-4" />
-                        {tituloBanner}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {docHeader && docHeader.url && (
-                          <a
-                            href={docHeader.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
-                          >
-                            <FileDown className="h-3 w-3" />
-                            {docHeader.nomeExibicao || 'Anexo Regulatório'}
-                          </a>
-                        )}
-                        <a
-                          href={linkLegado}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-emerald-300"
-                        >
-                          {nomeLinkLegado}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-700 leading-relaxed">{textoIntro}</p>
-                  </div>
-                )
-              })()}
-
               {/* ITEM 1 (PONTO DE ENTRADA DO CARREGADOR): MODELO MISTO OFICIAL TSB (Art. 9º, VII e Art. 10 da Res. ANP 11/2016) */}
               <div className="p-6 sm:p-7 bg-white border-2 border-[#1b4d96]/30 rounded-xl shadow-sm space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-200">
@@ -1054,43 +957,10 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 3: INCISO VIII (SISTEMA INTEGRADO + LINK OFICIAL)
+              SUB-ABA 3: INCISO VIII (MODELO MISTO OFICIAL TSB)
               ======================================================== */}
           {subAba === 'viii' && (
             <div className="space-y-6">
-              {/* BANNER COM AMPARO LEGAL E LINK AO SISTEMA OFICIAL */}
-              {(() => {
-                const itemVIII = incisosBdMap.get('inciso_viii')
-                const linkLegado = itemVIII?.url_externa || 'http://tsb.com.br:8443/Home/Ofertas'
-                const nomeLinkLegado =
-                  itemVIII?.nome_arquivo_custom || 'Acessar sistema oficial alternativo TSB (:8443)'
-                const textoIntro =
-                  itemVIII?.descricao ||
-                  'Mecanismo de divulgação de ofertas de capacidade ociosa para cessão entre carregadores, promovendo o aproveitamento eficiente e secundário da malha dutoviária da TSB. Consulta e cadastro públicos de ofertas.'
-
-                return (
-                  <div className="p-4 bg-[#eff6ff] border-l-4 border-l-[#0284c7] border border-blue-200 rounded-r-lg space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-[#0284c7] font-bold text-sm">
-                        <Info className="h-4 w-4" />
-                        {itemVIII?.titulo ||
-                          'Amparo Legal: Art. 9º, Inciso VIII da Resolução ANP nº 11/2016'}
-                      </div>
-                      <a
-                        href={linkLegado}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline inline-flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded border border-blue-300"
-                      >
-                        {nomeLinkLegado}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                    <p className="text-xs text-slate-700 leading-relaxed">{textoIntro}</p>
-                  </div>
-                )
-              })()}
-
               {/* NOVO MODELO MISTO: CARD DE DOWNLOAD DO FORMULÁRIO-PADRÃO + INSTRUÇÕES DE ENVIO */}
               <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 rounded-lg space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
