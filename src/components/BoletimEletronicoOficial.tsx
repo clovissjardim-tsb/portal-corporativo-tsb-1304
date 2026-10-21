@@ -511,53 +511,6 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
           </div>
         </div>
 
-        {/* SUB-ABAS DE NAVEGAÇÃO DO BOLETIM */}
-        <div className="bg-slate-100/80 px-6 sm:px-8 border-b border-slate-200">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-3">
-            <button
-              type="button"
-              onClick={() => setSubAbaBoletim('instalacoes_servicos')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAbaBoletim === 'instalacoes_servicos'
-                  ? 'bg-[#0a1d37] text-white shadow-sm'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5 text-sky-400" />
-              Seção I: Instalações &amp; Contratos
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSubAbaBoletim('programadas_realizadas')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAbaBoletim === 'programadas_realizadas'
-                  ? 'bg-[#0a1d37] text-white shadow-sm'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <Calendar className="h-3.5 w-3.5 text-sky-400" />
-              Seção II: Quantidades Programadas &amp; Realizadas
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSubAbaBoletim('monitoramento_congestionamento')}
-              className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all cursor-pointer font-display tracking-wide ${
-                subAbaBoletim === 'monitoramento_congestionamento'
-                  ? 'bg-[#0a1d37] text-white shadow-sm ring-1 ring-sky-300'
-                  : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-              }`}
-            >
-              <Activity className="h-3.5 w-3.5 text-amber-500" />
-              Monitoramento de Congestionamento
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold">
-                Res. 11/2016
-              </span>
-            </button>
-          </div>
-        </div>
-
         {/* AVISO DE FAIXAS DE SERVIDÃO (RES. 42/2012, ART. 46) NO TOPO DO BOLETIM */}
         {avisoServidao.ativo && (
           <div className="mx-6 sm:mx-8 mt-6 p-4 rounded-lg bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row items-start gap-3">
@@ -600,6 +553,62 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
             </div>
           </div>
         )}
+
+        {/* NAVEGAÇÃO RÁPIDA / SUMÁRIO DISCRETO (PADRÃO TRANSPARÊNCIA SEM ABAS PROEMINENTES) */}
+        <div className="mx-6 sm:mx-8 mt-5 p-3 sm:p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+              Seção ativa:
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0a1d37] text-white text-[11px] font-bold">
+              {subAbaBoletim === 'instalacoes_servicos' && 'Seção I: Instalações & Contratos'}
+              {subAbaBoletim === 'programadas_realizadas' &&
+                'Seção II: Quantidades Programadas & Realizadas'}
+              {subAbaBoletim === 'monitoramento_congestionamento' &&
+                'Monitoramento de Congestionamento (Res. 11/2016)'}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-[11px]">
+            <span className="text-slate-400 hidden md:inline">Ir para:</span>
+            {subAbaBoletim !== 'instalacoes_servicos' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSubAbaBoletim('instalacoes_servicos')
+                  window.scrollTo({ top: 380, behavior: 'smooth' })
+                }}
+                className="text-[#0284c7] hover:text-[#0369a1] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
+              >
+                &bull; Seção I (Instalações)
+              </button>
+            )}
+            {subAbaBoletim !== 'programadas_realizadas' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSubAbaBoletim('programadas_realizadas')
+                  window.scrollTo({ top: 380, behavior: 'smooth' })
+                }}
+                className="text-[#0284c7] hover:text-[#0369a1] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
+              >
+                &bull; Seção II (Quantidades)
+              </button>
+            )}
+            {subAbaBoletim !== 'monitoramento_congestionamento' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSubAbaBoletim('monitoramento_congestionamento')
+                  window.scrollTo({ top: 380, behavior: 'smooth' })
+                }}
+                className="text-amber-700 hover:text-amber-800 font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
+              >
+                &bull; Monitoramento (Res. 11/2016)
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="p-6 sm:p-8 space-y-10">
           {/* =========================================================================
@@ -1013,10 +1022,15 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                   <div className="mt-1">
                                     <button
                                       type="button"
-                                      onClick={() => setSubAbaBoletim('programadas_realizadas')}
+                                      onClick={() => {
+                                        setSubAbaBoletim('programadas_realizadas')
+                                        const el = document.getElementById('secao-ii-quantidades')
+                                        if (el) el.scrollIntoView({ behavior: 'smooth' })
+                                      }}
                                       className="text-[11px] font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline inline-flex items-center gap-1 cursor-pointer"
                                     >
-                                      &rarr; Acessar aba de relatórios mensais da Seção II
+                                      &rarr; Acessar Seção II (Quantidades Programadas &amp;
+                                      Realizadas)
                                     </button>
                                   </div>
                                 </div>
@@ -1085,6 +1099,36 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                       })()}
                     </tbody>
                   </table>
+                </div>
+
+                {/* NAVEGAÇÃO DISCRETA NO FINAL DA SEÇÃO I */}
+                <div className="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 text-xs text-slate-600">
+                  <span className="text-slate-500 text-[11px]">
+                    Boletim Eletrônico • Seção I Concluída
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubAbaBoletim('programadas_realizadas')
+                        window.scrollTo({ top: 380, behavior: 'smooth' })
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[#0284c7] hover:text-[#0369a1] font-semibold transition-colors"
+                    >
+                      Ir para Seção II (Quantidades Programadas &amp; Realizadas) &rarr;
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubAbaBoletim('monitoramento_congestionamento')
+                        window.scrollTo({ top: 380, behavior: 'smooth' })
+                      }}
+                      className="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-800 font-semibold transition-colors"
+                    >
+                      Monitoramento de Congestionamento &rarr;
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
@@ -1414,6 +1458,30 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     </div>
                   </div>
                 )}
+
+              {/* NAVEGAÇÃO DISCRETA INTEGRADA AO RODAPÉ DA SEÇÃO II */}
+              <div className="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 text-xs text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubAbaBoletim('instalacoes_servicos')
+                    window.scrollTo({ top: 380, behavior: 'smooth' })
+                  }}
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                >
+                  &larr; Voltar para Seção I (Instalações &amp; Contratos)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubAbaBoletim('monitoramento_congestionamento')
+                    window.scrollTo({ top: 380, behavior: 'smooth' })
+                  }}
+                  className="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-800 font-semibold transition-colors"
+                >
+                  Ir para Monitoramento de Congestionamento (Res. 11/2016) &rarr;
+                </button>
+              </div>
             </div>
           )}
 
@@ -1619,6 +1687,30 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   </p>
                 </div>
               )}
+
+              {/* NAVEGAÇÃO DISCRETA INTEGRADA AO RODAPÉ DO MONITORAMENTO */}
+              <div className="pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 text-xs text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubAbaBoletim('instalacoes_servicos')
+                    window.scrollTo({ top: 380, behavior: 'smooth' })
+                  }}
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                >
+                  &larr; Voltar para Seção I (Instalações &amp; Contratos)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubAbaBoletim('programadas_realizadas')
+                    window.scrollTo({ top: 380, behavior: 'smooth' })
+                  }}
+                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:text-[#0369a1] font-semibold transition-colors"
+                >
+                  Ir para Seção II (Quantidades Programadas &amp; Realizadas) &rarr;
+                </button>
+              </div>
             </div>
           )}
         </div>
