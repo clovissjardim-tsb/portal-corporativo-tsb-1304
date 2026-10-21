@@ -26,6 +26,7 @@ import {
   Activity,
   ShieldAlert,
   Info,
+  ChevronDown,
   Clock,
   CheckCircle2,
 } from 'lucide-react'
@@ -201,6 +202,9 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   const congestionamentoBd = useMemo(() => {
     return itensBd.filter((it) => it.secao === 'monitoramento_congestionamento')
   }, [itensBd])
+
+  // Estado colapsado por padrão do entendimento conceitual padrão NTS (entre alínea g e h)
+  const [explicativoGExpandido, setExplicativoGExpandido] = useState<boolean>(false)
 
   // Sub-aba interna do Boletim: 'instalacoes_servicos' | 'programadas_realizadas' | 'monitoramento_congestionamento'
   const [subAbaBoletim, setSubAbaBoletim] = useState<
@@ -956,44 +960,86 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                               </td>
                             </tr>
 
-                            {/* BLOCO EXPLICATIVO PADRÃO NTS JUNTO AO ITEM g) */}
+                            {/* BLOCO EXPLICATIVO PADRÃO NTS COLAPSÁVEL DE 1 LINHA (ENTRE g e h) */}
                             {blocoExplicativoG.ativo && (
-                              <tr className="bg-sky-50/70 border-l-4 border-l-[#143b73]">
-                                <td colSpan={2} className="p-3.5 sm:p-4 text-xs text-slate-700">
-                                  <div className="space-y-1.5">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <div className="flex items-center gap-1.5 text-[#0a1d37] font-bold font-display">
-                                        <Info className="h-3.5 w-3.5 text-[#143b73] shrink-0" />
-                                        <span>{blocoExplicativoG.titulo}</span>
-                                      </div>
+                              <tr
+                                className={`border-l-2 transition-colors ${
+                                  explicativoGExpandido
+                                    ? 'bg-sky-50/70 border-l-[#143b73]'
+                                    : 'bg-slate-50/80 hover:bg-sky-50/50 border-l-slate-300 hover:border-l-[#143b73]'
+                                }`}
+                              >
+                                <td colSpan={2} className="p-0">
+                                  {/* Linha compacta (acionador discreto acessível) */}
+                                  <button
+                                    type="button"
+                                    onClick={() => setExplicativoGExpandido((prev) => !prev)}
+                                    aria-expanded={explicativoGExpandido}
+                                    aria-controls="bloco-explicativo-nts-conteudo"
+                                    className="w-full text-left px-3 py-2 flex items-center justify-between gap-2.5 transition-colors cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#143b73] focus-visible:ring-inset"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <Info className="h-3.5 w-3.5 text-[#143b73] shrink-0" />
+                                      <span className="text-xs font-semibold text-slate-800 group-hover:text-[#143b73] truncate">
+                                        {blocoExplicativoG.titulo}
+                                      </span>
                                       <Badge
                                         variant="outline"
-                                        className="bg-white text-[#143b73] border-sky-300 text-[10px] font-mono"
+                                        className="hidden sm:inline-flex bg-white text-[#143b73] border-sky-300 text-[10px] font-mono shrink-0 py-0 px-1.5 h-4.5"
                                       >
                                         Padrão NTS • Portaria ANP 1/2003, Art. 2º, I, g
                                       </Badge>
                                     </div>
-                                    <p className="text-slate-700 leading-relaxed text-justify">
-                                      {blocoExplicativoG.descricao}
-                                    </p>
-                                    <div className="pt-1 flex flex-wrap items-center gap-3 text-[11px] text-slate-600 font-medium">
-                                      <span className="inline-flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full bg-[#143b73]" />
-                                        <strong>CTM:</strong> Simulação Termo-Hidráulica (pressões e
-                                        vazões nominais)
+                                    <div className="flex items-center gap-1.5 shrink-0 text-slate-500 group-hover:text-[#143b73]">
+                                      <span className="text-[11px] font-medium hidden md:inline">
+                                        {explicativoGExpandido
+                                          ? 'Ocultar detalhes'
+                                          : 'Ver detalhes'}
                                       </span>
-                                      <span className="inline-flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                                        <strong>CC:</strong> Dedução de consumo operacional e
-                                        segurança
-                                      </span>
-                                      <span className="inline-flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full bg-amber-600" />
-                                        <strong>Alocação:</strong> Firme, Interruptível e Curto
-                                        Prazo (&lt; 1 ano)
-                                      </span>
+                                      <ChevronDown
+                                        className={`h-4 w-4 transition-transform duration-200 ease-out text-[#143b73] ${
+                                          explicativoGExpandido ? 'rotate-180' : 'rotate-0'
+                                        }`}
+                                      />
                                     </div>
-                                  </div>
+                                  </button>
+
+                                  {/* Conteúdo detalhado completo expandido */}
+                                  {explicativoGExpandido && (
+                                    <div
+                                      id="bloco-explicativo-nts-conteudo"
+                                      className="px-3.5 pb-3.5 pt-1 sm:px-4 sm:pb-4 space-y-2 border-t border-sky-100 text-xs text-slate-700 animate-fade-in"
+                                    >
+                                      <div className="flex sm:hidden items-center justify-start pt-1">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-white text-[#143b73] border-sky-300 text-[10px] font-mono"
+                                        >
+                                          Padrão NTS • Portaria ANP 1/2003, Art. 2º, I, g
+                                        </Badge>
+                                      </div>
+                                      <p className="text-slate-700 leading-relaxed text-justify">
+                                        {blocoExplicativoG.descricao}
+                                      </p>
+                                      <div className="pt-1 flex flex-wrap items-center gap-3 text-[11px] text-slate-600 font-medium">
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="w-2 h-2 rounded-full bg-[#143b73]" />
+                                          <strong>CTM:</strong> Simulação Termo-Hidráulica (pressões
+                                          e vazões nominais)
+                                        </span>
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                          <strong>CC:</strong> Dedução de consumo operacional e
+                                          segurança
+                                        </span>
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="w-2 h-2 rounded-full bg-amber-600" />
+                                          <strong>Alocação:</strong> Firme, Interruptível e Curto
+                                          Prazo (&lt; 1 ano)
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
                                 </td>
                               </tr>
                             )}
