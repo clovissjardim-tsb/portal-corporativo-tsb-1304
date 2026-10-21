@@ -346,7 +346,7 @@ export async function gerarFormularioAcessoPdf(
     contentWidth,
     11,
     dadosPreenchidos?.garantiasSwap,
-    'Descreva as garantias deLastro Físico, disponibilidade nos pontos de injeção, salvaguardas contratuais e planos de contingência técnica.',
+    'Descreva as garantias de Lastro Físico, disponibilidade nos pontos de injeção, salvaguardas contratuais e planos de contingência técnica.',
   )
   curY += 15.5
 

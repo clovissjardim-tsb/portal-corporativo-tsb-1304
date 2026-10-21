@@ -911,13 +911,233 @@ export default function PlataformaEletronica({
                             Protocolo não localizado no sistema TSB.
                           </strong>
                           <span>
-                            Verifique o número informado ou submeta uma nova solicitação acima.
+                            Verifique o número informado. A solicitação é feita pelo
+                            formulário-padrão TSB (PDF) enviado ao canal oficial{' '}
+                            {emailRecebimentoCessoes}.
                           </span>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* ITEM 3: RESUMO PÚBLICO DAS SOLICITAÇÕES POR PONTO RELEVANTE (ART. 9º, VII) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="space-y-0.5">
+                    <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                      Resumo Público das Solicitações por Ponto Relevante (Art. 9º, VII)
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Agregação pública e anônima em estrita conformidade com a LGPD e Art. 9º, VII
+                      da Resolução ANP nº 11/2016.
+                    </p>
+                  </div>
+                  {carregarResumoVII && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={carregarResumoVII}
+                      disabled={carregandoResumoVII}
+                      className="text-xs text-slate-700 h-8 self-start sm:self-auto bg-white"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 mr-1.5 ${carregandoResumoVII ? 'animate-spin' : ''}`}
+                      />
+                      Atualizar Resumo
+                    </Button>
+                  )}
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
+                      <tr>
+                        <th className="p-3 border-r border-slate-700/60">Ponto de Recebimento</th>
+                        <th className="p-3 border-r border-slate-700/60">Ponto de Entrega</th>
+                        <th className="p-3 border-r border-slate-700/60">Instalação / Trecho</th>
+                        <th className="p-3 border-r border-slate-700/60">Modalidade</th>
+                        <th className="p-3 text-center border-r border-slate-700/60">
+                          Total Solicitações
+                        </th>
+                        <th className="p-3 text-right border-r border-slate-700/60">
+                          Capacidade Solicitada (m³/dia)
+                        </th>
+                        <th className="p-3 border-r border-slate-700/60">Períodos Demandados</th>
+                        <th className="p-3 text-center">Status Predominante</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {resumoPublicoVII && resumoPublicoVII.length > 0 ? (
+                        resumoPublicoVII.map((item, idx) => (
+                          <tr
+                            key={`${item.pontoRelevante}_${item.modalidade}_${idx}`}
+                            className="hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="p-3 font-semibold text-slate-800">
+                              {item.pontoRecebimento}
+                            </td>
+                            <td className="p-3 font-semibold text-slate-800">
+                              {item.pontoEntrega}
+                            </td>
+                            <td className="p-3 text-slate-700">{item.trecho}</td>
+                            <td className="p-3">
+                              <span className="inline-block text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded font-medium">
+                                {item.modalidade}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center font-mono font-bold text-slate-800">
+                              {item.totalSolicitacoes}
+                            </td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">
+                              {item.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
+                            </td>
+                            <td className="p-3 text-slate-600 text-[11px]">
+                              {item.periodosDemandados && item.periodosDemandados.length > 0
+                                ? item.periodosDemandados.join(', ')
+                                : '—'}
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block">
+                                {item.statusPredominante}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-slate-500">
+                            {carregandoResumoVII ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
+                                <span>
+                                  Carregando resumo de solicitações por ponto relevante...
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-slate-700">
+                                  Nenhuma solicitação registrada no momento.
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  As solicitações de acesso protocoladas junto à TSB serão agrupadas
+                                  e publicadas nesta seção preservando a LGPD.
+                                </p>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* ITEM 4: RESUMO DA DEMANDA POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
+              <div className="space-y-3">
+                <div className="space-y-0.5">
+                  <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-[#143b73]" />
+                    Resumo da Demanda por Instalação de Transporte (Trechos 1 e 3)
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Consolidação da capacidade total solicitada e modalidades demandadas
+                    discriminadas por gasoduto integrante do sistema TSB.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-[#0a2540] text-white font-semibold font-display">
+                      <tr>
+                        <th className="p-3 border-r border-slate-700/60">
+                          Instalação de Transporte
+                        </th>
+                        <th className="p-3 border-r border-slate-700/60">
+                          Descrição Técnica da Instalação
+                        </th>
+                        <th className="p-3 text-center border-r border-slate-700/60">
+                          Total Solicitações
+                        </th>
+                        <th className="p-3 text-right border-r border-slate-700/60">
+                          Capacidade Total Solicitada (m³/dia)
+                        </th>
+                        <th className="p-3 border-r border-slate-700/60">Modalidades Presentes</th>
+                        <th className="p-3 border-r border-slate-700/60">Períodos Demandados</th>
+                        <th className="p-3 text-center">Status Predominante</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {resumoInstalacaoVII && resumoInstalacaoVII.length > 0 ? (
+                        resumoInstalacaoVII.map((inst, idx) => (
+                          <tr
+                            key={`${inst.instalacao}_${idx}`}
+                            className="hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="p-3 font-bold text-[#0a2540]">{inst.instalacao}</td>
+                            <td className="p-3 text-slate-700">{inst.descricaoInstalacao}</td>
+                            <td className="p-3 text-center font-mono font-bold text-slate-800">
+                              {inst.totalSolicitacoes}
+                            </td>
+                            <td className="p-3 text-right font-mono font-bold text-slate-900">
+                              {inst.capacidadeTotalSolicitada.toLocaleString('pt-BR')}
+                            </td>
+                            <td className="p-3">
+                              <div className="flex flex-wrap gap-1">
+                                {inst.modalidadesPresentes &&
+                                inst.modalidadesPresentes.length > 0 ? (
+                                  inst.modalidadesPresentes.map((mod, mIdx) => (
+                                    <span
+                                      key={mIdx}
+                                      className="inline-block text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded font-medium"
+                                    >
+                                      {mod}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3 text-slate-600 text-[11px]">
+                              {inst.periodosDemandados && inst.periodosDemandados.length > 0
+                                ? inst.periodosDemandados.join(', ')
+                                : '—'}
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block">
+                                {inst.statusPredominante}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500">
+                            {carregandoResumoVII ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
+                                <span>Carregando resumo por instalação de transporte...</span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="font-semibold text-slate-700">
+                                  Nenhuma solicitação registrada no momento.
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  A consolidação por instalação de transporte (Trechos 1 e 3) será
+                                  exibida após o recebimento de solicitações.
+                                </p>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}
