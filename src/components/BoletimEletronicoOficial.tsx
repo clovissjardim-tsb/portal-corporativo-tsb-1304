@@ -528,7 +528,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
         <div className="p-6 sm:p-8 space-y-12">
           {/* =========================================================================
               BLOCO 1 — TÍTULO LITERAL: "I. Instalações de Transporte e Serviços Prestados"
-              Subtítulo: (atualizado permanentemente)
+              Subtítulo: (atualizadas permanentemente)
               Tabela com as 10 alíneas a)–j) literais da Portaria ANP nº 1/2003
               ========================================================================= */}
           <section id="bloco-item-i" className="space-y-4">
@@ -539,7 +539,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     {headerBlocoI.titulo}
                   </h2>
                   <span className="text-xs sm:text-sm font-medium text-slate-500 italic">
-                    (atualizado permanentemente)
+                    (atualizadas permanentemente)
                   </span>
                 </div>
                 <div className="w-full h-px bg-slate-200 mt-2 mb-2" />
@@ -573,10 +573,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 <thead className="bg-[#0a2540] text-white font-semibold font-display">
                   <tr>
                     <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
-                      Alínea / Documento / Informação
+                      Alínea
                     </th>
                     <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
-                      Arquivo / Acesso
+                      Documento
                     </th>
                   </tr>
                 </thead>
@@ -1373,7 +1373,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                       <thead className="bg-[#0a2540] text-white font-semibold font-display">
                         <tr>
                           <th className="p-3 w-3/4 sm:w-4/5 border-r border-slate-700/60 tracking-wide uppercase text-[11px]">
-                            Documento / Informação
+                            Documento
                           </th>
                           <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wide uppercase text-[11px]">
                             Arquivo
@@ -1577,7 +1577,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                           Relatório de Utilização &amp; Congestionamento
                         </th>
                         <th className="p-3 w-1/4 sm:w-1/5 text-center tracking-wider uppercase text-[11px]">
-                          Documento / Acesso
+                          Documento
                         </th>
                       </tr>
                     </thead>

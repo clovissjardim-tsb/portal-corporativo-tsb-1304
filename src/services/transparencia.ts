@@ -38,7 +38,7 @@ export const CABECALHOS_FALLBACK: Record<
   boletim_secao1_header: {
     titulo: 'I. Instalações de Transporte e Serviços Prestados',
     descricao:
-      'Atualizado permanentemente. Reúne termos gerais, modelos contratuais, acordos de conexão e operacionais, mapas, capacidades técnicas e disponíveis, quantidades operadas e expansões planejadas.',
+      'Reúne termos gerais, modelos contratuais, acordos de conexão e operacionais, mapas, capacidades técnicas e disponíveis, quantidades operadas e expansões planejadas.',
   },
   boletim_secao2_header: {
     titulo: 'Quantidades programadas e realizadas (dados diários do mês anterior)',
