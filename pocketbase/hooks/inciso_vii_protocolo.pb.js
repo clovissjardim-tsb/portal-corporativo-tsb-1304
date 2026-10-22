@@ -5,8 +5,199 @@
  * Conforme Arts. 9º e 10 da Resolução ANP nº 11/2016.
  */
 
-// 1. Hook automático após criação de solicitação do Inciso VII (e-mail de confirmação ao solicitante)
+// 0. Validações estritas, Honeypot e Rate Limiting antes de criar solicitação do Inciso VII
 onRecordCreate((e) => {
+  // Funções utilitárias inline para o ambiente isolado do JSVM
+  function validarCnpjMod11(cnpjStr) {
+    if (!cnpjStr) return false
+    const limpo = String(cnpjStr).replace(/\D/g, '')
+    if (limpo.length !== 14) return false
+    if (/^(\d)\1{13}$/.test(limpo)) return false
+
+    let tamanho = limpo.length - 2
+    let numeros = limpo.substring(0, tamanho)
+    const digitos = limpo.substring(tamanho)
+    let soma = 0
+    let pos = tamanho - 7
+
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--
+      if (pos < 2) pos = 9
+    }
+
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+    if (resultado !== parseInt(digitos.charAt(0), 10)) return false
+
+    tamanho = tamanho + 1
+    numeros = limpo.substring(0, tamanho)
+    soma = 0
+    pos = tamanho - 7
+
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--
+      if (pos < 2) pos = 9
+    }
+
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+    if (resultado !== parseInt(digitos.charAt(1), 10)) return false
+
+    return true
+  }
+
+  function validarEmailStr(emailStr) {
+    if (!emailStr) return false
+    const limpo = String(emailStr).trim().toLowerCase()
+    if (limpo.length > 254) return false
+    const re =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
+    return re.test(limpo)
+  }
+
+  const record = e.record
+  const origem = record.getString('origem') || 'manual_interno'
+
+  // 0.1 Honeypot anti-bot (se preenchido campo website_url)
+  const honeypot = record.getString('website_url')
+  if (honeypot && honeypot.trim().length > 0) {
+    console.warn('[Inciso VII Security] Tentativa de submissão bloqueada via honeypot: ' + honeypot)
+    throw new BadRequestError('Submissão inválida detectada por mecanismos de segurança anti-spam.')
+  }
+
+  // 0.2 Validação de CNPJ (dígitos verificadores oficiais)
+  const cnpj = record.getString('cnpj')
+  if (!validarCnpjMod11(cnpj)) {
+    throw new BadRequestError(
+      'CNPJ inválido. Por favor, verifique os dígitos verificadores informados.',
+    )
+  }
+
+  // 0.3 Validação de e-mail corporativo
+  const emailDest = record.getString('email')
+  if (!validarEmailStr(emailDest)) {
+    throw new BadRequestError(
+      'Endereço de e-mail inválido. Por favor, forneça um e-mail corporativo válido.',
+    )
+  }
+
+  // 0.4 Validação de campos obrigatórios do Art. 10 da Resolução ANP nº 11/2016
+  const razaoSocial = record.getString('razao_social')
+  if (!razaoSocial || razaoSocial.trim().length < 2) {
+    throw new BadRequestError(
+      'A Razão Social da empresa solicitante é obrigatória (Art. 10, I da Res. ANP nº 11/2016).',
+    )
+  }
+
+  const repLegal = record.getString('representante_legal')
+  if (!repLegal || repLegal.trim().length < 2) {
+    throw new BadRequestError(
+      'O nome do Representante Legal / Procurador é obrigatório (Art. 10, I da Res. ANP nº 11/2016).',
+    )
+  }
+
+  const capacidade = record.getFloat('capacidade')
+  if (!capacidade || capacidade <= 0) {
+    throw new BadRequestError(
+      'A capacidade diária solicitada deve ser maior que zero (Art. 10, IV da Res. ANP nº 11/2016).',
+    )
+  }
+
+  const modalidade = record.getString('modalidade')
+  if (modalidade === 'Troca Operacional') {
+    const garantiasSwap = record.getString('garantias_seguranca_swap')
+    if (!garantiasSwap || garantiasSwap.trim().length < 5) {
+      throw new BadRequestError(
+        'Para a modalidade de Troca Operacional (Swap), as garantias de segurança e confiabilidade operacional são obrigatórias (Art. 10, §1º da Res. ANP nº 11/2016).',
+      )
+    }
+  }
+
+  // 0.5 Rate Limiting apenas para submissões públicas (origem = 'portal_web' ou sem autenticação)
+  // Operadores autenticados na Gestão Interna não sofrem limitação estrita de IP
+  let authUserId = ''
+  try {
+    if ($apis && $apis.requestInfo && $apis.requestInfo(e)) {
+      const info = $apis.requestInfo(e)
+      if (info.authRecord) {
+        authUserId = info.authRecord.id
+      }
+    }
+  } catch (_) {}
+
+  const ehPublico = !authUserId || origem === 'portal_web'
+
+  if (ehPublico) {
+    let clientIp = '127.0.0.1'
+    try {
+      if ($apis && $apis.requestInfo && $apis.requestInfo(e)) {
+        const info = $apis.requestInfo(e)
+        // Extrai IP real considerando headers de proxy
+        const headers = info.headers || {}
+        clientIp =
+          headers['x-forwarded-for'] ||
+          headers['x-real-ip'] ||
+          headers['cf-connecting-ip'] ||
+          info.remoteIp ||
+          '127.0.0.1'
+        // Se houver múltiplos IPs em X-Forwarded-For, pega o primeiro
+        if (clientIp.indexOf(',') !== -1) {
+          clientIp = clientIp.split(',')[0].trim()
+        }
+      }
+    } catch (_) {}
+
+    // A. Limite por IP: máximo 3 submissões nos últimos 10 minutos
+    const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    try {
+      const countIpResult = e.app
+        .db()
+        .newQuery(
+          'SELECT COUNT(*) as total FROM solicitacoes_submissao_log WHERE ip_origem = {:ip} AND created >= {:dt} AND sucesso = 1',
+        )
+        .bind({ ip: clientIp, dt: dezMinutosAtras })
+        .one()
+
+      const totalIp = countIpResult && countIpResult.total ? Number(countIpResult.total) : 0
+      if (totalIp >= 3) {
+        console.warn(
+          `[Inciso VII RateLimit] Bloqueio por IP: ${clientIp} (${totalIp} submissões em 10 min)`,
+        )
+        throw new BadRequestError(
+          'Limite de solicitações temporariamente atingido para a sua conexão (máximo 3 envios a cada 10 minutos). Por favor, aguarde alguns instantes antes de submeter uma nova solicitação.',
+        )
+      }
+    } catch (errDb) {
+      if (errDb instanceof BadRequestError) throw errDb
+      console.warn('[Inciso VII RateLimit] Aviso ao checar limite de IP: ' + errDb)
+    }
+
+    // B. Limite por E-mail: máximo 5 submissões no mesmo e-mail em 24 horas
+    const vinteQuatroHorasAtras = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    try {
+      const emailNormalizado = emailDest.trim().toLowerCase()
+      const countEmailResult = e.app
+        .db()
+        .newQuery(
+          'SELECT COUNT(*) as total FROM solicitacoes_submissao_log WHERE email = {:em} AND created >= {:dt} AND sucesso = 1',
+        )
+        .bind({ em: emailNormalizado, dt: vinteQuatroHorasAtras })
+        .one()
+
+      const totalEmail =
+        countEmailResult && countEmailResult.total ? Number(countEmailResult.total) : 0
+      if (totalEmail >= 5) {
+        console.warn(
+          `[Inciso VII RateLimit] Bloqueio por E-mail: ${emailNormalizado} (${totalEmail} submissões em 24h)`,
+        )
+        throw new BadRequestError(
+          'Limite diário de solicitações atingido para este endereço de e-mail (máximo 5 envios por dia). Caso necessite de apoio adicional, utilize o canal institucional via e-mail corporativo.',
+        )
+      }
+    } catch (errDb2) {
+      if (errDb2 instanceof BadRequestError) throw errDb2
+      console.warn('[Inciso VII RateLimit] Aviso ao checar limite de e-mail: ' + errDb2)
+    }
+  }
+
   // Garantir que se a submissão vier sem protocolo preenchido, seja gerado antes de salvar
   if (!e.record.getString('protocolo')) {
     const ano = new Date().getFullYear()
@@ -30,6 +221,34 @@ onRecordCreate((e) => {
   }
 
   e.next()
+
+  // Registrar no log de auditoria e rate limiting com sucesso
+  try {
+    let clientIp = '127.0.0.1'
+    if ($apis && $apis.requestInfo && $apis.requestInfo(e)) {
+      const info = $apis.requestInfo(e)
+      const headers = info.headers || {}
+      clientIp =
+        headers['x-forwarded-for'] ||
+        headers['x-real-ip'] ||
+        headers['cf-connecting-ip'] ||
+        info.remoteIp ||
+        '127.0.0.1'
+      if (clientIp.indexOf(',') !== -1) {
+        clientIp = clientIp.split(',')[0].trim()
+      }
+    }
+
+    const logCollection = e.app.findCollectionByNameOrId('solicitacoes_submissao_log')
+    const logRec = new Record(logCollection)
+    logRec.set('ip_origem', clientIp)
+    logRec.set('email', (e.record.getString('email') || '').trim().toLowerCase())
+    logRec.set('protocolo', e.record.getString('protocolo'))
+    logRec.set('sucesso', true)
+    e.app.save(logRec)
+  } catch (errLog) {
+    console.warn('[Inciso VII RateLimit] Falha ao registrar log de submissão: ' + errLog)
+  }
 
   try {
     const record = e.record
@@ -583,7 +802,7 @@ onRecordUpdate((e) => {
       .execute()
   } catch (err) {
     const errMsg = err && err.message ? err.message : String(err)
-    console.error(`[SMTP TSB] Falha ao enviar cópia à ANP: ${errMsg}`)
+    console.error(`[SMTP TSB] Falha ao enviar e-mail de cópia à ANP: ${errMsg}`)
   }
 }, 'solicitacoes_inciso_vii')
 

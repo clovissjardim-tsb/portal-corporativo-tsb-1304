@@ -20,6 +20,7 @@ import {
   type ModalidadeSolicitacao,
   type NovaSolicitacaoWebInput,
 } from '@/services/solicitacoes'
+import { validarCNPJ, validarEmail, validarArquivoPdf } from '@/lib/validacoes'
 
 interface FormularioSolicitacaoWebProps {
   onSucessoProtocolo?: (protocolo: string) => void
@@ -60,6 +61,9 @@ export function FormularioSolicitacaoWeb({
   const [arquivoPdf, setArquivoPdf] = useState<File | null>(null)
   const [observacoes, setObservacoes] = useState('')
 
+  // Honeypot anti-bot (campo invisível via CSS para humanos, atraente para robôs de spam)
+  const [websiteUrlHoneypot, setWebsiteUrlHoneypot] = useState('')
+
   // Estados de submissão e feedback
   const [submetendo, setSubmetendo] = useState(false)
   const [erros, setErros] = useState<Record<string, string>>({})
@@ -83,23 +87,27 @@ export function FormularioSolicitacaoWeb({
   const validarCampos = (): boolean => {
     const novosErros: Record<string, string> = {}
 
-    if (!razaoSocial.trim()) {
-      novosErros.razaoSocial = 'Razão Social é obrigatória.'
+    if (!razaoSocial.trim() || razaoSocial.trim().length < 2) {
+      novosErros.razaoSocial = 'A Razão Social da empresa solicitante é obrigatória (Art. 10, I).'
     }
 
     const cnpjLimpo = cnpj.replace(/\D/g, '')
-    if (!cnpjLimpo || cnpjLimpo.length < 14) {
+    if (!cnpjLimpo || cnpjLimpo.length !== 14) {
       novosErros.cnpj = 'Informe um CNPJ válido com 14 dígitos.'
+    } else if (!validarCNPJ(cnpj)) {
+      novosErros.cnpj =
+        'CNPJ inválido (dígitos verificadores incorretos). Verifique a numeração oficial.'
     }
 
-    if (!representanteLegal.trim()) {
-      novosErros.representanteLegal = 'Nome do representante legal é obrigatório.'
+    if (!representanteLegal.trim() || representanteLegal.trim().length < 2) {
+      novosErros.representanteLegal =
+        'Nome do representante legal ou procurador é obrigatório (Art. 10, I).'
     }
 
     const emailLimpo = email.trim()
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailLimpo || !emailRegex.test(emailLimpo)) {
-      novosErros.email = 'Informe um endereço de e-mail corporativo válido.'
+    if (!emailLimpo || !validarEmail(emailLimpo)) {
+      novosErros.email =
+        'Informe um endereço de e-mail corporativo válido para recebimento do protocolo.'
     }
 
     if (!telefone.trim() || telefone.trim().length < 8) {
@@ -123,9 +131,17 @@ export function FormularioSolicitacaoWeb({
       if (!swapCedenteNome.trim() && !swapReceptorNome.trim()) {
         novosErros.swapPartes = 'Informe os agentes participantes da troca (cedente e receptor).'
       }
-      if (!garantiasSwap.trim()) {
+      if (!garantiasSwap.trim() || garantiasSwap.trim().length < 5) {
         novosErros.garantiasSwap =
-          'Para Swap, informe as garantias de segurança e confiabilidade (Art. 10, §1º).'
+          'Para Swap, informe as garantias de segurança e confiabilidade operacional (Art. 10, §1º).'
+      }
+    }
+
+    // Validação do arquivo PDF (se anexado: apenas PDF e no máximo 10 MB)
+    if (arquivoPdf) {
+      const validacaoPdf = validarArquivoPdf(arquivoPdf, 10)
+      if (!validacaoPdf.valido) {
+        novosErros.arquivoPdf = validacaoPdf.erro || 'Arquivo de anexo inválido.'
       }
     }
 
@@ -175,6 +191,7 @@ export function FormularioSolicitacaoWeb({
       garantias_seguranca_swap: garantiasSwap.trim() || undefined,
       observacoes: observacoes.trim() || undefined,
       arquivo_formulario: arquivoPdf,
+      website_url: websiteUrlHoneypot,
     }
 
     try {
@@ -226,6 +243,7 @@ export function FormularioSolicitacaoWeb({
     setSwapVolumeReceptor('')
     setGarantiasSwap('')
     setArquivoPdf(null)
+    setWebsiteUrlHoneypot('')
     setObservacoes('')
     setErros({})
     setErroGeral(null)
@@ -385,6 +403,34 @@ export function FormularioSolicitacaoWeb({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* HONEYPOT ANTI-BOT: Campo oculto visualmente via CSS absoluto (não type="hidden") */}
+        {/* Bots automatizados preenchem este campo, fazendo a requisição ser descartada com simulação de sucesso */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: '-9999px',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+          tabIndex={-1}
+        >
+          <label htmlFor="website_url_hp">Por favor, deixe este campo em branco</label>
+          <input
+            id="website_url_hp"
+            type="text"
+            name="website_url"
+            value={websiteUrlHoneypot}
+            onChange={(e) => setWebsiteUrlHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
+
         {/* SEÇÃO 1: DADOS CADASTRAIS DA SOLICITANTE */}
         <div className="space-y-4">
           <div className="border-b border-slate-100 pb-2">
@@ -809,17 +855,41 @@ export function FormularioSolicitacaoWeb({
               onChange={(e) => {
                 const f = e.target.files?.[0] || null
                 setArquivoPdf(f)
+                if (f) {
+                  const check = validarArquivoPdf(f, 10)
+                  if (!check.valido) {
+                    setErros((prev) => ({ ...prev, arquivoPdf: check.erro || 'Arquivo inválido' }))
+                  } else {
+                    setErros((prev) => {
+                      const next = { ...prev }
+                      delete next.arquivoPdf
+                      return next
+                    })
+                  }
+                } else {
+                  setErros((prev) => {
+                    const next = { ...prev }
+                    delete next.arquivoPdf
+                    return next
+                  })
+                }
               }}
-              className="bg-white h-9 text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[11px] file:bg-slate-100 file:text-slate-700 cursor-pointer"
+              className={`bg-white h-9 text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[11px] file:bg-slate-100 file:text-slate-700 cursor-pointer ${
+                erros.arquivoPdf ? 'border-red-400' : ''
+              }`}
               disabled={submetendo}
             />
 
-            {arquivoPdf && (
+            {erros.arquivoPdf && (
+              <span className="text-[11px] text-red-600 block">{erros.arquivoPdf}</span>
+            )}
+
+            {arquivoPdf && !erros.arquivoPdf && (
               <div className="flex items-center gap-2 text-[11px] text-emerald-800 font-medium pt-1">
                 <FileCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>
                   Arquivo anexado: <strong>{arquivoPdf.name}</strong> (
-                  {(arquivoPdf.size / 1024 / 1024).toFixed(2)} MB)
+                  {(arquivoPdf.size / 1024 / 1024).toFixed(2)} MB) — PDF verificado.
                 </span>
               </div>
             )}

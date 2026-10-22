@@ -109,6 +109,8 @@ export type NovaSolicitacaoWebInput = {
   garantias_seguranca_swap?: string
   observacoes?: string
   arquivo_formulario?: File | null
+  // Honeypot anti-bot (se preenchido, submissão é ignorada silenciosamente)
+  website_url?: string
 }
 
 // Interface para agregação pública por Ponto Relevante (SEM dados pessoais - LGPD / Art. 9º, VII)
@@ -260,8 +262,40 @@ export const solicitacoesService = {
     protocolo: string
     registro: SolicitacaoIncisoVII
   }> {
+    // 1. HONEYPOT ANTI-BOT: Se o campo website_url (oculto para humanos) estiver preenchido,
+    // simula sucesso imediato gerando um número de protocolo fictício e NÃO grava nada no banco.
+    // Desta forma, bots recebem HTTP 200 / protocolo falso sem poluir a base nem disparar SMTP.
+    if (data.website_url && data.website_url.trim().length > 0) {
+      console.warn('[Inciso VII Web] Submissão rejeitada silenciosamente via Honeypot anti-bot.')
+      const protocoloFalso = gerarNumeroProtocolo()
+      const registroFalso: SolicitacaoIncisoVII = {
+        id: 'fake_' + Math.random().toString(36).substring(2, 10),
+        collectionId: 'solicitacoes_inciso_vii',
+        collectionName: 'solicitacoes_inciso_vii',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        razao_social: data.razao_social,
+        cnpj: data.cnpj,
+        email: data.email,
+        modalidade: data.modalidade,
+        capacidade: data.capacidade,
+        trecho: data.trecho,
+        protocolo: protocoloFalso,
+        status: 'Solicitação Recebida - Em Análise Técnica',
+        sla_dias: 20,
+      }
+      return {
+        protocolo: protocoloFalso,
+        registro: registroFalso,
+      }
+    }
+
     const protocolo = gerarNumeroProtocolo()
     const formData = new FormData()
+
+    if (data.website_url) {
+      formData.append('website_url', data.website_url.trim())
+    }
 
     formData.append('protocolo', protocolo)
     formData.append('razao_social', data.razao_social.trim())

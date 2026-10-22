@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T23:10:19.236Z",
+  "generatedAt": "2026-10-22T23:24:34.946Z",
   "collections": [
     {
       "name": "users",
@@ -324,6 +324,12 @@
         },
         {
           "name": "prazo_vigencia",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "website_url",
           "type": "text",
           "required": false,
           "system": false
@@ -1225,6 +1231,61 @@
         "CREATE UNIQUE INDEX idx_poc_prop_protocolo ON poc_propostas_vinculantes (protocolo)",
         "CREATE INDEX idx_poc_prop_user_ciclo ON poc_propostas_vinculantes (user_id, ciclo)",
         "CREATE INDEX idx_poc_prop_status ON poc_propostas_vinculantes (status)"
+      ]
+    },
+    {
+      "name": "solicitacoes_submissao_log",
+      "type": "base",
+      "apiRules": {
+        "list": null,
+        "view": null,
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "ip_origem",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "protocolo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sucesso",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_submissao_ip_created ON solicitacoes_submissao_log (ip_origem, created DESC)",
+        "CREATE INDEX idx_submissao_email_created ON solicitacoes_submissao_log (email, created DESC)"
       ]
     }
   ]
