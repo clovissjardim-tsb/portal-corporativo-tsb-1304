@@ -741,19 +741,6 @@ export default function PlataformaEletronica({
                     </p>
                   </div>
                 </div>
-
-                {/* NOTA DE CONFORMIDADE LGPD E SIGILO */}
-                <div className="p-3.5 bg-sky-50 border border-sky-200 rounded-md flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-[#0284c7] shrink-0 mt-0.5" />
-                  <div className="text-xs text-sky-950 leading-relaxed">
-                    <strong>Privacidade e Sigilo Regulatório (LGPD):</strong> Os dados cadastrais,
-                    representantes legais e informações comerciais constantes do formulário são de
-                    uso estrito e confidencial da transportadora. As publicações exigidas pelo Art.
-                    9º, Inciso VII na Plataforma Eletrônica são divulgadas exclusivamente sob forma
-                    agregada por ponto relevante e trecho de transporte, garantindo o anonimato dos
-                    solicitantes.
-                  </div>
-                </div>
               </div>
 
               {/* ITEM 2: CONSULTA DE PROTOCOLO E SLA */}
