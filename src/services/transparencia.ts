@@ -91,9 +91,9 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Baixar Documento',
   },
   monitoramento_congestionamento_header: {
-    titulo: 'Monitoramento de Utilização da Capacidade e Congestionamento Físico e Contratual',
+    titulo: 'Relatório de Monitoramento de Utilização da Capacidade e Congestionamento',
     descricao:
-      'Em cumprimento ao Art. 12 da Resolução ANP nº 11/2016, a TSB submete mensalmente à ANP e disponibiliza publicamente os relatórios de monitoramento de utilização de capacidade do sistema dutoviário (Art. 12, caput e §1º) após homologação pela ANP. Os relatórios retratam a consolidação do fluxo operacional e a verificação de eventuais congestionamentos físicos ou contratuais nos pontos de recepção e entrega dos Trechos 1 e 3 da malha dutoviária, assegurando ampla transparência ao mercado.',
+      'O Transportador deve produzir relatórios mensais de monitoramento da utilização da capacidade nos Pontos Relevantes e do Congestionamento Físico e Contratual, submetendo-os à aprovação da ANP e disponibilizando-os publicamente após homologação.',
   },
   plataforma_topo: {
     titulo: 'Plataforma Eletrônica',

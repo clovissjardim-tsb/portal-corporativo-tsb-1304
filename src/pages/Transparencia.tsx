@@ -13,15 +13,18 @@ import {
   type ModalidadeSolicitacao,
 } from '@/services/solicitacoes'
 import { cessoesService, type OfertaCessaoPublica } from '@/services/cessoes'
-import { Radio, Layers } from 'lucide-react'
+import { Radio, Layers, Activity } from 'lucide-react'
 import BoletimEletronico from '@/components/BoletimEletronicoOficial'
 import PlataformaEletronica from '@/components/PlataformaEletronicaOficial'
+import BlocoMonitoramentoOficial from '@/components/BlocoMonitoramentoOficial'
 
 export default function Transparencia() {
   const { toast } = useToast()
 
-  // Pilar ativo: 'boletim' | 'plataforma'
-  const [activePilar, setActivePilar] = useState<'boletim' | 'plataforma'>('boletim')
+  // Pilar ativo: 'boletim' | 'plataforma' | 'monitoramento'
+  const [activePilar, setActivePilar] = useState<'boletim' | 'plataforma' | 'monitoramento'>(
+    'boletim',
+  )
 
   // Sub-abas da Plataforma: 'i_vi' | 'vii' | 'viii'
   const [subAbaPlataforma, setSubAbaPlataforma] = useState<'i_vi' | 'vii' | 'viii'>('i_vi')
@@ -133,66 +136,98 @@ export default function Transparencia() {
           dutoviário TSB, em cumprimento integral à regulamentação expedida pela ANP.
         </p>
       </div>
-      {/* SELEÇÃO DE PILARES (2 CARDS) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* PILAR 1: BOLETIM ELETRÔNICO */}
+      {/* SELEÇÃO DE PILARES EM 3 BLOCOS DE TOPO (PADRÃO CONCORRENTES TAG/NTS) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* BLOCO 1: BOLETIM ELETRÔNICO */}
         <button
           type="button"
           onClick={() => setActivePilar('boletim')}
-          className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+          className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             activePilar === 'boletim'
               ? 'border-[#143b73] bg-[#f0f9ff] shadow-sm'
               : 'border-slate-200 bg-white hover:border-[#143b73]/40 hover:bg-slate-50'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#e0f2fe] text-[#0e2b54] font-display">
-              Acesso Livre
-            </span>
-            <span className="text-xs font-semibold text-slate-500 font-display">
-              Portaria ANP nº 1/2003
-            </span>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#e0f2fe] text-[#0e2b54] font-display">
+                Bloco 1 • Livre
+              </span>
+              <span className="text-xs font-semibold text-slate-500 font-display">
+                Portaria ANP nº 1/2003
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
+              <Radio className="h-5 w-5 text-[#143b73] shrink-0" />
+              Boletim Eletrônico
+            </h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              Itens I e II: instalações e serviços, alíneas a)–j) em acordeão e contratos vigentes.
+            </p>
           </div>
-          <h3 className="text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
-            <Radio className="h-5 w-5 text-[#143b73]" />
-            Boletim Eletrônico
-          </h3>
-          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Instalações de transporte e serviços prestados, quantidades programadas e realizadas nos
-            Trechos 1 e 3 e modelos regulatórios.
-          </p>
         </button>
 
-        {/* PILAR 2: PLATAFORMA ELETRÔNICA */}
+        {/* BLOCO 2: PLATAFORMA ELETRÔNICA */}
         <button
           type="button"
           onClick={() => setActivePilar('plataforma')}
-          className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+          className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             activePilar === 'plataforma'
               ? 'border-[#059669] bg-[#f0fdf4] shadow-sm'
               : 'border-slate-200 bg-white hover:border-[#059669]/50 hover:bg-slate-50'
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d] font-display">
-              Acesso Livre
-            </span>
-            <span className="text-xs font-semibold text-slate-500 font-display">
-              Resolução ANP nº 11/2016 (Arts. 9º e 10)
-            </span>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d] font-display">
+                Bloco 2 • Livre
+              </span>
+              <span className="text-xs font-semibold text-slate-500 font-display">
+                Res. ANP nº 11/2016
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
+              <Layers className="h-5 w-5 text-[#059669] shrink-0" />
+              Plataforma Eletrônica
+            </h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              Incisos I a VIII: fluxos físicos, previsões rolantes, solicitação de acesso e cessão.
+            </p>
           </div>
-          <h3 className="text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
-            <Layers className="h-5 w-5 text-[#059669]" />
-            Plataforma Eletrônica
-          </h3>
-          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Incisos I a VIII: fluxos físicos, fluxo oposto, previsões rolantes, resumo agregado,
-            solicitação de acesso e ofertas de cessão.
-          </p>
+        </button>
+
+        {/* BLOCO 3: MONITORAMENTO DE CONGESTIONAMENTO (PADRÃO TAG/NTS) */}
+        <button
+          type="button"
+          onClick={() => setActivePilar('monitoramento')}
+          className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+            activePilar === 'monitoramento'
+              ? 'border-[#0284c7] bg-[#f0f9ff] shadow-sm'
+              : 'border-slate-200 bg-white hover:border-[#0284c7]/50 hover:bg-slate-50'
+          }`}
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-100 text-[#0369a1] font-display">
+                Bloco 3 • Livre
+              </span>
+              <span className="text-xs font-semibold text-slate-500 font-display">
+                Res. 11/2016, Art. 11
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
+              <Activity className="h-5 w-5 text-[#0284c7] shrink-0" />
+              Monitoramento
+            </h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              Utilização da capacidade e congestionamento físico ou contratual homologado na ANP.
+            </p>
+          </div>
         </button>
       </div>
-      {/* CONTEÚDO DO PILAR ATIVO */}
-      {/* PILAR 1: BOLETIM ELETRÔNICO (FORMATO OFICIAL TSB) */}
+
+      {/* CONTEÚDO DOS BLOCOS */}
+      {/* BLOCO 1: BOLETIM ELETRÔNICO (PORTARIA ANP Nº 1/2003) */}
       {activePilar === 'boletim' && (
         <BoletimEletronico
           filtroAnoMensal={filtroAnoMensal}
@@ -201,7 +236,8 @@ export default function Transparencia() {
           setFiltroMesMensal={setFiltroMesMensal}
         />
       )}
-      {/* PILAR 2: PLATAFORMA ELETRÔNICA (ESPELHANDO FIELMENTE A PÁGINA OFICIAL DA TSB) */}
+
+      {/* BLOCO 2: PLATAFORMA ELETRÔNICA (RES. ANP Nº 11/2016, INCISOS I–VIII) */}
       {activePilar === 'plataforma' && (
         <PlataformaEletronica
           subAba={subAbaPlataforma}
@@ -219,7 +255,10 @@ export default function Transparencia() {
           carregandoCessoes={carregandoCessoes}
           carregarOfertasCessao={carregarOfertasCessao}
         />
-      )}{' '}
+      )}
+
+      {/* BLOCO 3: MONITORAMENTO DE CAPACIDADE E CONGESTIONAMENTO (RES. ANP Nº 11/2016, ART. 11) */}
+      {activePilar === 'monitoramento' && <BlocoMonitoramentoOficial />}
     </div>
   )
 }

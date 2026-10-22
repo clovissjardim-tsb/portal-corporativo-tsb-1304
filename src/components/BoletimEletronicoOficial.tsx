@@ -24,9 +24,6 @@ import {
   ChevronDown,
   Info,
   ShieldAlert,
-  Activity,
-  Clock,
-  CheckCircle2,
 } from 'lucide-react'
 
 export interface BoletimEletronicoProps {
@@ -275,10 +272,6 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     return itensBd.filter((it) => it.secao === 'boletim_secao2')
   }, [itensBd])
 
-  const congestionamentoBd = useMemo(() => {
-    return itensBd.filter((it) => it.secao === 'monitoramento_congestionamento')
-  }, [itensBd])
-
   // Estado colapsado do bloco NTS na alínea g)
   const [explicativoGExpandido, setExplicativoGExpandido] = useState<boolean>(false)
 
@@ -336,18 +329,6 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
   const avisoServidao = useMemo(() => {
     const item = cabecalhosBdMap.get('aviso_faixas_servidao')
     const fallback = CABECALHOS_FALLBACK.aviso_faixas_servidao
-    return {
-      titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
-      descricao:
-        item?.ativo !== false && item?.descricao ? item.descricao : fallback.descricao || '',
-      item,
-      ativo: item ? item.ativo !== false : true,
-    }
-  }, [cabecalhosBdMap])
-
-  const headerCongestionamento = useMemo(() => {
-    const item = cabecalhosBdMap.get('monitoramento_congestionamento_header')
-    const fallback = CABECALHOS_FALLBACK.monitoramento_congestionamento_header
     return {
       titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
       descricao:
@@ -461,51 +442,6 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
       description: 'Exibindo os 12 arquivos mais recentes da série histórica.',
     })
   }
-
-  // Filtros Monitoramento de Congestionamento
-  const [pesquisaCongestionamento, setPesquisaCongestionamento] = useState<string>('')
-  const [filtroAnoCongestionamento, setFiltroAnoCongestionamento] = useState<string>('todos')
-  const [ordemCongestionamento, setOrdemCongestionamento] = useState<'desc' | 'asc'>('desc')
-
-  const relatoriosCongestionamentoTotal = useMemo(() => {
-    const ativos = congestionamentoBd.filter((it) => it.ativo)
-    const termo = pesquisaCongestionamento.trim().toLowerCase()
-
-    const filtrados = ativos.filter((it) => {
-      if (termo) {
-        const correspondeTitulo = it.titulo.toLowerCase().includes(termo)
-        const correspondeAno = (it.ano || '').includes(termo)
-        const correspondeMes = (it.mes || '').toLowerCase().includes(termo)
-        if (!correspondeTitulo && !correspondeAno && !correspondeMes) return false
-      }
-      if (filtroAnoCongestionamento !== 'todos' && it.ano !== filtroAnoCongestionamento) {
-        return false
-      }
-      return true
-    })
-
-    return filtrados.sort((a, b) => {
-      const periodoA = a.chave_periodo || `${a.ano || '0'}-${a.mes || '0'}`
-      const periodoB = b.chave_periodo || `${b.ano || '0'}-${b.mes || '0'}`
-      if (ordemCongestionamento === 'asc') {
-        return periodoA.localeCompare(periodoB)
-      }
-      return periodoB.localeCompare(periodoA)
-    })
-  }, [
-    congestionamentoBd,
-    pesquisaCongestionamento,
-    filtroAnoCongestionamento,
-    ordemCongestionamento,
-  ])
-
-  const anosCongestionamentoDisponiveis = useMemo(() => {
-    const anosSet = new Set<string>()
-    congestionamentoBd.forEach((it) => {
-      if (it.ano) anosSet.add(it.ano)
-    })
-    return Array.from(anosSet).sort((a, b) => Number(b) - Number(a))
-  }, [congestionamentoBd])
 
   // Helper de documento do topo
   const docTopo = useMemo(() => {
@@ -1662,138 +1598,6 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   </div>
                 )
               })()}
-            </section>
-          )}
-
-          {/* =========================================================================
-              MONITORAMENTO DO CONGESTIONAMENTO (RES. ANP 11/2016, ART. 12)
-              Claramente rotulado para distinguir da estrutura estrita da Portaria ANP nº 1/2003.
-              Obrigação da Resolução ANP nº 11/2016 (Art. 12) — não integra o Art. 2º da Portaria nº 1/2003.
-              ========================================================================= */}
-          {headerCongestionamento.ativo && (
-            <section
-              id="bloco-congestionamento"
-              className="space-y-6 pt-10 border-t border-slate-200"
-            >
-              <div className="space-y-2 border-b border-slate-200 pb-4">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <div>
-                    <span className="inline-block text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 mb-1.5">
-                      Obrigação da Resolução ANP nº 11/2016 (Art. 12) — não integra o Art. 2º da
-                      Portaria nº 1/2003
-                    </span>
-                    <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display tracking-tight">
-                      {headerCongestionamento.titulo}
-                    </h2>
-                  </div>
-                  <span className="text-xs text-slate-500 font-mono">
-                    Resolução ANP nº 11/2016 • Art. 12
-                  </span>
-                </div>
-                {headerCongestionamento.descricao && (
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
-                    {headerCongestionamento.descricao}
-                  </p>
-                )}
-              </div>
-
-              {/* NOTAS NORMATIVAS EM LINHAS DISCRETAS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="font-semibold text-slate-800 flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5 text-[#0284c7]" />
-                    <span>Periodicidade e Homologação (Art. 12, §1º e §2º)</span>
-                  </div>
-                  <p className="text-slate-500 leading-relaxed">
-                    Relatórios elaborados mensalmente e disponibilizados ao público após submissão e
-                    homologação técnica formal pela ANP.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="font-semibold text-slate-800 flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Fluxo Operacional Medido (Art. 12, caput)</span>
-                  </div>
-                  <p className="text-slate-500 leading-relaxed">
-                    Consolidação direta do fluxo operacional medido nos pontos de recepção e entrega
-                    para aferição de congestionamento físico ou contratual.
-                  </p>
-                </div>
-              </div>
-
-              {/* LISTAGEM DOS RELATÓRIOS OU ESTADO INFORMATIVO */}
-              {relatoriosCongestionamentoTotal.length > 0 ? (
-                <div className="space-y-4">
-                  {/* Filtro simples se houver mais de 5 relatórios */}
-                  {relatoriosCongestionamentoTotal.length > 5 && (
-                    <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 rounded-md border border-slate-200 text-xs">
-                      <div className="flex-1 min-w-[200px]">
-                        <Input
-                          type="text"
-                          placeholder="Pesquisar relatório..."
-                          value={pesquisaCongestionamento}
-                          onChange={(e) => setPesquisaCongestionamento(e.target.value)}
-                          className="h-8 text-xs bg-white"
-                        />
-                      </div>
-                      {anosCongestionamentoDisponiveis.length > 1 && (
-                        <select
-                          value={filtroAnoCongestionamento}
-                          onChange={(e) => setFiltroAnoCongestionamento(e.target.value)}
-                          className="h-8 px-2 rounded-md border border-slate-300 text-xs bg-white text-slate-800"
-                        >
-                          <option value="todos">Todos os anos</option>
-                          {anosCongestionamentoDisponiveis.map((ano) => (
-                            <option key={ano} value={ano}>
-                              {ano}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Linhas de documento padrão NTS */}
-                  <div className="divide-y divide-slate-100 pl-1 space-y-2">
-                    {relatoriosCongestionamentoTotal.map((item) => {
-                      const doc = resolverUrlDocumento(item, item.url_externa || '')
-                      return (
-                        <div key={item.id} className="pt-2 first:pt-0">
-                          {doc.url ? (
-                            <DocumentLinkRow
-                              url={doc.url}
-                              label={item.titulo}
-                              sublabel={item.descricao || undefined}
-                            />
-                          ) : (
-                            <div className="text-xs text-slate-500 flex items-center gap-2 py-1">
-                              <PdfIcon className="w-4 h-4 opacity-40" />
-                              <span className="font-medium text-slate-700">{item.titulo}</span>
-                              <span className="text-slate-400 italic text-[11px]">
-                                (homologação pendente na ANP)
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-6 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2 text-xs text-slate-600 max-w-3xl">
-                  <div className="flex items-center gap-2 font-semibold text-slate-800">
-                    <Activity className="h-4 w-4 text-amber-600" />
-                    <span>Relatórios Mensais em Processamento e Homologação na ANP</span>
-                  </div>
-                  <p className="leading-relaxed text-justify">
-                    Os demonstrativos de Monitoramento de Utilização da Capacidade e
-                    Congestionamento Físico e Contratual são submetidos mensalmente à Agência
-                    Nacional do Petróleo (ANP) e disponibilizados nesta seção conforme as
-                    homologações técnicas forem concluídas.
-                  </p>
-                </div>
-              )}
             </section>
           )}
         </div>

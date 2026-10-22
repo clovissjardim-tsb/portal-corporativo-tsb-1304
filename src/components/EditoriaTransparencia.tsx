@@ -203,7 +203,7 @@ export function EditoriaTransparencia() {
         `Relatório de Monitoramento de Utilização da Capacidade e Congestionamento - ${mesAtualStr}/${anoAtualStr}`,
       )
       setFormDescricao(
-        'Relatório mensal consolidado do fluxo operacional e monitoramento de capacidade conforme Art. 12 da Resolução ANP nº 11/2016.',
+        'Relatório mensal consolidado do fluxo operacional e monitoramento de capacidade conforme Art. 11 da Resolução ANP nº 11/2016.',
       )
       setFormNomeArquivoCustom(`Monitoramento_Congestionamento_${mesAtualStr}${anoAtualStr}.pdf`)
     } else {
@@ -489,7 +489,7 @@ export function EditoriaTransparencia() {
           }`}
         >
           <Activity className="h-3.5 w-3.5 text-amber-400" />
-          Monitoramento de Congestionamento (Art. 12)
+          Monitoramento de Congestionamento (Art. 11)
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-200 text-[#0a2540] font-bold">
             {contagens.monitoramento_congestionamento}
           </span>
@@ -734,7 +734,7 @@ export function EditoriaTransparencia() {
                 <h3 className="text-lg font-bold">
                   {modoNovoRelatorio
                     ? subSecaoAtiva === 'monitoramento_congestionamento'
-                      ? 'Adicionar Relatório de Congestionamento (Art. 12)'
+                      ? 'Adicionar Relatório de Congestionamento (Art. 11)'
                       : 'Adicionar Relatório de Quantidades (Alínea h)'
                     : itemEmEdicao?.titulo}
                 </h3>
