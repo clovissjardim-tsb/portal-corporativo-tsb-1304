@@ -112,48 +112,53 @@ const URLS_CONHECIDAS: Record<string, { url: string; nomeArquivo: string }> = {
   },
 }
 
-// Ícone padronizado estilo NTS (PDF em vermelho com contorno refinado)
-function PdfIcon({ className = 'h-5 w-5' }: { className?: string }) {
+// Ícone de documento PDF estilo NTS (glifo discreto de 16-18px com canto dobrado e contorno refinado)
+function PdfIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
   return (
-    <span
-      className={`inline-flex items-center justify-center shrink-0 ${className}`}
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 inline-block align-middle text-red-600 ${className}`}
       aria-hidden="true"
+      style={{ minWidth: '16px', minHeight: '16px', maxWidth: '20px', maxHeight: '20px' }}
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
+      {/* Contorno do arquivo com canto superior direito chanfrado/dobrado */}
+      <path
+        d="M3 2.5C3 1.94772 3.44772 1.5 4 1.5H9.5L13 5V13.5C13 14.0523 12.5523 14.5 12 14.5H4C3.44772 14.5 3 14.0523 3 13.5V2.5Z"
         stroke="currentColor"
-        className="h-full w-full text-red-600"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        fill="#fef2f2"
+      />
+      {/* Canto dobrado */}
+      <path
+        d="M9.5 1.5V5H13"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Badge/Texto 'PDF' em miniatura */}
+      <rect x="4.2" y="7.2" width="7.6" height="4.8" rx="0.8" fill="currentColor" />
+      <text
+        x="8"
+        y="10.8"
+        fill="#ffffff"
+        fontSize="3.2"
+        fontWeight="800"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        textAnchor="middle"
+        letterSpacing="0.2"
       >
-        <path
-          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <polyline
-          points="14 2 14 8 20 8"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <text
-          x="7"
-          y="18"
-          fill="#dc2626"
-          fontSize="6"
-          fontWeight="bold"
-          fontFamily="sans-serif"
-          letterSpacing="0.2"
-        >
-          PDF
-        </text>
-      </svg>
-    </span>
+        PDF
+      </text>
+    </svg>
   )
 }
 
-// Linha de documento simples e limpa estilo NTS: [PDF icon] + Nome do documento com link sutil
+// Linha de documento simples e limpa estilo NTS: [PDF icon pequeno 16-18px] + Nome do documento com link sutil
 interface DocumentLinkRowProps {
   url: string
   label: string
@@ -165,15 +170,15 @@ interface DocumentLinkRowProps {
 function DocumentLinkRow({ url, label, title, external, sublabel }: DocumentLinkRowProps) {
   if (!url) return null
   return (
-    <div className="group flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+    <div className="group flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
         title={title || label}
-        className="inline-flex items-center gap-2.5 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs"
+        className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs"
       >
-        <PdfIcon className="h-4.5 w-4.5 text-red-600 transition-transform group-hover:scale-105" />
+        <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
         <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
           {label}
         </span>
@@ -182,7 +187,7 @@ function DocumentLinkRow({ url, label, title, external, sublabel }: DocumentLink
         )}
       </a>
       {sublabel && (
-        <span className="text-xs text-slate-500 pl-7 sm:pl-0 font-normal">{sublabel}</span>
+        <span className="text-xs text-slate-500 pl-6 sm:pl-0 font-normal">{sublabel}</span>
       )}
     </div>
   )
@@ -1175,7 +1180,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                         className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0284c7] hover:underline"
                                         title={`Baixar ${itemRel.nomeArquivo}`}
                                       >
-                                        <PdfIcon className="h-3.5 w-3.5" />
+                                        <PdfIcon className="w-3.5 h-3.5" />
                                         <span>Baixar PDF</span>
                                       </a>
                                     ) : (
@@ -1496,7 +1501,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                             />
                           ) : (
                             <div className="text-xs text-slate-500 flex items-center gap-2 py-1">
-                              <PdfIcon className="h-4 w-4 opacity-40" />
+                              <PdfIcon className="w-4 h-4 opacity-40" />
                               <span className="font-medium text-slate-700">{item.titulo}</span>
                               <span className="text-slate-400 italic text-[11px]">
                                 (homologação pendente na ANP)
