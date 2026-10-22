@@ -254,121 +254,16 @@ export const solicitacoesService = {
   },
 
   /**
-   * Submete solicitação pública diretamente pelo portal web (Inciso VII - Art. 10 Res. 11/2016).
-   * Sem necessidade de login (acesso livre). Gera protocolo imediato no formato TSB-AAAA-XXXX,
-   * salva na fila com origem: 'portal_web', e dispara e-mail com comprovante formal.
+   * [LEGADO / DESATIVADO] Anteriormente permitia submissão direta pelo portal web.
+   * Revertido na v0.0.49 para o modelo exclusivo por e-mail (padrão NTS/TAG/TBG).
    */
   async submeterWeb(data: NovaSolicitacaoWebInput): Promise<{
     protocolo: string
     registro: SolicitacaoIncisoVII
   }> {
-    // 1. HONEYPOT ANTI-BOT: Se o campo website_url (oculto para humanos) estiver preenchido,
-    // simula sucesso imediato gerando um número de protocolo fictício e NÃO grava nada no banco.
-    // Desta forma, bots recebem HTTP 200 / protocolo falso sem poluir a base nem disparar SMTP.
-    if (data.website_url && data.website_url.trim().length > 0) {
-      console.warn('[Inciso VII Web] Submissão rejeitada silenciosamente via Honeypot anti-bot.')
-      const protocoloFalso = gerarNumeroProtocolo()
-      const registroFalso: SolicitacaoIncisoVII = {
-        id: 'fake_' + Math.random().toString(36).substring(2, 10),
-        collectionId: 'solicitacoes_inciso_vii',
-        collectionName: 'solicitacoes_inciso_vii',
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-        razao_social: data.razao_social,
-        cnpj: data.cnpj,
-        email: data.email,
-        modalidade: data.modalidade,
-        capacidade: data.capacidade,
-        trecho: data.trecho,
-        protocolo: protocoloFalso,
-        status: 'Solicitação Recebida - Em Análise Técnica',
-        sla_dias: 20,
-      }
-      return {
-        protocolo: protocoloFalso,
-        registro: registroFalso,
-      }
-    }
-
-    const protocolo = gerarNumeroProtocolo()
-    const formData = new FormData()
-
-    if (data.website_url) {
-      formData.append('website_url', data.website_url.trim())
-    }
-
-    formData.append('protocolo', protocolo)
-    formData.append('razao_social', data.razao_social.trim())
-    formData.append('cnpj', data.cnpj.trim())
-    formData.append('email', data.email.trim().toLowerCase())
-    formData.append('representante_legal', data.representante_legal.trim())
-    formData.append('telefone', data.telefone.trim())
-    formData.append('modalidade', data.modalidade)
-    formData.append('capacidade', String(data.capacidade))
-    formData.append('trecho', data.trecho.trim())
-    formData.append('ponto_recebimento', data.ponto_recebimento.trim())
-    formData.append('ponto_entrega', data.ponto_entrega.trim())
-
-    // Período formatado a partir da data de início e prazo pretendido
-    const periodoFormatado = data.prazo_vigencia
-      ? `Início em ${data.data_inicio} • Vigência: ${data.prazo_vigencia}`
-      : `Início em ${data.data_inicio}`
-    formData.append('periodo', periodoFormatado)
-    formData.append('prazo_vigencia', data.prazo_vigencia || '')
-
-    if (data.endereco) {
-      formData.append('endereco', data.endereco.trim())
-    }
-
-    if (data.observacoes) {
-      formData.append('observacoes', data.observacoes.trim())
-    }
-
-    formData.append('origem', 'portal_web')
-    formData.append('status', 'Solicitação Recebida - Em Análise Técnica')
-    formData.append('sla_dias', '20')
-    formData.append(
-      'parecer_fundamentado',
-      'Solicitação de acesso formalmente recepcionada via portal web. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.',
+    throw new Error(
+      'A submissão web foi descontinuada. As solicitações devem ser enviadas por e-mail para regulacao@tsb.com.br.',
     )
-    formData.append('manifestacao_sulgas_status', 'Pendente')
-
-    // Consolidação dos dados específicos de Swap (pares cedente/receptor e garantias)
-    if (data.modalidade === 'Troca Operacional') {
-      const swapPartes: string[] = []
-      if (data.swap_cedente_nome || data.swap_receptor_nome) {
-        swapPartes.push(
-          `Cedente: ${data.swap_cedente_nome || '-'} | Receptor: ${data.swap_receptor_nome || '-'}`,
-        )
-      }
-      if (data.swap_origem || data.swap_destino) {
-        swapPartes.push(`Origem: ${data.swap_origem || '-'} ➔ Destino: ${data.swap_destino || '-'}`)
-      }
-      if (data.swap_volume_cedente || data.swap_volume_receptor) {
-        swapPartes.push(
-          `Vol. Cedente: ${data.swap_volume_cedente || '-'} MM³/d | Vol. Receptor: ${data.swap_volume_receptor || '-'} MM³/d`,
-        )
-      }
-      if (data.garantias_seguranca_swap) {
-        swapPartes.push(`Garantias/Lastro: ${data.garantias_seguranca_swap}`)
-      }
-
-      const swapTexto = swapPartes.join(' • ')
-      formData.append('garantias_seguranca_swap', swapTexto)
-    }
-
-    if (data.arquivo_formulario) {
-      formData.append('arquivo_formulario', data.arquivo_formulario)
-    }
-
-    const registro = await pb
-      .collection<SolicitacaoIncisoVII>('solicitacoes_inciso_vii')
-      .create(formData)
-
-    return {
-      protocolo: registro.protocolo || protocolo,
-      registro,
-    }
   },
 
   /**

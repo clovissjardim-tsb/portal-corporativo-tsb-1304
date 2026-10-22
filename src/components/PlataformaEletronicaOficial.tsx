@@ -20,7 +20,6 @@ import {
   FileSpreadsheet,
   Mail,
 } from 'lucide-react'
-import { FormularioSolicitacaoWeb } from '@/components/FormularioSolicitacaoWeb'
 import {
   transparenciaService,
   resolverUrlDocumento,
@@ -164,7 +163,7 @@ export default function PlataformaEletronica({
     setGerandoPdfAcesso(true)
     try {
       await gerarFormularioAcessoPdf({
-        emailDestino: emailRecebimentoCessoes,
+        emailDestino: 'regulacao@tsb.com.br',
       })
     } catch (err) {
       console.error('Erro ao gerar PDF do formulário de solicitação de acesso:', err)
@@ -645,72 +644,61 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 2: INCISO VII (SUBMISSÃO WEB COM PROTOCOLO IMEDIATO)
+              SUB-ABA 2: INCISO VII (MODELO EXCLUSIVO POR E-MAIL - PADRÃO NTS/TAG/TBG)
               ======================================================== */}
           {subAba === 'vii' && (
             <div className="space-y-8">
-              {/* ITEM 1 (VIA PRINCIPAL): FORMULÁRIO WEB PÚBLICO COM PROTOCOLO IMEDIATO */}
-              <FormularioSolicitacaoWeb
-                onSucessoProtocolo={(proto) => {
-                  setConsultaProtocolo(proto)
-                }}
-                onIrParaConsulta={(proto) => {
-                  setConsultaProtocolo(proto)
-                  const el = document.getElementById('secao-consulta-protocolo-vii')
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
-              />
-
-              {/* ITEM 2 (VIA ALTERNATIVA): CANAL POR E-MAIL COM FORMULÁRIO PDF OFICIAL (PADRÃO NTS/TBG) */}
+              {/* CANAL OFICIAL EXCLUSIVO POR E-MAIL COM FORMULÁRIO PDF OFICIAL (PADRÃO NTS/TAG/TBG) */}
               <div className="p-6 bg-slate-50/70 border border-slate-200 rounded-xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 uppercase tracking-wider font-display">
-                        Via Alternativa
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
+                        Inciso VII • Canal Oficial
                       </span>
                       <span className="text-[11px] font-medium text-slate-500">
-                        Padrão NTS / Envio por E-mail
+                        Padrão NTS / TAG / TBG • Envio por E-mail
                       </span>
                     </div>
                     <h4 className="text-base font-bold text-[#0a2540] font-display flex items-center gap-2">
                       <Mail className="h-4 w-4 text-[#0284c7]" />
-                      Prefere enviar por e-mail? Baixe o Formulário-Padrão (PDF)
+                      Solicitação de Acesso à Capacidade de Transporte Dutoviário
                     </h4>
                     <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                      Caso prefira formalizar a solicitação fora do ambiente web, faça o download do
-                      modelo oficial, assine (ICP-Brasil ou carimbo/assinatura física) e encaminhe
-                      ao canal de atendimento institucional. A equipe cadastrará o pedido na fila e
-                      o protocolo será emitido em seguida.
+                      Em conformidade com a prática padrão adotada pelas transportadoras brasileiras
+                      (NTS, TAG e TBG), a solicitação de acesso é formalizada exclusivamente
+                      mediante o download do formulário oficial em PDF, preenchimento dos requisitos
+                      técnicos, assinatura do representante legal e envio por e-mail para{' '}
+                      <strong className="text-[#0a2540]">regulacao@tsb.com.br</strong>. A equipe da
+                      TSB autuará o processo internamente e emitirá o protocolo formal com contagem
+                      do SLA regulatório.
                     </p>
                   </div>
 
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     onClick={handleBaixarFormularioAcessoPdf}
                     disabled={gerandoPdfAcesso}
-                    className="border-slate-300 text-[#0a2540] hover:bg-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer bg-white"
+                    className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <Download className="h-3.5 w-3.5 text-slate-600" />
+                    <Download className="h-3.5 w-3.5 text-slate-200" />
                     {gerandoPdfAcesso
                       ? 'Gerando Formulário PDF...'
                       : 'Baixar Formulário Oficial (PDF)'}
                   </Button>
                 </div>
 
-                {/* FLUXO DIDÁTICO ALTERNATIVO EM 4 PASSOS */}
+                {/* FLUXO EM 4 PASSOS: BAIXAR, PREENCHER E ASSINAR, ENVIAR POR E-MAIL, AGUARDAR RESPOSTA */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
                     <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       1
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Baixar o PDF</h5>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Baixar Formulário Oficial</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Modelo oficial TSB com todos os requisitos do Art. 10 da Resolução ANP
-                      11/2016.
+                      Faça o download do modelo oficial TSB em PDF, estruturado com todos os
+                      requisitos do Art. 10 da Resolução ANP nº 11/2016.
                     </p>
                   </div>
 
@@ -720,8 +708,8 @@ export default function PlataformaEletronica({
                     </div>
                     <h5 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Preencha os dados da empresa e assine via Gov.br, ICP-Brasil ou carimbo da
-                      empresa.
+                      Preencha os dados da empresa, capacidade e trecho. Assine via certificado
+                      digital (Gov.br / ICP-Brasil) ou assinatura física com carimbo.
                     </p>
                   </div>
 
@@ -729,12 +717,15 @@ export default function PlataformaEletronica({
                     <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       3
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Enviar ao Canal</h5>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Enviar por E-mail</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Envie o anexo assinado para:{' '}
-                      <strong className="text-[#0a2540] break-all">
-                        {emailRecebimentoCessoes}
-                      </strong>
+                      Encaminhe o documento assinado em anexo para o canal regulatório oficial:{' '}
+                      <a
+                        href="mailto:regulacao@tsb.com.br"
+                        className="font-bold text-[#0284c7] hover:underline break-all"
+                      >
+                        regulacao@tsb.com.br
+                      </a>
                     </p>
                   </div>
 
@@ -742,16 +733,18 @@ export default function PlataformaEletronica({
                     <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       4
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Receber Protocolo</h5>
+                    <h5 className="font-bold text-xs text-[#0a2540]">
+                      Aguardar Resposta (20 dias)
+                    </h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      A TSB autua o pedido, gera o protocolo com SLA de 20 dias úteis e responde por
-                      e-mail.
+                      A TSB autua o pedido, gera o protocolo formal e emitirá o parecer fundamentado
+                      em até 20 dias úteis (Art. 10 da Res. ANP nº 11/2016).
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* ITEM 3: CONSULTA DE PROTOCOLO E SLA */}
+              {/* ITEM 2: CONSULTA DE PROTOCOLO E SLA */}
               <div
                 id="secao-consulta-protocolo-vii"
                 className="p-5 sm:p-6 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3"
@@ -920,8 +913,8 @@ export default function PlataformaEletronica({
                           </strong>
                           <span className="text-slate-600">
                             Verifique o número informado. A solicitação é formalizada pelo
-                            formulário-padrão TSB (PDF) enviado ao canal oficial{' '}
-                            {emailRecebimentoCessoes}.
+                            formulário-padrão TSB (PDF) enviado ao canal oficial
+                            regulacao@tsb.com.br.
                           </span>
                         </div>
                       </div>

@@ -48,7 +48,7 @@ async function obterLogoBase64(url: string): Promise<string | null> {
 export async function gerarFormularioAcessoPdf(
   opcoes: GerarFormularioAcessoPdfOpcoes = {},
 ): Promise<void> {
-  const { emailDestino = 'acesso@tsb.com.br', dadosPreenchidos } = opcoes
+  const { emailDestino = 'regulacao@tsb.com.br', dadosPreenchidos } = opcoes
 
   const doc = new jsPDF({
     orientation: 'portrait',
