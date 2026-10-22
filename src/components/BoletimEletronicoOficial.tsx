@@ -529,7 +529,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
         {avisoServidao.ativo && (
           <div className="mx-6 sm:mx-10 mt-8 p-5 rounded-lg bg-slate-50/80 border border-slate-200 flex flex-col sm:flex-row items-start gap-4">
             <div className="p-2 rounded-md bg-[#0a2540] text-white shrink-0 mt-0.5">
-              <ShieldAlert className="h-4 w-4 text-amber-400" />
+              <ShieldAlert className="h-4 w-4 text-slate-200" />
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -1034,11 +1034,11 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                     vazões nominais)
                                   </span>
                                   <span className="inline-flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                    <span className="w-2 h-2 rounded-full bg-slate-600" />
                                     <strong>CC:</strong> Dedução de consumo operacional e segurança
                                   </span>
                                   <span className="inline-flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-amber-600" />
+                                    <span className="w-2 h-2 rounded-full bg-[#0284c7]" />
                                     <strong>Alocação:</strong> Firme, Interruptível e Curto Prazo
                                   </span>
                                 </div>

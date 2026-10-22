@@ -226,59 +226,55 @@ export default function PlataformaEletronica({
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB (IGUAL AO BOLETIM ELETRÔNICO OFICIAL) */}
       <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-        {/* CABEÇALHO OFICIAL COM PALETA TSB */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0a1d37 0%, #0c2340 50%, #143b73 100%)',
-          }}
-          className="text-white p-6 sm:p-8 border-b border-white/10"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-sky-200 font-display">
-              Portal TSB • Regulação &amp; Acesso Público
-            </span>
-            <Badge className="bg-[#e30613] hover:bg-[#c50510] text-white border-0 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 font-display">
-              Resolução ANP nº 11/2016 • Art. 9º
-            </Badge>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 font-display">
-                <Layers className="h-6 w-6 sm:h-7 sm:w-7 text-sky-300" />
-                {headerPlataformaTopo.titulo}
-              </h1>
-              {headerPlataformaTopo.descricao && (
-                <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-3xl leading-relaxed">
-                  {headerPlataformaTopo.url_externa ? (
-                    <a
-                      href={headerPlataformaTopo.url_externa}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#38bdf8] hover:text-white underline inline-flex items-center gap-1 font-medium transition-colors"
-                    >
-                      {headerPlataformaTopo.descricao}
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                    </a>
-                  ) : (
-                    headerPlataformaTopo.descricao
-                  )}
-                </p>
-              )}
+        {/* CABEÇALHO UNIFICADO E SÓBRIO COM IDENTIDADE TSB (MESMO PADRÃO DO BOLETIM ELETRÔNICO) */}
+        <div className="px-6 py-7 sm:px-10 sm:py-9 bg-white border-b border-slate-200">
+          <div className="max-w-4xl space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#143b73] tracking-wide uppercase font-display">
+              <span>Resolução ANP nº 11, de 16/03/2016</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-500 font-normal normal-case">Art. 9º da Resolução</span>
             </div>
+
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0a2540] font-display">
+              {headerPlataformaTopo.titulo}
+            </h1>
+
+            {headerPlataformaTopo.descricao && (
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed text-justify sm:text-left">
+                {headerPlataformaTopo.url_externa ? (
+                  <a
+                    href={headerPlataformaTopo.url_externa}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium transition-colors"
+                  >
+                    {headerPlataformaTopo.descricao}
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                ) : (
+                  headerPlataformaTopo.descricao
+                )}
+              </p>
+            )}
+
             {(() => {
               if (!headerPlataformaTopo.item) return null
               const doc = resolverUrlDocumento(headerPlataformaTopo.item, '')
               if (!doc.url) return null
               return (
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-colors border border-white/20 self-start"
-                >
-                  <FileDown className="h-3.5 w-3.5" />
-                  {doc.nomeExibicao || 'Anexo da Plataforma'}
-                </a>
+                <div className="pt-2">
+                  <a
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5"
+                  >
+                    <FileDown className="h-4 w-4 text-slate-500" />
+                    <span className="underline decoration-slate-300 underline-offset-4 hover:decoration-[#0284c7]">
+                      {doc.nomeExibicao || 'Anexo da Plataforma'}
+                    </span>
+                  </a>
+                </div>
               )
             })()}
           </div>
@@ -324,14 +320,14 @@ export default function PlataformaEletronica({
               </div>
 
               {/* TABELA PRINCIPAL NO MESMO PADRÃO DO BOLETIM ELETRÔNICO OFICIAL */}
-              <div className="overflow-x-auto border border-slate-200 rounded-md">
+              <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-[#0a1d37] text-white font-semibold font-display">
+                  <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
                     <tr>
-                      <th className="p-3 w-16 text-center border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
+                      <th className="p-3 w-16 text-center border-r border-slate-200 tracking-wider uppercase text-[11px]">
                         Inciso
                       </th>
-                      <th className="p-3 w-3/5 sm:w-2/3 border-r border-slate-700/60 tracking-wider uppercase text-[11px]">
+                      <th className="p-3 w-3/5 sm:w-2/3 border-r border-slate-200 tracking-wider uppercase text-[11px]">
                         Exigência Legal (Art. 9º, Res. ANP 11/2016)
                       </th>
                       <th className="p-3 w-2/5 sm:w-1/3 text-center tracking-wider uppercase text-[11px]">
@@ -426,7 +422,7 @@ export default function PlataformaEletronica({
                                 {item?.titulo ||
                                   'III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e capacidade ociosa por ponto relevante.'}
                               </span>
-                              <div className="p-2 rounded bg-sky-50/70 border border-sky-200/80 text-[11px] text-sky-950 leading-relaxed">
+                              <div className="p-2 rounded bg-slate-50 border border-slate-200 text-[11px] text-slate-700 leading-relaxed">
                                 <span className="font-semibold text-[#0a2540]">
                                   Previsão de Disponibilidade (Padrão TBG):
                                 </span>{' '}
@@ -590,7 +586,7 @@ export default function PlataformaEletronica({
                           <button
                             type="button"
                             onClick={() => setSubAba('vii')}
-                            className="text-[11px] font-semibold text-[#059669] hover:underline inline-flex items-center gap-1"
+                            className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
                             &rarr; Abrir modelo oficial (PDF) e consulta regulatória
                           </button>
@@ -599,8 +595,9 @@ export default function PlataformaEletronica({
                       <td className="p-3 text-center">
                         <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => setSubAba('vii')}
-                          className="bg-[#059669] hover:bg-[#047857] text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5"
+                          className="border-[#0a2540] text-[#0a2540] hover:bg-[#0a2540] hover:text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           Solicitar Acesso
@@ -621,7 +618,7 @@ export default function PlataformaEletronica({
                           <button
                             type="button"
                             onClick={() => setSubAba('viii')}
-                            className="text-[11px] font-semibold text-[#0284c7] hover:underline inline-flex items-center gap-1"
+                            className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
                             &rarr; Ver resumo de ofertas e baixar formulário-padrão (PDF)
                           </button>
@@ -630,8 +627,9 @@ export default function PlataformaEletronica({
                       <td className="p-3 text-center">
                         <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => setSubAba('viii')}
-                          className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5"
+                          className="border-[#0a2540] text-[#0a2540] hover:bg-[#0a2540] hover:text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           Painel de Cessão
@@ -650,22 +648,22 @@ export default function PlataformaEletronica({
           {subAba === 'vii' && (
             <div className="space-y-8">
               {/* ITEM 1 (PONTO DE ENTRADA DO CARREGADOR): MODELO MISTO OFICIAL TSB (Art. 9º, VII e Art. 10 da Res. ANP 11/2016) */}
-              <div className="p-6 sm:p-7 bg-white border-2 border-[#1b4d96]/30 rounded-xl shadow-sm space-y-6">
+              <div className="p-6 sm:p-7 bg-white border border-slate-200 rounded-xl shadow-xs space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-200">
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#e30613] text-white uppercase tracking-wider font-display">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
                         Inciso VII • Modelo Regulatório TSB
                       </span>
                       <span className="text-[11px] font-semibold text-slate-500">
                         Resolução ANP nº 11/2016 • Art. 9º, VII • Art. 10
                       </span>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-extrabold text-[#0a1d37] font-display">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#0a2540] font-display">
                       Inciso VII — Solicitação de Acesso Firme, Interruptível ou Troca Operacional
                       (Swap)
                     </h3>
-                    <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
                       Em cumprimento estrito às exigências regulatórias do{' '}
                       <strong>Art. 9º, Inciso VII</strong> e do <strong>Art. 10</strong> da ANP e
                       aos protocolos de segurança da informação e LGPD, a formalização de
@@ -679,9 +677,9 @@ export default function PlataformaEletronica({
                     type="button"
                     onClick={handleBaixarFormularioAcessoPdf}
                     disabled={gerandoPdfAcesso}
-                    className="bg-[#0a1d37] hover:bg-[#1b4d96] text-white font-bold text-xs sm:text-sm px-5 py-6 shrink-0 shadow-md flex items-center gap-2 font-display"
+                    className="bg-[#0a2540] hover:bg-[#143b73] text-white font-medium text-xs sm:text-sm px-4 py-2.5 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <Download className="h-4 w-4 text-sky-400" />
+                    <Download className="h-4 w-4 text-slate-300" />
                     {gerandoPdfAcesso
                       ? 'Gerando Formulário PDF...'
                       : 'Baixar Formulário Oficial (PDF)'}
@@ -689,23 +687,23 @@ export default function PlataformaEletronica({
                 </div>
 
                 {/* FLUXO DIDÁTICO EM 4 PASSOS */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                    <div className="w-7 h-7 rounded-full bg-[#0a1d37] text-white font-bold text-xs flex items-center justify-center font-display">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
                       1
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a1d37]">Baixar o Formulário</h4>
+                    <h4 className="font-bold text-xs text-[#0a2540]">Baixar o Formulário</h4>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
                       Faça o download do modelo oficial da TSB contendo os campos técnicos exigidos
                       pelo Art. 10 (modalidade, pontos de injeção/retirada, capacidade e período).
                     </p>
                   </div>
 
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                    <div className="w-7 h-7 rounded-full bg-[#1b4d96] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
                       2
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a1d37]">Preencher &amp; Assinar</h4>
+                    <h4 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h4>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
                       Preencha os dados cadastrais da empresa e obtenha a assinatura do
                       representante legal habilitado (assinatura com carimbo ou digital
@@ -713,28 +711,28 @@ export default function PlataformaEletronica({
                     </p>
                   </div>
 
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                    <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
                       3
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a1d37]">Enviar por E-mail</h4>
+                    <h4 className="font-bold text-xs text-[#0a2540]">Enviar por E-mail</h4>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
                       Envie o documento assinado em anexo para o canal corporativo oficial de
                       recebimento:{' '}
-                      <strong className="text-[#0a1d37] break-all">
+                      <strong className="text-[#0a2540] break-all">
                         {emailRecebimentoCessoes}
                       </strong>
                     </p>
                   </div>
 
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-2">
-                    <div className="w-7 h-7 rounded-full bg-[#15803d] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
                       4
                     </div>
-                    <h4 className="font-bold text-xs text-[#15803d]">
+                    <h4 className="font-bold text-xs text-[#0a2540]">
                       Protocolo &amp; SLA 20 Dias
                     </h4>
-                    <p className="text-[11px] text-emerald-900 leading-relaxed">
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
                       A TSB cadastra a solicitação no sistema, emite o número oficial de protocolo
                       com confirmação por e-mail e inicia a contagem do prazo regulatório de 20 dias
                       úteis.
@@ -744,8 +742,8 @@ export default function PlataformaEletronica({
               </div>
 
               {/* ITEM 2: CONSULTA DE PROTOCOLO E SLA */}
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
-                <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
+              <div className="p-5 sm:p-6 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3">
+                <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
                   <Search className="h-4 w-4 text-[#0284c7]" />
                   Consulta Pública de Protocolo, SLA e Parecer Fundamentado
                 </h3>
@@ -754,7 +752,7 @@ export default function PlataformaEletronica({
                   protocolo gerado.
                 </p>
 
-                <form onSubmit={handleVerificarSLA} className="flex gap-2">
+                <form onSubmit={handleVerificarSLA} className="flex gap-2 max-w-xl">
                   <Input
                     placeholder="Informe o protocolo (Ex: TSB-2026-8942)"
                     value={consultaProtocolo}
@@ -765,7 +763,7 @@ export default function PlataformaEletronica({
                   <Button
                     type="submit"
                     disabled={consultandoSLA || !consultaProtocolo.trim()}
-                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold shrink-0"
+                    className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0 cursor-pointer"
                   >
                     {consultandoSLA ? 'Buscando...' : 'Verificar Protocolo'}
                   </Button>
@@ -775,13 +773,13 @@ export default function PlataformaEletronica({
                 {resultadoConsulta && resultadoConsulta.buscado && (
                   <div className="animate-fade-in pt-2">
                     {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
-                      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-950 space-y-3">
+                      <div className="p-4 bg-white border border-slate-200 rounded-lg text-slate-800 space-y-3 shadow-xs">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="font-bold text-sm flex items-center gap-1.5 text-emerald-800">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <span className="font-bold text-sm flex items-center gap-1.5 text-[#0a2540]">
+                            <CheckCircle2 className="h-4 w-4 text-[#0284c7]" />
                             Protocolo: {resultadoConsulta.dados.protocolo}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#dcfce7] text-[#15803d] border border-emerald-300">
+                          <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                             SLA Restante: {resultadoConsulta.dados.sla_dias} Dias Úteis
                           </span>
                         </div>
@@ -811,13 +809,13 @@ export default function PlataformaEletronica({
                           )}
                           <div>
                             <strong>Status Regulatório:</strong>{' '}
-                            <span className="font-semibold text-emerald-900">
+                            <span className="font-semibold text-slate-900">
                               {resultadoConsulta.dados.status}
                             </span>
                           </div>
 
                           {resultadoConsulta.dados.garantias_seguranca_swap && (
-                            <div className="text-purple-900">
+                            <div className="text-slate-700">
                               <strong>Garantias de Segurança (Swap):</strong>{' '}
                               {resultadoConsulta.dados.garantias_seguranca_swap}
                             </div>
@@ -825,29 +823,29 @@ export default function PlataformaEletronica({
 
                           {/* PARECER FUNDAMENTADO E DETALHAMENTO DO DESFECHO (SEM DADOS PESSOAIS) */}
                           {resultadoConsulta.dados.parecer_fundamentado && (
-                            <div className="mt-3 p-3.5 bg-white/90 rounded border border-emerald-300 space-y-2">
+                            <div className="mt-3 p-3.5 bg-slate-50 rounded border border-slate-200 space-y-2">
                               <div className="flex items-center justify-between flex-wrap gap-1">
-                                <span className="font-bold text-emerald-950 block">
+                                <span className="font-bold text-[#0a2540] block">
                                   Parecer Técnico-Regulatório Fundamentado (Art. 10, Res. 11/2016):
                                 </span>
                                 {resultadoConsulta.dados.desfecho_tipo && (
-                                  <Badge className="bg-[#0a2540] text-white text-[10px]">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#0a2540] text-white">
                                     {resultadoConsulta.dados.desfecho_tipo === 'CONFIRMACAO' &&
                                       'Desfecho I - Confirmação'}
                                     {resultadoConsulta.dados.desfecho_tipo === 'APROFUNDAMENTO' &&
                                       'Desfecho II - Aprofundamento'}
                                     {resultadoConsulta.dados.desfecho_tipo === 'NEGATIVA' &&
                                       'Desfecho III - Negativa'}
-                                  </Badge>
+                                  </span>
                                 )}
                               </div>
-                              <p className="text-slate-800 leading-relaxed italic">
+                              <p className="text-slate-700 leading-relaxed italic">
                                 &quot;{resultadoConsulta.dados.parecer_fundamentado}&quot;
                               </p>
 
                               {/* Termos e condições do Desfecho I */}
                               {resultadoConsulta.dados.termos_condicoes && (
-                                <div className="p-2.5 bg-emerald-50 rounded border border-emerald-200 text-[11px] text-emerald-950">
+                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700">
                                   <strong>Termos e Condições do Atendimento:</strong>{' '}
                                   {resultadoConsulta.dados.termos_condicoes}
                                 </div>
@@ -856,7 +854,7 @@ export default function PlataformaEletronica({
                               {/* Condições, escopo, cronograma e custos do Desfecho II */}
                               {(resultadoConsulta.dados.aprofundamento_condicoes ||
                                 resultadoConsulta.dados.aprofundamento_cronograma) && (
-                                <div className="p-2.5 bg-sky-50 rounded border border-sky-200 text-[11px] text-sky-950 space-y-1">
+                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700 space-y-1">
                                   <strong>
                                     Detalhamento do Aprofundamento da Análise (Art. 10, §2º, II):
                                   </strong>
@@ -889,7 +887,7 @@ export default function PlataformaEletronica({
 
                               {/* Previsão de disponibilidade do Desfecho III */}
                               {resultadoConsulta.dados.previsao_disponibilidade && (
-                                <div className="p-2.5 bg-red-50 rounded border border-red-200 text-[11px] text-red-950">
+                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700">
                                   <strong>
                                     Previsão de Disponibilidade do Serviço (Art. 10, §2º, III):
                                   </strong>{' '}
@@ -901,14 +899,14 @@ export default function PlataformaEletronica({
                         </div>
                       </div>
                     ) : (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-900 space-y-1 flex items-start gap-2">
-                        <XCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                      <div className="p-4 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 space-y-1 flex items-start gap-2">
+                        <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
                         <div className="text-xs">
-                          <strong className="block font-semibold">
+                          <strong className="block font-semibold text-slate-900">
                             Protocolo não localizado no sistema TSB.
                           </strong>
-                          <span>
-                            Verifique o número informado. A solicitação é feita pelo
+                          <span className="text-slate-600">
+                            Verifique o número informado. A solicitação é formalizada pelo
                             formulário-padrão TSB (PDF) enviado ao canal oficial{' '}
                             {emailRecebimentoCessoes}.
                           </span>
@@ -924,23 +922,20 @@ export default function PlataformaEletronica({
                   SUBSTITUIÇÃO DAS TABELAS VIVAS PÚBLICAS POR CARDS DE DOCUMENTO OFICIAL
                   ===================================================================== */}
               <div className="space-y-4">
-                <div className="space-y-0.5 pb-2 border-b border-slate-200">
+                <div className="space-y-1 pb-2 border-b border-slate-200">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge
-                      variant="outline"
-                      className="bg-sky-50 text-[#143b73] border-sky-300 text-[10px] font-mono"
-                    >
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 uppercase tracking-wider font-display">
                       Art. 9º, VII • Resolução ANP nº 11/2016
-                    </Badge>
+                    </span>
                     <span className="text-[11px] text-slate-500 font-medium">
                       Padrão TBG • Publicação em Documento Estático (PDF)
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
-                    <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                    <ShieldCheck className="h-4 w-4 text-[#0284c7]" />
                     Resumos Oficiais de Solicitações e Demanda por Instalação (PDF)
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify">
                     Em conformidade com a prática regulatória do setor e o Art. 9º, VII da Resolução
                     ANP nº 11/2016, a TSB consolida periodicamente as solicitações de acesso e a
                     demanda por trecho dutoviário em relatórios oficiais estáticos, garantindo a
@@ -959,19 +954,19 @@ export default function PlataformaEletronica({
                     const dataReferencia = itemDoc?.periodo || null
 
                     return (
-                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between space-y-3">
+                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col justify-between space-y-3">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <Badge className="bg-[#0a2540] text-white text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
                               Art. 9º, VII • Pontos Relevantes
-                            </Badge>
+                            </span>
                             {dataReferencia && (
-                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                                 Ref.: {dataReferencia}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-bold text-sm text-[#0a1d37]">
+                          <h4 className="font-bold text-sm text-[#0a2540]">
                             {itemDoc?.titulo ||
                               'Resumo Público das Solicitações por Ponto Relevante'}
                           </h4>
@@ -996,9 +991,9 @@ export default function PlataformaEletronica({
                               href={doc.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
                             >
-                              <FileDown className="h-4 w-4 text-sky-400" />
+                              <FileDown className="h-4 w-4 text-slate-300" />
                               {doc.nomeExibicao || 'Baixar Resumo em PDF'}
                             </a>
                           ) : (
@@ -1027,19 +1022,19 @@ export default function PlataformaEletronica({
                     const dataReferencia = itemDoc?.periodo || null
 
                     return (
-                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between space-y-3">
+                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col justify-between space-y-3">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <Badge className="bg-[#143b73] text-white text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
                               Art. 9º, VII • Trechos 1 e 3
-                            </Badge>
+                            </span>
                             {dataReferencia && (
-                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                                 Ref.: {dataReferencia}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-bold text-sm text-[#0a1d37]">
+                          <h4 className="font-bold text-sm text-[#0a2540]">
                             {itemDoc?.titulo || 'Resumo da Demanda por Instalação de Transporte'}
                           </h4>
                           <p className="text-xs text-slate-600 leading-relaxed text-justify">
@@ -1063,9 +1058,9 @@ export default function PlataformaEletronica({
                               href={doc.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
                             >
-                              <FileDown className="h-4 w-4 text-sky-400" />
+                              <FileDown className="h-4 w-4 text-slate-300" />
                               {doc.nomeExibicao || 'Baixar Demanda Trechos 1 e 3 (PDF)'}
                             </a>
                           ) : (
@@ -1088,14 +1083,14 @@ export default function PlataformaEletronica({
                 <button
                   type="button"
                   onClick={() => setSubAba('i_vi')}
-                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
                 >
                   &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
                 </button>
                 <button
                   type="button"
                   onClick={() => setSubAba('viii')}
-                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:text-[#0369a1] font-semibold transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:underline font-medium transition-colors cursor-pointer"
                 >
                   Ir para Inciso VIII (Ofertas de Cessão) &rarr;
                 </button>
@@ -1109,18 +1104,18 @@ export default function PlataformaEletronica({
           {subAba === 'viii' && (
             <div className="space-y-6">
               {/* NOVO MODELO MISTO: CARD DE DOWNLOAD DO FORMULÁRIO-PADRÃO + INSTRUÇÕES DE ENVIO */}
-              <div className="p-5 bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 rounded-lg space-y-4">
+              <div className="p-5 bg-slate-50/70 border border-slate-200 rounded-lg space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a1d37] text-white font-display">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a2540] text-white font-display">
                         Inciso VIII • Modelo Regulatório TSB
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-500">
+                      <span className="text-[11px] font-medium text-slate-500">
                         Resolução ANP nº 11/2016 • Art. 9º, VIII • Art. 10
                       </span>
                     </div>
-                    <h3 className="text-base font-bold text-[#0a1d37] flex items-center gap-2 font-display">
+                    <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
                       <FileDown className="h-5 w-5 text-[#0284c7]" />
                       Inciso VIII — Formulário-Padrão TSB para Comunicação de Cessão de Capacidade
                     </h3>
@@ -1137,7 +1132,7 @@ export default function PlataformaEletronica({
                     <Button
                       onClick={handleBaixarFormularioPdf}
                       disabled={gerandoPdfCessao}
-                      className="bg-[#0a1d37] hover:bg-[#143b73] text-white text-xs font-semibold h-9 px-4 shadow-sm inline-flex items-center gap-2 border border-slate-700"
+                      className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium h-9 px-4 shadow-xs inline-flex items-center gap-2 cursor-pointer"
                     >
                       <FileDown className={`h-4 w-4 ${gerandoPdfCessao ? 'animate-bounce' : ''}`} />
                       {gerandoPdfCessao ? 'Gerando PDF Oficial...' : 'Baixar Formulário (PDF)'}
@@ -1146,10 +1141,10 @@ export default function PlataformaEletronica({
                 </div>
 
                 {/* PASSO A PASSO REGULATÓRIO */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-200/80 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-200 text-xs">
                   <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-sky-100 text-[#0284c7] font-bold text-[11px] flex items-center justify-center shrink-0">
+                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
                         1
                       </span>
                       <span>Baixe e Preencha</span>
@@ -1161,8 +1156,8 @@ export default function PlataformaEletronica({
                   </div>
 
                   <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#059669] font-bold text-[11px] flex items-center justify-center shrink-0">
+                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
                         2
                       </span>
                       <span>Assine e Envie por E-mail</span>
@@ -1179,11 +1174,11 @@ export default function PlataformaEletronica({
                   </div>
 
                   <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a1d37] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-[#1b4d96] font-bold text-[11px] flex items-center justify-center shrink-0">
+                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
                         3
                       </span>
-                      <span>Publicação Automatizada</span>
+                      <span>Publicação Regulamentar</span>
                     </div>
                     <p className="text-[11px] text-slate-600 leading-snug">
                       A TSB valida os dados operacionais e publica a oferta no resumo abaixo,
@@ -1198,23 +1193,20 @@ export default function PlataformaEletronica({
                   SUBSTITUIÇÃO DA TABELA VIVA PÚBLICA POR CARD DE DOCUMENTO OFICIAL
                   ===================================================================== */}
               <div className="space-y-4">
-                <div className="space-y-0.5 pb-2 border-b border-slate-200">
+                <div className="space-y-1 pb-2 border-b border-slate-200">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge
-                      variant="outline"
-                      className="bg-sky-50 text-[#143b73] border-sky-300 text-[10px] font-mono"
-                    >
+                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 uppercase tracking-wider font-display">
                       Art. 9º, VIII • Resolução ANP nº 11/2016
-                    </Badge>
+                    </span>
                     <span className="text-[11px] text-slate-500 font-medium">
                       Padrão TBG • Publicação em Documento Estático (PDF)
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
-                    <ShieldCheck className="h-4 w-4 text-[#059669]" />
+                    <ShieldCheck className="h-4 w-4 text-[#0284c7]" />
                     Resumo Público das Ofertas Ativas de Cessão de Capacidade (PDF)
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify">
                     A TSB publica o resumo consolidado das ofertas ativas de cessão de capacidade
                     contratada informadas por carregadores, após análise de conformidade técnica e
                     operacional. A publicação é realizada no padrão de documento estático,
@@ -1231,19 +1223,19 @@ export default function PlataformaEletronica({
                   const dataReferencia = itemDoc?.periodo || null
 
                   return (
-                    <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-lg shadow-sm space-y-4 max-w-2xl">
+                    <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-lg shadow-xs space-y-4 max-w-2xl">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <Badge className="bg-[#0a2540] text-white text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
                             Documento Oficial • Inciso VIII
-                          </Badge>
+                          </span>
                           {dataReferencia && (
-                            <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                            <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                               Período de Referência: {dataReferencia}
                             </span>
                           )}
                         </div>
-                        <h4 className="font-bold text-sm sm:text-base text-[#0a1d37]">
+                        <h4 className="font-bold text-sm sm:text-base text-[#0a2540]">
                           {itemDoc?.titulo || 'Ofertas Ativas de Cessão de Capacidade Contratada'}
                         </h4>
                         <p className="text-xs text-slate-600 leading-relaxed text-justify">
@@ -1267,9 +1259,9 @@ export default function PlataformaEletronica({
                             href={doc.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold transition-colors shadow-sm"
+                            className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
                           >
-                            <FileDown className="h-4 w-4 text-sky-400" />
+                            <FileDown className="h-4 w-4 text-slate-300" />
                             {doc.nomeExibicao || 'Baixar Resumo de Ofertas Ativas (PDF)'}
                           </a>
                         ) : (
@@ -1294,14 +1286,14 @@ export default function PlataformaEletronica({
                 <button
                   type="button"
                   onClick={() => setSubAba('i_vi')}
-                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a1d37] font-semibold transition-colors"
+                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
                 >
                   &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
                 </button>
                 <button
                   type="button"
                   onClick={() => setSubAba('vii')}
-                  className="inline-flex items-center gap-1.5 text-[#059669] hover:text-[#047857] font-semibold transition-colors"
+                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:underline font-medium transition-colors cursor-pointer"
                 >
                   Ir para Inciso VII (Solicitação de Acesso) &rarr;
                 </button>

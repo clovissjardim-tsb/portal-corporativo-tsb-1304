@@ -144,21 +144,29 @@ export default function Transparencia() {
           onClick={() => setActivePilar('boletim')}
           className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             activePilar === 'boletim'
-              ? 'border-[#143b73] bg-[#f0f9ff] shadow-sm'
-              : 'border-slate-200 bg-white hover:border-[#143b73]/40 hover:bg-slate-50'
+              ? 'border-[#0a2540] bg-slate-50/90 shadow-sm'
+              : 'border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/50'
           }`}
         >
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#e0f2fe] text-[#0e2b54] font-display">
+              <span
+                className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
+                  activePilar === 'boletim'
+                    ? 'bg-[#0a2540] text-white'
+                    : 'bg-slate-100 text-slate-700'
+                } font-display`}
+              >
                 Bloco 1 • Livre
               </span>
-              <span className="text-xs font-semibold text-slate-500 font-display">
+              <span className="text-xs font-medium text-slate-500 font-display">
                 Portaria ANP nº 1/2003
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
-              <Radio className="h-5 w-5 text-[#143b73] shrink-0" />
+            <h3 className="text-base sm:text-lg font-bold text-[#0a2540] flex items-center gap-2 font-display">
+              <Radio
+                className={`h-5 w-5 shrink-0 ${activePilar === 'boletim' ? 'text-[#0284c7]' : 'text-slate-500'}`}
+              />
               Boletim Eletrônico
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
@@ -173,21 +181,29 @@ export default function Transparencia() {
           onClick={() => setActivePilar('plataforma')}
           className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             activePilar === 'plataforma'
-              ? 'border-[#059669] bg-[#f0fdf4] shadow-sm'
-              : 'border-slate-200 bg-white hover:border-[#059669]/50 hover:bg-slate-50'
+              ? 'border-[#0a2540] bg-slate-50/90 shadow-sm'
+              : 'border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/50'
           }`}
         >
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d] font-display">
+              <span
+                className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
+                  activePilar === 'plataforma'
+                    ? 'bg-[#0a2540] text-white'
+                    : 'bg-slate-100 text-slate-700'
+                } font-display`}
+              >
                 Bloco 2 • Livre
               </span>
-              <span className="text-xs font-semibold text-slate-500 font-display">
+              <span className="text-xs font-medium text-slate-500 font-display">
                 Res. ANP nº 11/2016
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
-              <Layers className="h-5 w-5 text-[#059669] shrink-0" />
+            <h3 className="text-base sm:text-lg font-bold text-[#0a2540] flex items-center gap-2 font-display">
+              <Layers
+                className={`h-5 w-5 shrink-0 ${activePilar === 'plataforma' ? 'text-[#0284c7]' : 'text-slate-500'}`}
+              />
               Plataforma Eletrônica
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
@@ -202,21 +218,29 @@ export default function Transparencia() {
           onClick={() => setActivePilar('monitoramento')}
           className={`text-left p-5 rounded-lg border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             activePilar === 'monitoramento'
-              ? 'border-[#0284c7] bg-[#f0f9ff] shadow-sm'
-              : 'border-slate-200 bg-white hover:border-[#0284c7]/50 hover:bg-slate-50'
+              ? 'border-[#0a2540] bg-slate-50/90 shadow-sm'
+              : 'border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/50'
           }`}
         >
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-100 text-[#0369a1] font-display">
+              <span
+                className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
+                  activePilar === 'monitoramento'
+                    ? 'bg-[#0a2540] text-white'
+                    : 'bg-slate-100 text-slate-700'
+                } font-display`}
+              >
                 Bloco 3 • Livre
               </span>
-              <span className="text-xs font-semibold text-slate-500 font-display">
+              <span className="text-xs font-medium text-slate-500 font-display">
                 Res. 11/2016, Art. 11
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-[#0a1d37] flex items-center gap-2 font-display">
-              <Activity className="h-5 w-5 text-[#0284c7] shrink-0" />
+            <h3 className="text-base sm:text-lg font-bold text-[#0a2540] flex items-center gap-2 font-display">
+              <Activity
+                className={`h-5 w-5 shrink-0 ${activePilar === 'monitoramento' ? 'text-[#0284c7]' : 'text-slate-500'}`}
+              />
               Monitoramento
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
