@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T22:44:17.416Z",
+  "generatedAt": "2026-10-22T23:10:19.236Z",
   "collections": [
     {
       "name": "users",
@@ -80,7 +80,7 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
+        "create": "",
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"
       },
@@ -299,6 +299,31 @@
         },
         {
           "name": "operador_cadastro",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["portal_web", "manual_interno"]
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "endereco",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "prazo_vigencia",
           "type": "text",
           "required": false,
           "system": false

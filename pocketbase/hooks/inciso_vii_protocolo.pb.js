@@ -7,6 +7,28 @@
 
 // 1. Hook automático após criação de solicitação do Inciso VII (e-mail de confirmação ao solicitante)
 onRecordCreate((e) => {
+  // Garantir que se a submissão vier sem protocolo preenchido, seja gerado antes de salvar
+  if (!e.record.getString('protocolo')) {
+    const ano = new Date().getFullYear()
+    const random4 = Math.floor(1000 + Math.random() * 9000)
+    e.record.set('protocolo', 'TSB-' + ano + '-' + random4)
+  }
+  if (!e.record.getString('status')) {
+    e.record.set('status', 'Solicitação Recebida - Em Análise Técnica')
+  }
+  if (!e.record.getInt('sla_dias')) {
+    e.record.set('sla_dias', 20)
+  }
+  if (!e.record.getString('parecer_fundamentado')) {
+    e.record.set(
+      'parecer_fundamentado',
+      'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.',
+    )
+  }
+  if (!e.record.getString('manifestacao_sulgas_status')) {
+    e.record.set('manifestacao_sulgas_status', 'Pendente')
+  }
+
   e.next()
 
   try {

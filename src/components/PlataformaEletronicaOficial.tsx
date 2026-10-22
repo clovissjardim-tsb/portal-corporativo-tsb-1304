@@ -18,7 +18,9 @@ import {
   Layers,
   Download,
   FileSpreadsheet,
+  Mail,
 } from 'lucide-react'
+import { FormularioSolicitacaoWeb } from '@/components/FormularioSolicitacaoWeb'
 import {
   transparenciaService,
   resolverUrlDocumento,
@@ -643,106 +645,117 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 2: INCISO VII (MODELO MISTO OFICIAL TSB)
+              SUB-ABA 2: INCISO VII (SUBMISSÃO WEB COM PROTOCOLO IMEDIATO)
               ======================================================== */}
           {subAba === 'vii' && (
             <div className="space-y-8">
-              {/* ITEM 1 (PONTO DE ENTRADA DO CARREGADOR): MODELO MISTO OFICIAL TSB (Art. 9º, VII e Art. 10 da Res. ANP 11/2016) */}
-              <div className="p-6 sm:p-7 bg-white border border-slate-200 rounded-xl shadow-xs space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-200">
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
-                        Inciso VII • Modelo Regulatório TSB
+              {/* ITEM 1 (VIA PRINCIPAL): FORMULÁRIO WEB PÚBLICO COM PROTOCOLO IMEDIATO */}
+              <FormularioSolicitacaoWeb
+                onSucessoProtocolo={(proto) => {
+                  setConsultaProtocolo(proto)
+                }}
+                onIrParaConsulta={(proto) => {
+                  setConsultaProtocolo(proto)
+                  const el = document.getElementById('secao-consulta-protocolo-vii')
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' })
+                  }
+                }}
+              />
+
+              {/* ITEM 2 (VIA ALTERNATIVA): CANAL POR E-MAIL COM FORMULÁRIO PDF OFICIAL (PADRÃO NTS/TBG) */}
+              <div className="p-6 bg-slate-50/70 border border-slate-200 rounded-xl space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 uppercase tracking-wider font-display">
+                        Via Alternativa
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-500">
-                        Resolução ANP nº 11/2016 • Art. 9º, VII • Art. 10
+                      <span className="text-[11px] font-medium text-slate-500">
+                        Padrão NTS / Envio por E-mail
                       </span>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-[#0a2540] font-display">
-                      Inciso VII — Solicitação de Acesso Firme, Interruptível ou Troca Operacional
-                      (Swap)
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                      Em cumprimento estrito às exigências regulatórias do{' '}
-                      <strong>Art. 9º, Inciso VII</strong> e do <strong>Art. 10</strong> da ANP e
-                      aos protocolos de segurança da informação e LGPD, a formalização de
-                      solicitações de acesso à capacidade de transporte da TSB adota o modelo misto:
-                      download do formulário oficial padronizado, assinatura física ou digital pelo
-                      representante legal e envio ao canal corporativo oficial.
+                    <h4 className="text-base font-bold text-[#0a2540] font-display flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-[#0284c7]" />
+                      Prefere enviar por e-mail? Baixe o Formulário-Padrão (PDF)
+                    </h4>
+                    <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                      Caso prefira formalizar a solicitação fora do ambiente web, faça o download do
+                      modelo oficial, assine (ICP-Brasil ou carimbo/assinatura física) e encaminhe
+                      ao canal de atendimento institucional. A equipe cadastrará o pedido na fila e
+                      o protocolo será emitido em seguida.
                     </p>
                   </div>
 
                   <Button
                     type="button"
+                    variant="outline"
                     onClick={handleBaixarFormularioAcessoPdf}
                     disabled={gerandoPdfAcesso}
-                    className="bg-[#0a2540] hover:bg-[#143b73] text-white font-medium text-xs sm:text-sm px-4 py-2.5 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
+                    className="border-slate-300 text-[#0a2540] hover:bg-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer bg-white"
                   >
-                    <Download className="h-4 w-4 text-slate-300" />
+                    <Download className="h-3.5 w-3.5 text-slate-600" />
                     {gerandoPdfAcesso
                       ? 'Gerando Formulário PDF...'
                       : 'Baixar Formulário Oficial (PDF)'}
                   </Button>
                 </div>
 
-                {/* FLUXO DIDÁTICO EM 4 PASSOS */}
+                {/* FLUXO DIDÁTICO ALTERNATIVO EM 4 PASSOS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       1
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a2540]">Baixar o Formulário</h4>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Baixar o PDF</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Faça o download do modelo oficial da TSB contendo os campos técnicos exigidos
-                      pelo Art. 10 (modalidade, pontos de injeção/retirada, capacidade e período).
+                      Modelo oficial TSB com todos os requisitos do Art. 10 da Resolução ANP
+                      11/2016.
                     </p>
                   </div>
 
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       2
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h4>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Preencha os dados cadastrais da empresa e obtenha a assinatura do
-                      representante legal habilitado (assinatura com carimbo ou digital
-                      ICP-Brasil/Gov.br).
+                      Preencha os dados da empresa e assine via Gov.br, ICP-Brasil ou carimbo da
+                      empresa.
                     </p>
                   </div>
 
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       3
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a2540]">Enviar por E-mail</h4>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Enviar ao Canal</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Envie o documento assinado em anexo para o canal corporativo oficial de
-                      recebimento:{' '}
+                      Envie o anexo assinado para:{' '}
                       <strong className="text-[#0a2540] break-all">
                         {emailRecebimentoCessoes}
                       </strong>
                     </p>
                   </div>
 
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                    <div className="w-6 h-6 rounded bg-[#0a2540] text-white font-bold text-xs flex items-center justify-center font-display">
+                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
                       4
                     </div>
-                    <h4 className="font-bold text-xs text-[#0a2540]">
-                      Protocolo &amp; SLA 20 Dias
-                    </h4>
+                    <h5 className="font-bold text-xs text-[#0a2540]">Receber Protocolo</h5>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      A TSB cadastra a solicitação no sistema, emite o número oficial de protocolo
-                      com confirmação por e-mail e inicia a contagem do prazo regulatório de 20 dias
-                      úteis.
+                      A TSB autua o pedido, gera o protocolo com SLA de 20 dias úteis e responde por
+                      e-mail.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* ITEM 2: CONSULTA DE PROTOCOLO E SLA */}
-              <div className="p-5 sm:p-6 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3">
+              {/* ITEM 3: CONSULTA DE PROTOCOLO E SLA */}
+              <div
+                id="secao-consulta-protocolo-vii"
+                className="p-5 sm:p-6 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3"
+              >
                 <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
                   <Search className="h-4 w-4 text-[#0284c7]" />
                   Consulta Pública de Protocolo, SLA e Parecer Fundamentado

@@ -942,8 +942,17 @@ export default function Gestao() {
                                 {item.protocolo}
                               </td>
                               <td className="p-3">
-                                <div className="font-semibold text-slate-800">
-                                  {item.razao_social}
+                                <div className="font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                                  <span>{item.razao_social}</span>
+                                  {item.origem === 'portal_web' ? (
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                                      origem: portal web
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                      origem: manual interno
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-[11px] text-slate-500">
                                   CNPJ: {item.cnpj} &bull;{' '}
@@ -2595,6 +2604,18 @@ export default function Gestao() {
                     <strong className="text-[#0a2540]">
                       {itemSelecionado.representante_legal || 'Não informado'}
                     </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Origem do Cadastro:</span>
+                    <span
+                      className={`font-semibold ${
+                        itemSelecionado.origem === 'portal_web' ? 'text-sky-700' : 'text-slate-700'
+                      }`}
+                    >
+                      {itemSelecionado.origem === 'portal_web'
+                        ? 'Portal Web (Submissão Pública)'
+                        : 'Manual Interno (Operador)'}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500 block">E-mail Cadastrado:</span>
