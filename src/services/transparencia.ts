@@ -111,7 +111,7 @@ export const CABECALHOS_FALLBACK: Record<
   plataforma_inciso_vii_header: {
     titulo: 'Inciso VII — Amparo Legal: Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016',
     descricao:
-      'Envio público e direto sem necessidade de login prévio. Gera protocolo regulatório automático com confirmação via e-mail corporativo (SMTP TSB) e prazo legal de resposta de até 20 dias úteis para manifestação técnica e comercial fundamentada por escrito da transportadora.',
+      'Publicação pública dos resumos consolidados na Plataforma Eletrônica (padrão TBG). A solicitação de acesso e contratação de capacidade ocorre no ambiente seguro e autenticado do POCC (com login), mantendo-se a formalização via formulário PDF e e-mail como canal alternativo.',
   },
 }
 

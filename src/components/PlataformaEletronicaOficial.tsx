@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Link } from 'react-router-dom'
 import {
   FileText,
   FileDown,
@@ -19,6 +20,8 @@ import {
   Download,
   FileSpreadsheet,
   Mail,
+  ArrowRight,
+  Lock,
 } from 'lucide-react'
 import {
   transparenciaService,
@@ -583,26 +586,41 @@ export default function PlataformaEletronica({
                         <span className="font-semibold text-[#0a2540]">
                           VII - Consulta de disponibilidade de acesso (Solicitação de Acesso)
                         </span>
-                        <div className="mt-1 flex items-center gap-3">
+                        <div className="mt-1 flex flex-wrap items-center gap-3">
                           <button
                             type="button"
                             onClick={() => setSubAba('vii')}
                             className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            &rarr; Abrir modelo oficial (PDF) e consulta regulatória
+                            &rarr; Ver publicação pública, canal POCC e formulário PDF
                           </button>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-[11px] text-slate-500">
+                            Transação via POCC (com login)
+                          </span>
                         </div>
                       </td>
                       <td className="p-3 text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSubAba('vii')}
-                          className="border-[#0a2540] text-[#0a2540] hover:bg-[#0a2540] hover:text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          Solicitar Acesso
-                        </Button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSubAba('vii')}
+                            className="border-slate-300 text-slate-700 hover:bg-slate-100 text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Painel VII
+                          </Button>
+                          <Link to="/poc">
+                            <Button
+                              size="sm"
+                              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Lock className="h-3 w-3 text-slate-200" />
+                              Via POCC
+                            </Button>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
 
@@ -615,26 +633,41 @@ export default function PlataformaEletronica({
                           VIII - Resumo das Ofertas de Cessão de Capacidade Contratada Informadas ao
                           Transportador por Carregadores
                         </span>
-                        <div className="mt-1 flex items-center gap-3">
+                        <div className="mt-1 flex flex-wrap items-center gap-3">
                           <button
                             type="button"
                             onClick={() => setSubAba('viii')}
                             className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
                           >
-                            &rarr; Ver resumo de ofertas e baixar formulário-padrão (PDF)
+                            &rarr; Ver resumo público e alternativas de contratação
                           </button>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-[11px] text-slate-500">
+                            Transação via POCC (com login)
+                          </span>
                         </div>
                       </td>
                       <td className="p-3 text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSubAba('viii')}
-                          className="border-[#0a2540] text-[#0a2540] hover:bg-[#0a2540] hover:text-white text-[11px] h-7 px-3 font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          Painel de Cessão
-                        </Button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSubAba('viii')}
+                            className="border-slate-300 text-slate-700 hover:bg-slate-100 text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Painel VIII
+                          </Button>
+                          <Link to="/poc">
+                            <Button
+                              size="sm"
+                              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Lock className="h-3 w-3 text-slate-200" />
+                              Via POCC
+                            </Button>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -644,102 +677,153 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 2: INCISO VII (MODELO EXCLUSIVO POR E-MAIL - PADRÃO NTS/TAG/TBG)
+              SUB-ABA 2: INCISO VII (MODELO TBG — POCC COM LOGIN + ALTERNATIVA E-MAIL)
               ======================================================== */}
           {subAba === 'vii' && (
             <div className="space-y-8">
-              {/* CANAL OFICIAL EXCLUSIVO POR E-MAIL COM FORMULÁRIO PDF OFICIAL (PADRÃO NTS/TAG/TBG) */}
-              <div className="p-6 bg-slate-50/70 border border-slate-200 rounded-xl space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
-                        Inciso VII • Canal Oficial
-                      </span>
-                      <span className="text-[11px] font-medium text-slate-500">
-                        Padrão NTS / TAG / TBG • Envio por E-mail
-                      </span>
+              {/* CARD PRINCIPAL (PADRÃO TBG): VIA PRINCIPAL POCC + CANAL ALTERNATIVO POR E-MAIL */}
+              <div className="p-6 bg-slate-50/70 border border-slate-200 rounded-xl space-y-6">
+                {/* VIA PRINCIPAL: TRANSAÇÃO ELETRÔNICA NO POCC */}
+                <div className="p-5 bg-white border border-slate-200 rounded-lg space-y-4 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-3 border-b border-slate-100">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
+                          Inciso VII • Via Principal
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">
+                          Padrão TBG • Módulo POCC (Com Login)
+                        </span>
+                      </div>
+                      <h4 className="text-base font-bold text-[#0a2540] font-display flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-[#0284c7]" />
+                        Solicitar Acesso de Capacidade — via POCC
+                      </h4>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Em alinhamento ao modelo da Plataforma Eletrônica da TBG, a solicitação e a
+                        contratação de capacidade são realizadas em ambiente seguro e autenticado no{' '}
+                        <strong>Processo de Oferta e Contratação de Capacidade (POCC)</strong>. A
+                        publicação dos resumos consolidados permanece pública, enquanto a transação
+                        é conduzida com autenticação para proteção de dados (LGPD) e rastreabilidade
+                        regulatória.
+                      </p>
                     </div>
-                    <h4 className="text-base font-bold text-[#0a2540] font-display flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-[#0284c7]" />
-                      Solicitação de Acesso à Capacidade de Transporte Dutoviário
-                    </h4>
-                    <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
-                      Em conformidade com a prática padrão adotada pelas transportadoras brasileiras
-                      (NTS, TAG e TBG), a solicitação de acesso é formalizada exclusivamente
-                      mediante o download do formulário oficial em PDF, preenchimento dos requisitos
-                      técnicos, assinatura do representante legal e envio por e-mail para{' '}
-                      <strong className="text-[#0a2540]">regulacao@tsb.com.br</strong>. A equipe da
-                      TSB autuará o processo internamente e emitirá o protocolo formal com contagem
-                      do SLA regulatório.
-                    </p>
+
+                    <Link to="/poc">
+                      <Button
+                        type="button"
+                        className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
+                      >
+                        Acessar POCC com Login
+                        <ArrowRight className="h-3.5 w-3.5 text-slate-200" />
+                      </Button>
+                    </Link>
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={handleBaixarFormularioAcessoPdf}
-                    disabled={gerandoPdfAcesso}
-                    className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
-                  >
-                    <Download className="h-3.5 w-3.5 text-slate-200" />
-                    {gerandoPdfAcesso
-                      ? 'Gerando Formulário PDF...'
-                      : 'Baixar Formulário Oficial (PDF)'}
-                  </Button>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Info className="h-3.5 w-3.5 text-[#0284c7] shrink-0" />
+                    <span>
+                      Caso ainda não esteja autenticado, você será direcionado à página de login
+                      corporativo antes de registrar a Manifestação de Interesse (Etapa I do Art.
+                      37-A, §5º).
+                    </span>
+                  </div>
                 </div>
 
-                {/* FLUXO EM 4 PASSOS: BAIXAR, PREENCHER E ASSINAR, ENVIAR POR E-MAIL, AGUARDAR RESPOSTA */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
-                      1
+                {/* CANAL ALTERNATIVO: ENVIO DE FORMULÁRIO OFICIAL (PDF) POR E-MAIL */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-3 border-b border-slate-200">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-700 uppercase tracking-wider font-display">
+                          Canal Secundário / Alternativo
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">
+                          Envio por E-mail com Formulário Assinado
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-slate-500" />
+                        Formalização Alternativa por E-mail (Formulário Oficial em PDF)
+                      </h5>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Como via alternativa ao módulo POCC, a solicitação pode ser formalizada
+                        mediante download do formulário oficial em PDF, assinatura do representante
+                        legal e envio para{' '}
+                        <strong className="text-[#0a2540]">regulacao@tsb.com.br</strong>. A equipe
+                        da TSB autuará o processo internamente na Gestão Interna com emissão do
+                        parecer fundamentado em até 20 dias úteis (Art. 10 da Res. ANP nº 11/2016).
+                      </p>
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Baixar Formulário Oficial</h5>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Faça o download do modelo oficial TSB em PDF, estruturado com todos os
-                      requisitos do Art. 10 da Resolução ANP nº 11/2016.
-                    </p>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleBaixarFormularioAcessoPdf}
+                      disabled={gerandoPdfAcesso}
+                      className="border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs px-3.5 py-2 shrink-0 shadow-2xs flex items-center gap-2 cursor-pointer"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-600" />
+                      {gerandoPdfAcesso
+                        ? 'Gerando Formulário PDF...'
+                        : 'Baixar Formulário Oficial (PDF)'}
+                    </Button>
                   </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
-                      2
+                  {/* FLUXO EM 4 PASSOS: BAIXAR, PREENCHER E ASSINAR, ENVIAR POR E-MAIL, AGUARDAR RESPOSTA */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
+                        1
+                      </div>
+                      <h6 className="font-bold text-xs text-[#0a2540]">
+                        Baixar Formulário Oficial
+                      </h6>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Faça o download do modelo oficial TSB em PDF estruturado conforme o Art. 10
+                        da Res. 11/2016.
+                      </p>
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h5>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Preencha os dados da empresa, capacidade e trecho. Assine via certificado
-                      digital (Gov.br / ICP-Brasil) ou assinatura física com carimbo.
-                    </p>
-                  </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
-                      3
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
+                        2
+                      </div>
+                      <h6 className="font-bold text-xs text-[#0a2540]">Preencher &amp; Assinar</h6>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Preencha os dados e assine via certificado digital (Gov.br / ICP-Brasil) ou
+                        fisicamente.
+                      </p>
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">Enviar por E-mail</h5>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      Encaminhe o documento assinado em anexo para o canal regulatório oficial:{' '}
-                      <a
-                        href="mailto:regulacao@tsb.com.br"
-                        className="font-bold text-[#0284c7] hover:underline break-all"
-                      >
-                        regulacao@tsb.com.br
-                      </a>
-                    </p>
-                  </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                    <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
-                      4
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
+                        3
+                      </div>
+                      <h6 className="font-bold text-xs text-[#0a2540]">Enviar por E-mail</h6>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        Encaminhe em anexo para o canal regulatório:{' '}
+                        <a
+                          href="mailto:regulacao@tsb.com.br"
+                          className="font-bold text-[#0284c7] hover:underline break-all"
+                        >
+                          regulacao@tsb.com.br
+                        </a>
+                      </p>
                     </div>
-                    <h5 className="font-bold text-xs text-[#0a2540]">
-                      Aguardar Resposta (20 dias)
-                    </h5>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      A TSB autua o pedido, gera o protocolo formal e emitirá o parecer fundamentado
-                      em até 20 dias úteis (Art. 10 da Res. ANP nº 11/2016).
-                    </p>
+
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <div className="w-5 h-5 rounded bg-slate-200 text-[#0a2540] font-bold text-[11px] flex items-center justify-center font-display">
+                        4
+                      </div>
+                      <h6 className="font-bold text-xs text-[#0a2540]">
+                        Aguardar Resposta (20 dias)
+                      </h6>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        A TSB autua o pedido internamente e emitirá parecer fundamentado em até 20
+                        dias úteis.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1105,91 +1189,142 @@ export default function PlataformaEletronica({
           )}
 
           {/* ========================================================
-              SUB-ABA 3: INCISO VIII (MODELO MISTO OFICIAL TSB)
+              SUB-ABA 3: INCISO VIII (MODELO TBG — POCC COM LOGIN + ALTERNATIVA E-MAIL)
               ======================================================== */}
           {subAba === 'viii' && (
             <div className="space-y-6">
-              {/* NOVO MODELO MISTO: CARD DE DOWNLOAD DO FORMULÁRIO-PADRÃO + INSTRUÇÕES DE ENVIO */}
-              <div className="p-5 bg-slate-50/70 border border-slate-200 rounded-lg space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#0a2540] text-white font-display">
-                        Inciso VIII • Modelo Regulatório TSB
-                      </span>
-                      <span className="text-[11px] font-medium text-slate-500">
-                        Resolução ANP nº 11/2016 • Art. 9º, VIII • Art. 10
-                      </span>
+              {/* CARD PRINCIPAL (PADRÃO TBG): VIA PRINCIPAL POCC + CANAL ALTERNATIVO POR E-MAIL */}
+              <div className="p-6 bg-slate-50/70 border border-slate-200 rounded-xl space-y-6">
+                {/* VIA PRINCIPAL: TRANSAÇÃO ELETRÔNICA NO POCC */}
+                <div className="p-5 bg-white border border-slate-200 rounded-lg space-y-4 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-3 border-b border-slate-100">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white uppercase tracking-wider font-display">
+                          Inciso VIII • Via Principal
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">
+                          Padrão TBG • Módulo POCC (Com Login)
+                        </span>
+                      </div>
+                      <h4 className="text-base font-bold text-[#0a2540] font-display flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-[#0284c7]" />
+                        Ofertar/Contratar Cessão — via POCC
+                      </h4>
+                      <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                        Seguindo a referência da TBG, a negociação, oferta e contratação de
+                        capacidade ocorrem dentro do ambiente autenticado do <strong>POCC</strong>.
+                        A Plataforma Eletrônica mantém a publicação pública do resumo das ofertas
+                        ativas, resguardando o sigilo comercial e os dados sensíveis dos
+                        representantes legais (LGPD).
+                      </p>
                     </div>
-                    <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
-                      <FileDown className="h-5 w-5 text-[#0284c7]" />
-                      Inciso VIII — Formulário-Padrão TSB para Comunicação de Cessão de Capacidade
-                    </h3>
-                    <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
-                      Em cumprimento estrito às exigências regulatórias do{' '}
-                      <strong>Art. 9º, Inciso VIII</strong> da ANP, a comunicação de cessão é feita
-                      mediante formulário-padrão assinado pelo representante legal, enviado ao canal
-                      oficial da TSB; após verificação da conformidade regulatória pela equipe
-                      técnica, a oferta é publicada neste resumo oficial.
-                    </p>
+
+                    <Link to="/poc">
+                      <Button
+                        type="button"
+                        className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
+                      >
+                        Acessar POCC com Login
+                        <ArrowRight className="h-3.5 w-3.5 text-slate-200" />
+                      </Button>
+                    </Link>
                   </div>
 
-                  <div className="shrink-0 flex flex-col sm:flex-row gap-2">
-                    <Button
-                      onClick={handleBaixarFormularioPdf}
-                      disabled={gerandoPdfCessao}
-                      className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium h-9 px-4 shadow-xs inline-flex items-center gap-2 cursor-pointer"
-                    >
-                      <FileDown className={`h-4 w-4 ${gerandoPdfCessao ? 'animate-bounce' : ''}`} />
-                      {gerandoPdfCessao ? 'Gerando PDF Oficial...' : 'Baixar Formulário (PDF)'}
-                    </Button>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Info className="h-3.5 w-3.5 text-[#0284c7] shrink-0" />
+                    <span>
+                      O acesso ao ambiente transacional do POCC requer autenticação corporativa com
+                      credenciais de Carregador.
+                    </span>
                   </div>
                 </div>
 
-                {/* PASSO A PASSO REGULATÓRIO */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-200 text-xs">
-                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
-                        1
-                      </span>
-                      <span>Baixe e Preencha</span>
+                {/* CANAL ALTERNATIVO: FORMULÁRIO-PADRÃO (PDF) ENVIADO POR E-MAIL */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-700 uppercase tracking-wider font-display">
+                          Canal Secundário / Alternativo
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">
+                          Envio por E-mail com Formulário Assinado
+                        </span>
+                      </div>
+                      <h5 className="text-sm font-bold text-[#0a2540] flex items-center gap-2 font-display">
+                        <FileDown className="h-4 w-4 text-slate-500" />
+                        Comunicação Alternativa de Cessão via Formulário-Padrão TSB (PDF)
+                      </h5>
+                      <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+                        Como alternativa ao canal digital no POCC, a comunicação de cessão de
+                        capacidade contratada pode ser formalizada mediante o formulário-padrão
+                        oficial assinado pelo representante legal e enviado ao canal oficial da TSB.
+                        Após validação regulatória pela equipe interna, a oferta é publicada no
+                        resumo abaixo.
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Faça o download do formulário oficial em PDF e preencha as características da
-                      cessão (modalidade, trecho, capacidade e período).
-                    </p>
-                  </div>
 
-                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
-                        2
-                      </span>
-                      <span>Assine e Envie por E-mail</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      Assine com carimbo ou certificado digital (Gov.br/ICP) e envie para:{' '}
-                      <a
-                        href={`mailto:${emailRecebimentoCessoes}`}
-                        className="font-bold text-[#0284c7] hover:underline"
+                    <div className="shrink-0 flex flex-col sm:flex-row gap-2">
+                      <Button
+                        onClick={handleBaixarFormularioPdf}
+                        disabled={gerandoPdfCessao}
+                        variant="outline"
+                        className="border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs h-9 px-3.5 shadow-2xs inline-flex items-center gap-2 cursor-pointer"
                       >
-                        {emailRecebimentoCessoes}
-                      </a>
-                    </p>
+                        <FileDown
+                          className={`h-4 w-4 text-slate-600 ${gerandoPdfCessao ? 'animate-bounce' : ''}`}
+                        />
+                        {gerandoPdfCessao ? 'Gerando PDF Oficial...' : 'Baixar Formulário (PDF)'}
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
-                    <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
-                        3
-                      </span>
-                      <span>Publicação Regulamentar</span>
+                  {/* PASSO A PASSO REGULATÓRIO */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                      <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          1
+                        </span>
+                        <span>Baixe e Preencha</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">
+                        Faça o download do formulário oficial em PDF e preencha as características
+                        da cessão (modalidade, trecho, capacidade e período).
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-snug">
-                      A TSB valida os dados operacionais e publica a oferta no resumo abaixo,
-                      resguardando os dados de contato sob sigilo da LGPD.
-                    </p>
+
+                    <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                      <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          2
+                        </span>
+                        <span>Assine e Envie por E-mail</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">
+                        Assine com carimbo ou certificado digital (Gov.br/ICP) e envie para:{' '}
+                        <a
+                          href={`mailto:${emailRecebimentoCessoes}`}
+                          className="font-bold text-[#0284c7] hover:underline"
+                        >
+                          {emailRecebimentoCessoes}
+                        </a>
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1">
+                      <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded bg-slate-100 text-slate-800 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          3
+                        </span>
+                        <span>Publicação Regulamentar</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">
+                        A TSB valida os dados operacionais e publica a oferta no resumo abaixo,
+                        resguardando os dados de contato sob sigilo da LGPD.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
