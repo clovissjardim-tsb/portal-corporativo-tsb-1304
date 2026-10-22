@@ -422,25 +422,6 @@ export function EditoriaTransparencia() {
         <button
           type="button"
           onClick={() => {
-            setSubSecaoAtiva('boletim_contratos')
-            setFiltroPesquisa('')
-          }}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            subSecaoAtiva === 'boletim_contratos'
-              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
-        >
-          <Radio className="h-3.5 w-3.5 text-sky-400" />
-          Item I — Contratos de Serviço de Transporte
-          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
-            {contagens.boletim_contratos}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
             setSubSecaoAtiva('boletim_secao1')
             setFiltroPesquisa('')
           }}
@@ -451,9 +432,28 @@ export function EditoriaTransparencia() {
           }`}
         >
           <FileText className="h-3.5 w-3.5 text-sky-400" />
-          Item II — Instalações &amp; Serviços (Alíneas a–j)
+          Item I — Instalações &amp; Serviços (Alíneas a–j)
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
             {contagens.boletim_secao1}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSubSecaoAtiva('boletim_contratos')
+            setFiltroPesquisa('')
+          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            subSecaoAtiva === 'boletim_contratos'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          <Radio className="h-3.5 w-3.5 text-sky-400" />
+          Item II — Contratos de Serviço de Transporte
+          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
+            {contagens.boletim_contratos}
           </span>
         </button>
 

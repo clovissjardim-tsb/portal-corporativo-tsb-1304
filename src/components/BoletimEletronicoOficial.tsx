@@ -295,10 +295,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     }
   }, [cabecalhosBdMap])
 
-  // Bloco I agora é Contratos de Serviço de Transporte (decisão explícita do usuário)
+  // Item I – Instalações de Transporte e Serviços Prestados (Art. 2º, I da Portaria ANP nº 1/2003)
   const headerBlocoI = useMemo(() => {
-    const item = cabecalhosBdMap.get('boletim_contratos_header')
-    const fallback = CABECALHOS_FALLBACK.boletim_contratos_header
+    const item = cabecalhosBdMap.get('boletim_secao1_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_secao1_header
     return {
       titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
       descricao:
@@ -308,10 +308,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     }
   }, [cabecalhosBdMap])
 
-  // Bloco II agora é Instalações de Transporte e Serviços Prestados (decisão explícita do usuário)
+  // Item II – Contratos de Serviço de Transporte (Art. 2º, II da Portaria ANP nº 1/2003)
   const headerBlocoII = useMemo(() => {
-    const item = cabecalhosBdMap.get('boletim_secao1_header')
-    const fallback = CABECALHOS_FALLBACK.boletim_secao1_header
+    const item = cabecalhosBdMap.get('boletim_contratos_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_contratos_header
     return {
       titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
       descricao:
@@ -525,8 +525,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     return resolverUrlDocumento(headerBlocoII.item, '')
   }, [headerBlocoII])
 
-  // Estado do acordeão para as alíneas a) a j) do Bloco II
-  // Inicialmente todas fechadas por padrão (Set vazio). Permite abertura múltipla simultânea.
+  // Estado do acordeão para as alíneas a) a j) do Item I
+  // Inicialmente todas colapsadas por padrão (Set vazio). Permite abertura suave.
   const [alineasAbertas, setAlineasAbertas] = useState<Set<string>>(new Set())
 
   const toggleAlinea = (letra: string) => {
@@ -539,6 +539,20 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
       }
       return novo
     })
+  }
+
+  // Textos explicativos didáticos regulatórios (1-3 frases em tom sério pt-BR) para cada alínea a-j
+  const explicativosAlineas: Record<string, string> = {
+    a: 'Define as cláusulas jurídicas, operacionais e regulatórias de referência aplicadas aos contratos de transporte dutoviário na malha da TSB. Estabelece os direitos e obrigações fundamentais entre a transportadora e os carregadores, com base nas diretrizes expedidas pela ANP.',
+    b: 'Apresenta a minuta-padrão de contrato de transporte para cada modalidade operacional autorizada (transporte firme anual, de curto prazo e interruptível). O documento assegura isonomia e previsibilidade regulatória às contratações celebradas pelos agentes de mercado.',
+    c: 'Minuta-padrão disciplinando os requisitos técnicos, parâmetros de engenharia e responsabilidades para interconexão física de instalações de terceiros (pontos de recebimento e entrega) à malha dutoviária da TSB, em observância às normas de segurança operacional.',
+    d: 'Regulamenta as diretrizes operacionais de rateio diário, critérios de alocação de volumes e procedimentos de balanço comercial nas Estações de Medição e Entrega (EMEDs), prevenindo desvios e assegurando a conciliação transparente das quantidades movimentadas.',
+    e: 'Representação cartográfica e esquemática unifilar atualizada do sistema de transporte operado pela TSB (Trechos 1 e 3: Uruguaiana–Triunfo e Polo Petroquímico), identificando o traçado dutoviário, estações de compressão e pontos de entrega.',
+    f: 'Relatório das características técnicas, construtivas e diâmetros nominais dos gasodutos, pressões de projeto e capacidade máxima operacional calculada sob as melhores condições de transporte termo-hidráulico do sistema.',
+    g: 'Demonstrativo técnico da capacidade residual remanescente passível de contratação por novos carregadores na modalidade de Transporte Firme, apurada nas melhores condições operacionais e deduzidas as parcelas contratadas e o consumo operacional do sistema.',
+    h: 'Demonstrativo diário e histórico mensal das vazões de gás natural programadas e efetivamente realizadas em cada ponto de recebimento e entrega da malha dutoviária da TSB, permitindo o acompanhamento da utilização operacional do sistema.',
+    i: 'Informações sobre paradas programadas de manutenção preventiva, intervenções operacionais contingenciais e cronograma de reduções temporárias de capacidade no sistema dutoviário da TSB, garantindo previsibilidade aos carregadores.',
+    j: 'Apresenta os projetos técnicos, planos de expansão da malha dutoviária e ampliações de capacidade planejadas ou em fase de implantação pela TSB, em alinhamento ao planejamento energético nacional e à expansão do mercado de gás.',
   }
 
   return (
@@ -647,45 +661,68 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
               )}
             </div>
 
-            {/* LISTAGEM DAS ALÍNEAS a) A j) — BLOCOS ESTILO NTS COM RESPIRO GENEROSO */}
-            <div className="divide-y divide-slate-100 space-y-8">
+            {/* LISTAGEM DAS ALÍNEAS a) A j) DO ART. 2º, I DA PORTARIA ANP Nº 1/2003
+                PADRÃO ACORDEÃO (COLLAPSADO POR PADRÃO):
+                - Cabeçalho clicável com chevron suave mostrando a letra e o título curto da norma
+                - Ao expandir: texto explicativo regulatório didático (1-3 frases) + links oficiais/anexos
+                - Alínea g): mantém entendimento conceitual de capacidade firme (2º nível colapsado)
+                - Alínea h): expande a série histórica com filtros avançados */}
+            <div className="border border-slate-200 rounded-lg divide-y divide-slate-200 overflow-hidden bg-white shadow-xs">
               {/* a) Termos e condições gerais de prestação de serviço */}
               {(() => {
                 const item = secao1BdMap.get('alinea_a')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('a')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/08/Termos-e-Condicoes-do-Contrato-Extraor.pdf',
                 )
                 const tituloTexto =
-                  item?.titulo || 'Termos e condições gerais do Contrato de Transporte'
+                  item?.titulo || 'Termos e condições gerais de prestação de serviço'
                 return (
-                  <div className="pt-6 first:pt-0 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">a)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Termos e Condições Gerais do Contrato de Transporte Extraordinário'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('a')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">a)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.a}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Termos e Condições Gerais do Contrato de Transporte Extraordinário'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* b) Modelo de Contrato de Serviço de Transporte, por tipo de serviço */}
+              {/* b) Modelo de contrato para cada tipo de serviço */}
               {(() => {
                 const item = secao1BdMap.get('alinea_b')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('b')
                 const docAlineaB = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
@@ -696,41 +733,56 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                       'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
                     )
                   : null
-                const tituloTexto =
-                  item?.titulo || 'Modelo de Contrato de Serviço de Transporte, por tipo de serviço'
+                const tituloTexto = item?.titulo || 'Modelo de contrato para cada tipo de serviço'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">b)</span>
-                      {tituloTexto}
-                    </h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      {item?.descricao ||
-                        'Modelos de contrato padronizados para prestação de serviços de transporte firme e interruptível.'}
-                    </p>
-                    <div className="pl-5 space-y-2">
-                      <DocumentLinkRow
-                        url={docAlineaB.url}
-                        label={
-                          docAlineaB.nomeExibicao &&
-                          docAlineaB.nomeExibicao !== '- Baixar Arquivo' &&
-                          docAlineaB.nomeExibicao !== 'Contrato Master TSB'
-                            ? docAlineaB.nomeExibicao
-                            : 'Contrato Master TSB 2025–2029 (Transporte Firme para períodos de curto prazo e anuais)'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('b')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">b)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                      {docMaster && docMaster.url && docMaster.url !== docAlineaB.url && (
-                        <DocumentLinkRow
-                          url={docMaster.url}
-                          label={
-                            docMaster.nomeExibicao && docMaster.nomeExibicao !== '- Baixar Arquivo'
-                              ? docMaster.nomeExibicao
-                              : 'Modelo de Contrato Complementar TSB'
-                          }
-                        />
-                      )}
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.b}
+                        </p>
+                        <div className="space-y-2 pt-1">
+                          <DocumentLinkRow
+                            url={docAlineaB.url}
+                            label={
+                              docAlineaB.nomeExibicao &&
+                              docAlineaB.nomeExibicao !== '- Baixar Arquivo' &&
+                              docAlineaB.nomeExibicao !== 'Contrato Master TSB'
+                                ? docAlineaB.nomeExibicao
+                                : 'Contrato Master TSB 2025–2029 (Transporte Firme para períodos de curto prazo e anuais)'
+                            }
+                          />
+                          {docMaster && docMaster.url && docMaster.url !== docAlineaB.url && (
+                            <DocumentLinkRow
+                              url={docMaster.url}
+                              label={
+                                docMaster.nomeExibicao &&
+                                docMaster.nomeExibicao !== '- Baixar Arquivo'
+                                  ? docMaster.nomeExibicao
+                                  : 'Modelo de Contrato Complementar TSB'
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -739,6 +791,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
               {(() => {
                 const item = secao1BdMap.get('alinea_c')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('c')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000435.pdf',
@@ -746,99 +799,151 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 const tituloTexto = item?.titulo || 'Modelo de Acordo de Conexão'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">c)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Modelo de Acordo de Conexão às Instalações de Transporte'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('c')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">c)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.c}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Modelo de Acordo de Conexão às Instalações de Transporte'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* d) Modelo de Acordo Operativo de Alocação de Capacidade */}
+              {/* d) Modelo de Acordo Operativo de Alocação das Quantidades de Gás nas Estações de Entrega */}
               {(() => {
                 const item = secao1BdMap.get('alinea_d')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('d')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000436.pdf',
                 )
                 const tituloTexto =
-                  item?.titulo || 'Modelo de Acordo Operativo de Alocação de Capacidade'
+                  item?.titulo ||
+                  'Modelo de Acordo Operativo de Alocação das Quantidades de Gás nas Estações de Entrega'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">d)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Modelo de Acordo Operativo de Alocação de Quantidades de Gás'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('d')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">d)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.d}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Modelo de Acordo Operativo de Alocação de Quantidades de Gás'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* e) Mapa das instalações de transporte */}
+              {/* e) Mapa atualizado das instalações de transporte */}
               {(() => {
                 const item = secao1BdMap.get('alinea_e')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('e')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000437.pdf',
                 )
-                const tituloTexto = item?.titulo || 'Mapa das instalações de transporte'
+                const tituloTexto = item?.titulo || 'Mapa atualizado das instalações de transporte'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">e)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Mapa das Instalações do Sistema Dutoviário TSB'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('e')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">e)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.e}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Mapa das Instalações do Sistema Dutoviário TSB'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* f) Características físicas e Capacidade Técnica Máxima */}
+              {/* f) Características físicas e capacidade máxima das instalações de transporte, nas melhores condições operacionais */}
               {(() => {
                 const item = secao1BdMap.get('alinea_f')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('f')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_-I.f-_caracteristicas-.pdf',
@@ -848,127 +953,161 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_ele_item-I.f_-fluxos-fisicos.pdf',
                 )
                 const tituloTexto =
-                  item?.titulo || 'Características físicas e Capacidade Técnica Máxima'
+                  item?.titulo ||
+                  'Características físicas e capacidade máxima das instalações de transporte, nas melhores condições operacionais'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">f)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-2">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao &&
-                          doc.nomeExibicao !== '- Baixar Arquivo' &&
-                          doc.nomeExibicao !== '- Características'
-                            ? doc.nomeExibicao
-                            : 'Características Físicas e Operacionais das Instalações de Transporte'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('f')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">f)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                      {docSecundario.url && (
-                        <DocumentLinkRow
-                          url={docSecundario.url}
-                          label={
-                            docSecundario.nomeExibicao &&
-                            docSecundario.nomeExibicao !== '- Fluxos Físicos do Gás Natural'
-                              ? docSecundario.nomeExibicao
-                              : 'Fluxos Físicos de Gás Natural na Malha Dutoviária'
-                          }
-                        />
-                      )}
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.f}
+                        </p>
+                        <div className="space-y-2 pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao &&
+                              doc.nomeExibicao !== '- Baixar Arquivo' &&
+                              doc.nomeExibicao !== '- Características'
+                                ? doc.nomeExibicao
+                                : 'Características Físicas e Operacionais das Instalações de Transporte'
+                            }
+                          />
+                          {docSecundario.url && (
+                            <DocumentLinkRow
+                              url={docSecundario.url}
+                              label={
+                                docSecundario.nomeExibicao &&
+                                docSecundario.nomeExibicao !== '- Fluxos Físicos do Gás Natural'
+                                  ? docSecundario.nomeExibicao
+                                  : 'Fluxos Físicos de Gás Natural na Malha Dutoviária'
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* g) Capacidade Disponível para novos serviços e condições para ampliá-la */}
+              {/* g) Capacidade disponível para prestação de novos serviços de Transporte Firme nas melhores condições operacionais */}
               {(() => {
                 const item = secao1BdMap.get('alinea_g')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('g')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2024/10/bol_elet_I_g-cap-disponivel.pdf',
                 )
                 const tituloTexto =
                   item?.titulo ||
-                  'Capacidade Disponível para novos serviços e condições para ampliá-la'
+                  'Capacidade disponível para prestação de novos serviços de Transporte Firme nas melhores condições operacionais'
 
                 return (
-                  <div className="pt-6 space-y-3">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">g)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Demonstrativo de Capacidade Disponível para Novos Serviços'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('g')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">g)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.g}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Demonstrativo de Capacidade Disponível para Novos Serviços'
+                            }
+                          />
+                        </div>
 
-                    {/* BLOCO COLAPSADO EM 1 LINHA COM CHEVRON: ENTENDIMENTO CONCEITUAL PADRÃO NTS */}
-                    {blocoExplicativoG.ativo && (
-                      <div className="mt-3 rounded-md border border-slate-200 bg-slate-50/70 overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => setExplicativoGExpandido((prev) => !prev)}
-                          aria-expanded={explicativoGExpandido}
-                          aria-controls="bloco-explicativo-nts-conteudo"
-                          className="w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 transition-colors cursor-pointer hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Info className="h-4 w-4 text-[#0284c7] shrink-0" />
-                            <span className="text-xs font-semibold text-slate-800 truncate">
-                              {blocoExplicativoG.titulo}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0 text-slate-500 text-xs font-medium">
-                            <span className="hidden sm:inline text-[11px] text-slate-500">
-                              {explicativoGExpandido ? 'Ocultar' : 'Entender metodologia'}
-                            </span>
-                            <ChevronDown
-                              className={`h-4 w-4 text-slate-600 transition-transform duration-200 ${
-                                explicativoGExpandido ? 'rotate-180' : 'rotate-0'
-                              }`}
-                            />
-                          </div>
-                        </button>
+                        {/* BLOCO COLAPSADO EM 1 LINHA COM CHEVRON: ENTENDIMENTO CONCEITUAL PADRÃO NTS (2º NÍVEL) */}
+                        {blocoExplicativoG.ativo && (
+                          <div className="mt-3 rounded-md border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() => setExplicativoGExpandido((prev) => !prev)}
+                              aria-expanded={explicativoGExpandido}
+                              aria-controls="bloco-explicativo-nts-conteudo"
+                              className="w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 transition-colors cursor-pointer hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Info className="h-4 w-4 text-[#0284c7] shrink-0" />
+                                <span className="text-xs font-semibold text-slate-800 truncate">
+                                  {blocoExplicativoG.titulo}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 text-slate-500 text-xs font-medium">
+                                <span className="hidden sm:inline text-[11px] text-slate-500">
+                                  {explicativoGExpandido ? 'Ocultar' : 'Entender metodologia'}
+                                </span>
+                                <ChevronDown
+                                  className={`h-4 w-4 text-slate-600 transition-transform duration-200 ${
+                                    explicativoGExpandido ? 'rotate-180' : 'rotate-0'
+                                  }`}
+                                />
+                              </div>
+                            </button>
 
-                        {explicativoGExpandido && (
-                          <div
-                            id="bloco-explicativo-nts-conteudo"
-                            className="px-4 py-3.5 border-t border-slate-200/80 text-xs text-slate-600 space-y-2.5 bg-white animate-fade-in"
-                          >
-                            <p className="leading-relaxed text-justify">
-                              {blocoExplicativoG.descricao}
-                            </p>
-                            <div className="pt-1 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-[#0a2540]" />
-                                <strong>CTM:</strong> Simulação Termo-Hidráulica (pressões e vazões
-                                nominais)
-                              </span>
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                                <strong>CC:</strong> Dedução de consumo operacional e segurança
-                              </span>
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-amber-600" />
-                                <strong>Alocação:</strong> Firme, Interruptível e Curto Prazo
-                              </span>
-                            </div>
+                            {explicativoGExpandido && (
+                              <div
+                                id="bloco-explicativo-nts-conteudo"
+                                className="px-4 py-3.5 border-t border-slate-200/80 text-xs text-slate-600 space-y-2.5 bg-slate-50/50 animate-fade-in"
+                              >
+                                <p className="leading-relaxed text-justify">
+                                  {blocoExplicativoG.descricao}
+                                </p>
+                                <div className="pt-1 flex flex-wrap items-center gap-4 text-[11px] text-slate-500">
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-[#0a2540]" />
+                                    <strong>CTM:</strong> Simulação Termo-Hidráulica (pressões e
+                                    vazões nominais)
+                                  </span>
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                    <strong>CC:</strong> Dedução de consumo operacional e segurança
+                                  </span>
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-amber-600" />
+                                    <strong>Alocação:</strong> Firme, Interruptível e Curto Prazo
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -977,309 +1116,322 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 )
               })()}
 
-              {/* h) Quantidades programadas e realizadas (dados diários do mês anterior)
-                     TABELA DE DADOS ISOLADA NUM BLOCO PRÓPRIO E CLARAMENTE SEPARADO */}
+              {/* h) Quantidades programadas e realizadas de gás nos pontos de recepção e entrega (dados diários, referentes ao mês anterior) */}
               {(() => {
                 const item = secao1BdMap.get('alinea_h')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('h')
                 const tituloTexto =
                   item?.titulo ||
-                  'Quantidades programadas e realizadas (dados diários do mês anterior)'
+                  'Quantidades programadas e realizadas de gás nos pontos de recepção e entrega (dados diários, referentes ao mês anterior)'
 
                 return (
-                  <div id="alinea-h-quantidades" className="pt-8 scroll-mt-6 space-y-4">
-                    {/* Título da Alínea h */}
-                    <div className="space-y-1">
-                      <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                        <span className="font-bold text-[#0a2540] mr-1.5">h)</span>
+                  <div id="alinea-h-quantidades" className="scroll-mt-6 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('h')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">h)</span>
                         {tituloTexto}
-                      </h3>
-                      <p className="text-xs text-slate-500 leading-relaxed max-w-4xl">
-                        Série histórica consolidada nos pontos de recepção e entrega da malha TSB
-                        (Trechos 1 e 3: Uruguaiana-Triunfo e Polo Petroquímico), atualizada
-                        mensalmente desde 2003.
-                      </p>
-                    </div>
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 sm:px-5 pb-5 pt-1 space-y-4 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.h}
+                        </p>
 
-                    {/* BLOCO CONTIDO E RECUADO PARA A SÉRIE HISTÓRICA */}
-                    <div className="p-4 sm:p-5 rounded-lg border border-slate-200 bg-slate-50/60 space-y-4">
-                      {/* BARRA DE FILTROS LIMPA */}
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wider font-display">
-                            Filtros de Pesquisa &amp; Consulta
-                          </span>
-                          {(pesquisaQuantidades ||
-                            filtroAnoQuantidades !== 'todos' ||
-                            ordemQuantidades !== 'desc' ||
-                            itensExibirQuantidades !== 12) && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={limparFiltrosQuantidades}
-                              className="h-7 px-2 text-[11px] text-slate-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-1 cursor-pointer"
-                            >
-                              <RotateCcw className="h-3 w-3" />
-                              Limpar filtros
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* GRID DE ENTRADAS */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                          {/* 1. Pesquisa */}
-                          <div className="space-y-1">
-                            <Label
-                              htmlFor="pesquisarQuantidades"
-                              className="text-xs font-medium text-slate-600 flex items-center gap-1"
-                            >
-                              <Search className="h-3 w-3 text-slate-400" />
-                              Pesquisar:
-                            </Label>
-                            <Input
-                              id="pesquisarQuantidades"
-                              type="text"
-                              placeholder="Mês ou ano..."
-                              value={pesquisaQuantidades}
-                              onChange={(e) => setPesquisaQuantidades(e.target.value)}
-                              className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-1 focus-visible:ring-[#0284c7]"
-                            />
-                          </div>
-
-                          {/* 2. Ano */}
-                          <div className="space-y-1">
-                            <Label
-                              htmlFor="seletorAnoQuantidades"
-                              className="text-xs font-medium text-slate-600 flex items-center gap-1"
-                            >
-                              <Calendar className="h-3 w-3 text-slate-400" />
-                              Ano de referência:
-                            </Label>
-                            <select
-                              id="seletorAnoQuantidades"
-                              value={filtroAnoQuantidades}
-                              onChange={(e) => setFiltroAnoQuantidades(e.target.value)}
-                              className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-normal focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
-                            >
-                              <option value="todos">
-                                Todos os anos (2003–{anosDisponiveis[0] || 'atual'})
-                              </option>
-                              {anosDisponiveis.map((ano) => (
-                                <option key={ano} value={String(ano)}>
-                                  {ano}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* 3. Ordenação */}
-                          <div className="space-y-1">
-                            <Label className="text-xs font-medium text-slate-600 flex items-center gap-1">
-                              <ArrowUpDown className="h-3 w-3 text-slate-400" />
-                              Ordenação:
-                            </Label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={toggleOrdemQuantidades}
-                              className="w-full h-8 px-2.5 text-xs bg-white border-slate-300 text-slate-700 hover:bg-slate-50 font-normal flex items-center justify-between cursor-pointer"
-                            >
-                              <span className="truncate flex items-center gap-1.5">
-                                {ordemQuantidades === 'desc' ? (
-                                  <>
-                                    <ArrowDownWideNarrow className="h-3 w-3 text-[#0284c7] shrink-0" />
-                                    <span>Mais novo primeiro</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <ArrowUpNarrowWide className="h-3 w-3 text-[#0284c7] shrink-0" />
-                                    <span>Mais antigo primeiro</span>
-                                  </>
-                                )}
+                        {/* BLOCO CONTIDO E RECUADO PARA A SÉRIE HISTÓRICA */}
+                        <div className="p-4 sm:p-5 rounded-lg border border-slate-200 bg-white space-y-4 shadow-2xs">
+                          {/* BARRA DE FILTROS LIMPA */}
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-xs font-bold text-[#0a2540] uppercase tracking-wider font-display">
+                                Filtros de Pesquisa &amp; Consulta
                               </span>
-                            </Button>
-                          </div>
-
-                          {/* 4. Limite de exibição */}
-                          <div className="space-y-1">
-                            <Label
-                              htmlFor="seletorItensExibirQuantidades"
-                              className="text-xs font-medium text-slate-600 flex items-center gap-1"
-                            >
-                              <Eye className="h-3 w-3 text-slate-400" />
-                              Exibir:
-                            </Label>
-                            <select
-                              id="seletorItensExibirQuantidades"
-                              value={itensExibirQuantidades}
-                              onChange={(e) => {
-                                const val = e.target.value
-                                setItensExibirQuantidades(val === 'todos' ? 'todos' : Number(val))
-                              }}
-                              className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-normal focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
-                            >
-                              <option value={12}>12 relatórios</option>
-                              <option value={24}>24 relatórios</option>
-                              <option value={36}>36 relatórios</option>
-                              <option value={48}>48 relatórios</option>
-                              <option value="todos">
-                                Todos ({relatoriosFiltradosTotal.length})
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* Linha informativa discreta */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
-                          <span>
-                            Exibindo <strong>{relatoriosVisiveis.length}</strong> de{' '}
-                            <strong>{relatoriosFiltradosTotal.length}</strong> relatórios
-                            {filtroAnoQuantidades !== 'todos' &&
-                              ` no ano de ${filtroAnoQuantidades}`}
-                          </span>
-                          <div className="flex items-center gap-1 text-[11px]">
-                            <span className="text-slate-400">Atalhos:</span>
-                            {[12, 24, 48].map((qtd) => (
-                              <button
-                                key={qtd}
-                                type="button"
-                                onClick={() => setItensExibirQuantidades(qtd)}
-                                className={`px-1.5 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
-                                  itensExibirQuantidades === qtd
-                                    ? 'bg-[#0a2540] text-white font-semibold'
-                                    : 'text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                {qtd}
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => setItensExibirQuantidades('todos')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
-                                itensExibirQuantidades === 'todos'
-                                  ? 'bg-[#0a2540] text-white font-semibold'
-                                  : 'text-slate-600 hover:bg-slate-200'
-                              }`}
-                            >
-                              Todos
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* TABELA DE QUANTIDADES — DESIGN SIMPLES E LIMPO */}
-                      <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
-                        <table className="w-full text-xs text-left border-collapse">
-                          <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-                            <tr>
-                              <th className="p-3 font-semibold text-slate-700">
-                                Demonstrativo Mensal (Trechos 1 e 3)
-                              </th>
-                              <th className="p-3 w-40 text-right font-semibold text-slate-700">
-                                Documento
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {relatoriosVisiveis.length > 0 ? (
-                              relatoriosVisiveis.map((itemRel) => (
-                                <tr
-                                  key={itemRel.id}
-                                  className="hover:bg-slate-50/70 transition-colors"
+                              {(pesquisaQuantidades ||
+                                filtroAnoQuantidades !== 'todos' ||
+                                ordemQuantidades !== 'desc' ||
+                                itensExibirQuantidades !== 12) && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={limparFiltrosQuantidades}
+                                  className="h-7 px-2 text-[11px] text-slate-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-1 cursor-pointer"
                                 >
-                                  <td className="p-3 text-slate-800 font-medium">
-                                    <div className="flex items-center gap-2.5">
-                                      <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                      <span>{itemRel.titulo}</span>
-                                    </div>
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    {itemRel.temArquivoDireto ? (
-                                      <a
-                                        href={itemRel.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0284c7] hover:underline"
-                                        title={`Baixar ${itemRel.nomeArquivo}`}
-                                      >
-                                        <PdfIcon className="w-3.5 h-3.5" />
-                                        <span>Baixar PDF</span>
-                                      </a>
+                                  <RotateCcw className="h-3 w-3" />
+                                  Limpar filtros
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* GRID DE ENTRADAS */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                              {/* 1. Pesquisa */}
+                              <div className="space-y-1">
+                                <Label
+                                  htmlFor="seletorPesquisarQuantidades"
+                                  className="text-xs font-medium text-slate-600 flex items-center gap-1"
+                                >
+                                  <Search className="h-3 w-3 text-slate-400" />
+                                  Pesquisar:
+                                </Label>
+                                <Input
+                                  id="seletorPesquisarQuantidades"
+                                  type="text"
+                                  placeholder="Mês ou ano..."
+                                  value={pesquisaQuantidades}
+                                  onChange={(e) => setPesquisaQuantidades(e.target.value)}
+                                  className="h-8 text-xs bg-white border-slate-300 focus-visible:ring-1 focus-visible:ring-[#0284c7]"
+                                />
+                              </div>
+
+                              {/* 2. Ano */}
+                              <div className="space-y-1">
+                                <Label
+                                  htmlFor="seletorAnoQuantidades"
+                                  className="text-xs font-medium text-slate-600 flex items-center gap-1"
+                                >
+                                  <Calendar className="h-3 w-3 text-slate-400" />
+                                  Ano de referência:
+                                </Label>
+                                <select
+                                  id="seletorAnoQuantidades"
+                                  value={filtroAnoQuantidades}
+                                  onChange={(e) => setFiltroAnoQuantidades(e.target.value)}
+                                  className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-normal focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                                >
+                                  <option value="todos">
+                                    Todos os anos (2003–{anosDisponiveis[0] || 'atual'})
+                                  </option>
+                                  {anosDisponiveis.map((ano) => (
+                                    <option key={ano} value={String(ano)}>
+                                      {ano}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* 3. Ordenação */}
+                              <div className="space-y-1">
+                                <Label className="text-xs font-medium text-slate-600 flex items-center gap-1">
+                                  <ArrowUpDown className="h-3 w-3 text-slate-400" />
+                                  Ordenação:
+                                </Label>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={toggleOrdemQuantidades}
+                                  className="w-full h-8 px-2.5 text-xs bg-white border-slate-300 text-slate-700 hover:bg-slate-50 font-normal flex items-center justify-between cursor-pointer"
+                                >
+                                  <span className="truncate flex items-center gap-1.5">
+                                    {ordemQuantidades === 'desc' ? (
+                                      <>
+                                        <ArrowDownWideNarrow className="h-3 w-3 text-[#0284c7] shrink-0" />
+                                        <span>Mais novo primeiro</span>
+                                      </>
                                     ) : (
-                                      <a
-                                        href="https://www.tsb.com.br/boletim-eletronico/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-[#0284c7] hover:underline"
-                                        title="Consultar no site oficial da TSB"
-                                      >
-                                        <FileDown className="h-3 w-3" />
-                                        <span>Portal TSB</span>
-                                      </a>
+                                      <>
+                                        <ArrowUpNarrowWide className="h-3 w-3 text-[#0284c7] shrink-0" />
+                                        <span>Mais antigo primeiro</span>
+                                      </>
                                     )}
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td
-                                  colSpan={2}
-                                  className="p-6 text-center text-slate-500 space-y-2"
+                                  </span>
+                                </Button>
+                              </div>
+
+                              {/* 4. Limite de exibição */}
+                              <div className="space-y-1">
+                                <Label
+                                  htmlFor="seletorItensExibirQuantidades"
+                                  className="text-xs font-medium text-slate-600 flex items-center gap-1"
                                 >
-                                  <p className="font-medium text-slate-700">
-                                    Nenhum relatório encontrado para os critérios selecionados.
-                                  </p>
+                                  <Eye className="h-3 w-3 text-slate-400" />
+                                  Exibir:
+                                </Label>
+                                <select
+                                  id="seletorItensExibirQuantidades"
+                                  value={itensExibirQuantidades}
+                                  onChange={(e) => {
+                                    const val = e.target.value
+                                    setItensExibirQuantidades(
+                                      val === 'todos' ? 'todos' : Number(val),
+                                    )
+                                  }}
+                                  className="w-full h-8 px-2.5 rounded-md border border-slate-300 text-xs bg-white text-slate-800 font-normal focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                                >
+                                  <option value={12}>12 relatórios</option>
+                                  <option value={24}>24 relatórios</option>
+                                  <option value={36}>36 relatórios</option>
+                                  <option value={48}>48 relatórios</option>
+                                  <option value="todos">
+                                    Todos ({relatoriosFiltradosTotal.length})
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Linha informativa discreta */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
+                              <span>
+                                Exibindo <strong>{relatoriosVisiveis.length}</strong> de{' '}
+                                <strong>{relatoriosFiltradosTotal.length}</strong> relatórios
+                                {filtroAnoQuantidades !== 'todos' &&
+                                  ` no ano de ${filtroAnoQuantidades}`}
+                              </span>
+                              <div className="flex items-center gap-1 text-[11px]">
+                                <span className="text-slate-400">Atalhos:</span>
+                                {[12, 24, 48].map((qtd) => (
+                                  <button
+                                    key={qtd}
+                                    type="button"
+                                    onClick={() => setItensExibirQuantidades(qtd)}
+                                    className={`px-1.5 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
+                                      itensExibirQuantidades === qtd
+                                        ? 'bg-[#0a2540] text-white font-semibold'
+                                        : 'text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    {qtd}
+                                  </button>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => setItensExibirQuantidades('todos')}
+                                  className={`px-1.5 py-0.5 rounded text-[11px] transition-colors cursor-pointer ${
+                                    itensExibirQuantidades === 'todos'
+                                      ? 'bg-[#0a2540] text-white font-semibold'
+                                      : 'text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                >
+                                  Todos
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* TABELA DE QUANTIDADES — DESIGN SIMPLES E LIMPO */}
+                          <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
+                            <table className="w-full text-xs text-left border-collapse">
+                              <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                                <tr>
+                                  <th className="p-3 font-semibold text-slate-700">
+                                    Demonstrativo Mensal (Trechos 1 e 3)
+                                  </th>
+                                  <th className="p-3 w-40 text-right font-semibold text-slate-700">
+                                    Documento
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {relatoriosVisiveis.length > 0 ? (
+                                  relatoriosVisiveis.map((itemRel) => (
+                                    <tr
+                                      key={itemRel.id}
+                                      className="hover:bg-slate-50/70 transition-colors"
+                                    >
+                                      <td className="p-3 text-slate-800 font-medium">
+                                        <div className="flex items-center gap-2.5">
+                                          <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                          <span>{itemRel.titulo}</span>
+                                        </div>
+                                      </td>
+                                      <td className="p-3 text-right">
+                                        {itemRel.temArquivoDireto ? (
+                                          <a
+                                            href={itemRel.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0284c7] hover:underline"
+                                            title={`Baixar ${itemRel.nomeArquivo}`}
+                                          >
+                                            <PdfIcon className="w-3.5 h-3.5" />
+                                            <span>Baixar PDF</span>
+                                          </a>
+                                        ) : (
+                                          <a
+                                            href="https://www.tsb.com.br/boletim-eletronico/"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-[#0284c7] hover:underline"
+                                            title="Consultar no site oficial da TSB"
+                                          >
+                                            <FileDown className="h-3 w-3" />
+                                            <span>Portal TSB</span>
+                                          </a>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={2}
+                                      className="p-6 text-center text-slate-500 space-y-2"
+                                    >
+                                      <p className="font-medium text-slate-700">
+                                        Nenhum relatório encontrado para os critérios selecionados.
+                                      </p>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={limparFiltrosQuantidades}
+                                        className="text-xs h-7 text-[#0284c7] cursor-pointer"
+                                      >
+                                        Limpar filtros
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* MAIS RESULTADOS */}
+                          {itensExibirQuantidades !== 'todos' &&
+                            relatoriosFiltradosTotal.length > relatoriosVisiveis.length && (
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1 text-xs text-slate-500">
+                                <span>
+                                  Mostrando <strong>{relatoriosVisiveis.length}</strong> de{' '}
+                                  <strong>{relatoriosFiltradosTotal.length}</strong> registros.
+                                </span>
+                                <div className="flex items-center gap-2">
                                   <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    onClick={limparFiltrosQuantidades}
-                                    className="text-xs h-7 text-[#0284c7] cursor-pointer"
+                                    onClick={() => {
+                                      const proximaQtd = (itensExibirQuantidades as number) + 12
+                                      setItensExibirQuantidades(proximaQtd)
+                                    }}
+                                    className="text-xs h-7 border-slate-300 text-slate-700 hover:bg-white cursor-pointer"
                                   >
-                                    Limpar filtros
+                                    + 12 relatórios
                                   </Button>
-                                </td>
-                              </tr>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => setItensExibirQuantidades('todos')}
+                                    className="text-xs h-7 bg-[#0a2540] hover:bg-[#13395e] text-white cursor-pointer"
+                                  >
+                                    Exibir todos ({relatoriosFiltradosTotal.length})
+                                  </Button>
+                                </div>
+                              </div>
                             )}
-                          </tbody>
-                        </table>
+                        </div>
                       </div>
-
-                      {/* MAIS RESULTADOS */}
-                      {itensExibirQuantidades !== 'todos' &&
-                        relatoriosFiltradosTotal.length > relatoriosVisiveis.length && (
-                          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1 text-xs text-slate-500">
-                            <span>
-                              Mostrando <strong>{relatoriosVisiveis.length}</strong> de{' '}
-                              <strong>{relatoriosFiltradosTotal.length}</strong> registros.
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const proximaQtd = (itensExibirQuantidades as number) + 12
-                                  setItensExibirQuantidades(proximaQtd)
-                                }}
-                                className="text-xs h-7 border-slate-300 text-slate-700 hover:bg-white cursor-pointer"
-                              >
-                                + 12 relatórios
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => setItensExibirQuantidades('todos')}
-                                className="text-xs h-7 bg-[#0a2540] hover:bg-[#13395e] text-white cursor-pointer"
-                              >
-                                Exibir todos ({relatoriosFiltradosTotal.length})
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                    </div>
+                    )}
                   </div>
                 )
               })()}
@@ -1288,6 +1440,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
               {(() => {
                 const item = secao1BdMap.get('alinea_i')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('i')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000440.pdf',
@@ -1296,57 +1449,90 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   item?.titulo || 'Interrupções e reduções de capacidade, atuais e planejadas'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">i)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Interrupções e Reduções de Capacidade no Sistema Dutoviário'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('i')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">i)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.i}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Interrupções e Reduções de Capacidade no Sistema Dutoviário'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
 
-              {/* j) Ampliações em implantação ou planejadas */}
+              {/* j) Ampliações planejadas */}
               {(() => {
                 const item = secao1BdMap.get('alinea_j')
                 if (item && item.ativo === false) return null
+                const isOpen = alineasAbertas.has('j')
                 const doc = resolverUrlDocumento(
                   item,
                   'https://www.tsb.com.br/wp-content/uploads/2023/08/Ampliacoes-Planejadas.pdf',
                 )
-                const tituloTexto = item?.titulo || 'Ampliações em implantação ou planejadas'
+                const tituloTexto = item?.titulo || 'Ampliações planejadas'
 
                 return (
-                  <div className="pt-6 space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                      <span className="font-bold text-[#0a2540] mr-1.5">j)</span>
-                      {tituloTexto}
-                    </h3>
-                    {item?.descricao && (
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.descricao}</p>
-                    )}
-                    <div className="pl-5 space-y-1.5">
-                      <DocumentLinkRow
-                        url={doc.url}
-                        label={
-                          doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
-                            ? doc.nomeExibicao
-                            : 'Projetos de Ampliações Planejadas e em Implantação'
-                        }
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleAlinea('j')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">j)</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
                       />
-                    </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || explicativosAlineas.j}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow
+                            url={doc.url}
+                            label={
+                              doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc.nomeExibicao
+                                : 'Projetos de Ampliações Planejadas e em Implantação'
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -1355,10 +1541,11 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
 
           {/* =========================================================================
               ITEM II — CONTRATOS DE SERVIÇO DE TRANSPORTE
-              Padrão NTS:
-              - Título de norma grande e claro
-              - Subtítulo em itálico "(atualizado a cada novo contrato ou alteração)"
-              - Linha simples de documento com ícone de PDF ou estado vazio discreto
+              Art. 2º, II da Portaria ANP nº 1/2003:
+              - Título literal da norma
+              - Subtítulo em itálico "(atualizado sempre que houver assinatura de um novo contrato ou alteração de contrato vigente)"
+              - Lista discreta das 6 indicações da norma regulatória
+              - Slot de PDF "Resumo dos Contratos e Tarifas Vigentes" + estado vazio honesto
               ========================================================================= */}
           {headerBlocoII.ativo && (
             <section id="bloco-item-ii" className="space-y-6 pt-10 border-t border-slate-200">
@@ -1368,7 +1555,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     {headerBlocoII.titulo}
                   </h2>
                   <span className="text-sm font-normal text-slate-500 italic">
-                    (atualizado a cada novo contrato ou alteração)
+                    (atualizado sempre que houver assinatura de um novo contrato ou alteração de
+                    contrato vigente)
                   </span>
                 </div>
                 {headerBlocoII.descricao && (
@@ -1376,6 +1564,54 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     {headerBlocoII.descricao}
                   </p>
                 )}
+              </div>
+
+              {/* LISTA DISCRETA: O QUE ESTE DOCUMENTO/ITEM CONTÉM (6 INDICAÇÕES DA NORMA) */}
+              <div className="p-4 sm:p-5 rounded-lg bg-slate-50/70 border border-slate-200 text-xs text-slate-700 space-y-2.5 max-w-4xl">
+                <div className="flex items-center gap-2 font-semibold text-slate-800">
+                  <Info className="h-4 w-4 text-[#0284c7] shrink-0" />
+                  <span>
+                    Conteúdo regulamentar exigido pela Portaria ANP nº 1/2003 (Art. 2º, II):
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1 text-[11px] sm:text-xs text-slate-600">
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>1.</strong> Nome completo do Carregador
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>2.</strong> Tipo de serviço de transporte
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>3.</strong> Data de início e término do contrato
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>4.</strong> Evolução das capacidades contratadas
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>5.</strong> Tarifas e descontos aplicados a cada carregador
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0a2540] mt-1.5 shrink-0" />
+                    <span>
+                      <strong>6.</strong> Relação acionária entre Transportador e Carregador
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* SLOT DO DOCUMENTO DO ITEM II ESTILO NTS */}
@@ -1416,12 +1652,12 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                       Resumo dos Contratos e Tarifas Vigentes
                     </p>
                     <p className="leading-relaxed text-justify">
-                      Ainda não há contratos públicos celebrados ou alterados pendentes de
-                      publicação. O documento consolidado contemplando os 6 requisitos
-                      regulamentares da Portaria ANP nº 1/2003 e da Lei nº 14.134/2021 (nome do
-                      Carregador, tipo de serviço, vigências, capacidades, tarifas e relação
-                      acionária) será publicado diretamente neste slot pela equipe de regulação da
-                      TSB.
+                      Ainda não há contratos publicados. O demonstrativo consolidado contemplando os
+                      6 requisitos regulamentares da Portaria ANP nº 1/2003 e da Lei nº 14.134/2021
+                      (nome do Carregador, modalidade de serviço, vigências de início e término,
+                      evolução de capacidades, tarifas e descontos, e relação societária/acionária)
+                      será publicado diretamente neste slot pela equipe de regulação da TSB assim
+                      que houver celebração ou repactuação contratual.
                     </p>
                   </div>
                 )
@@ -1431,7 +1667,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
 
           {/* =========================================================================
               MONITORAMENTO DO CONGESTIONAMENTO (RES. ANP 11/2016, ART. 12)
-              Seção independente, sem numeral I ou II, estilo NTS limpo
+              Claramente rotulado para distinguir da estrutura estrita da Portaria ANP nº 1/2003.
+              Obrigação da Resolução ANP nº 11/2016 (Art. 12) — não integra o Art. 2º da Portaria nº 1/2003.
               ========================================================================= */}
           {headerCongestionamento.ativo && (
             <section
@@ -1440,9 +1677,15 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
             >
               <div className="space-y-2 border-b border-slate-200 pb-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display tracking-tight">
-                    {headerCongestionamento.titulo}
-                  </h2>
+                  <div>
+                    <span className="inline-block text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 mb-1.5">
+                      Obrigação da Resolução ANP nº 11/2016 (Art. 12) — não integra o Art. 2º da
+                      Portaria nº 1/2003
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display tracking-tight">
+                      {headerCongestionamento.titulo}
+                    </h2>
+                  </div>
                   <span className="text-xs text-slate-500 font-mono">
                     Resolução ANP nº 11/2016 • Art. 12
                   </span>

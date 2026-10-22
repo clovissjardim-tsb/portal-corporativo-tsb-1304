@@ -36,9 +36,9 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Baixar Arquivo',
   },
   boletim_secao1_header: {
-    titulo: 'II. Instalações de Transporte e Serviços Prestados',
+    titulo: 'I – Instalações de Transporte e Serviços Prestados',
     descricao:
-      'Reúne termos gerais, modelos contratuais, acordos de conexão e operacionais, mapas, capacidades técnicas e disponíveis, quantidades operadas e expansões planejadas.',
+      'Instalações de transporte e serviços prestados indicando termos e condições gerais, modelos de contrato por tipo de serviço, acordos operacionais e de conexão, mapa atualizado, características físicas e capacidade máxima, capacidade disponível para transporte firme, quantidades programadas e realizadas, interrupções e ampliações planejadas (Art. 2º, I da Portaria ANP nº 1/2003).',
   },
   boletim_secao2_header: {
     titulo: 'Quantidades programadas e realizadas (dados diários do mês anterior)',
@@ -61,9 +61,9 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Ver Resolução ANP nº 42/2012',
   },
   boletim_contratos_header: {
-    titulo: 'I. Contratos de Serviço de Transporte',
+    titulo: 'II – Contratos de Serviço de Transporte',
     descricao:
-      'Atualizado a cada novo contrato ou alteração. Em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021, reúne informações sobre contratos de serviço de transporte celebrados, contemplando: nome do Carregador, tipo de serviço contratado, datas de início e término de vigência, evolução das capacidades contratadas ao longo do prazo contratual, tarifas e descontos pactuados, e indicação de relação acionária direta ou indireta entre Transportador e Carregador.',
+      'Atualizado sempre que houver assinatura de um novo contrato ou alteração de contrato vigente, indicando: nome completo do Carregador; tipo de serviço; data de início e término do contrato; evolução das capacidades contratadas; tarifas e descontos aplicados a cada carregador; relação acionária entre Transportador e Carregador (Art. 2º, II da Portaria ANP nº 1/2003).',
     nome_arquivo_custom: 'Baixar Documento',
   },
   contratos_transporte_documento: {
