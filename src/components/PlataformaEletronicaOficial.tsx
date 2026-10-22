@@ -714,7 +714,7 @@ export default function PlataformaEletronica({
                         type="button"
                         className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
                       >
-                        Acessar POCC com Login
+                        Solicitar Acesso Via POCC
                         <ArrowRight className="h-3.5 w-3.5 text-slate-200" />
                       </Button>
                     </Link>
@@ -1225,7 +1225,7 @@ export default function PlataformaEletronica({
                         type="button"
                         className="bg-[#0a2540] hover:bg-[#143b73] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-xs flex items-center gap-2 cursor-pointer"
                       >
-                        Acessar POCC com Login
+                        Ofertar/Contratar Cessão Via POCC
                         <ArrowRight className="h-3.5 w-3.5 text-slate-200" />
                       </Button>
                     </Link>
