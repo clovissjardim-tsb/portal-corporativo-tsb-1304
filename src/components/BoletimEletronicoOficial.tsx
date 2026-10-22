@@ -295,9 +295,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     }
   }, [cabecalhosBdMap])
 
+  // Bloco I agora é Contratos de Serviço de Transporte (decisão explícita do usuário)
   const headerBlocoI = useMemo(() => {
-    const item = cabecalhosBdMap.get('boletim_secao1_header')
-    const fallback = CABECALHOS_FALLBACK.boletim_secao1_header
+    const item = cabecalhosBdMap.get('boletim_contratos_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_contratos_header
     return {
       titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
       descricao:
@@ -307,9 +308,10 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     }
   }, [cabecalhosBdMap])
 
+  // Bloco II agora é Instalações de Transporte e Serviços Prestados (decisão explícita do usuário)
   const headerBlocoII = useMemo(() => {
-    const item = cabecalhosBdMap.get('boletim_contratos_header')
-    const fallback = CABECALHOS_FALLBACK.boletim_contratos_header
+    const item = cabecalhosBdMap.get('boletim_secao1_header')
+    const fallback = CABECALHOS_FALLBACK.boletim_secao1_header
     return {
       titulo: item?.ativo !== false && item?.titulo ? item.titulo : fallback.titulo,
       descricao:
@@ -516,6 +518,28 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
     if (!headerBlocoI.item) return null
     return resolverUrlDocumento(headerBlocoI.item, '')
   }, [headerBlocoI])
+
+  // Helper do anexo do Bloco II (se houver)
+  const docBlocoII = useMemo(() => {
+    if (!headerBlocoII.item) return null
+    return resolverUrlDocumento(headerBlocoII.item, '')
+  }, [headerBlocoII])
+
+  // Estado do acordeão para as alíneas a) a j) do Bloco II
+  // Inicialmente todas fechadas por padrão (Set vazio). Permite abertura múltipla simultânea.
+  const [alineasAbertas, setAlineasAbertas] = useState<Set<string>>(new Set())
+
+  const toggleAlinea = (letra: string) => {
+    setAlineasAbertas((prev) => {
+      const novo = new Set(prev)
+      if (novo.has(letra)) {
+        novo.delete(letra)
+      } else {
+        novo.add(letra)
+      }
+      return novo
+    })
+  }
 
   return (
     <div className="space-y-10 animate-fade-in text-slate-800">

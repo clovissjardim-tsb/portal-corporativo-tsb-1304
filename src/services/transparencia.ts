@@ -36,7 +36,7 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Baixar Arquivo',
   },
   boletim_secao1_header: {
-    titulo: 'I. Instalações de Transporte e Serviços Prestados',
+    titulo: 'II. Instalações de Transporte e Serviços Prestados',
     descricao:
       'Reúne termos gerais, modelos contratuais, acordos de conexão e operacionais, mapas, capacidades técnicas e disponíveis, quantidades operadas e expansões planejadas.',
   },
@@ -61,7 +61,7 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Ver Resolução ANP nº 42/2012',
   },
   boletim_contratos_header: {
-    titulo: 'II. Contratos de Serviço de Transporte',
+    titulo: 'I. Contratos de Serviço de Transporte',
     descricao:
       'Atualizado a cada novo contrato ou alteração. Em cumprimento ao Item II da Portaria ANP nº 1/2003 e ao Art. 2º da Lei nº 14.134/2021, reúne informações sobre contratos de serviço de transporte celebrados, contemplando: nome do Carregador, tipo de serviço contratado, datas de início e término de vigência, evolução das capacidades contratadas ao longo do prazo contratual, tarifas e descontos pactuados, e indicação de relação acionária direta ou indireta entre Transportador e Carregador.',
     nome_arquivo_custom: 'Baixar Documento',
