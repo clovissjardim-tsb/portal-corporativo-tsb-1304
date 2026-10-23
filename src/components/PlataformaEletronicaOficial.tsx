@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   FileDown,
   ExternalLink,
@@ -223,7 +224,17 @@ export default function PlataformaEletronica({
   carregandoCessoes,
   carregarOfertasCessao,
 }: PlataformaEletronicaProps) {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [gerandoPdfAcesso, setGerandoPdfAcesso] = useState(false)
+
+  const handleSolicitarAcessoClick = () => {
+    if (isAuthenticated) {
+      navigate('/poc')
+    } else {
+      navigate('/login')
+    }
+  }
 
   const handleBaixarFormularioAcessoPdf = async () => {
     setGerandoPdfAcesso(true)
@@ -784,17 +795,17 @@ export default function PlataformaEletronica({
 
                         {/* AÇÃO PRINCIPAL E DOCUMENTOS EM PDF */}
                         <div className="space-y-3 pt-1">
-                          {/* Botão de Solicitação Direta via Módulo POCC */}
+                          {/* Botão de Solicitação Direta via Área do Carregador */}
                           <div>
-                            <Link to="/poc">
-                              <Button
-                                size="sm"
-                                className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-                              >
-                                <Lock className="h-3.5 w-3.5 text-slate-200" />
-                                Solicitar Acesso
-                              </Button>
-                            </Link>
+                            <Button
+                              size="sm"
+                              type="button"
+                              onClick={handleSolicitarAcessoClick}
+                              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            >
+                              <Lock className="h-3.5 w-3.5 text-slate-200" />
+                              Solicitar Acesso
+                            </Button>
                           </div>
 
                           {/* 1. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
