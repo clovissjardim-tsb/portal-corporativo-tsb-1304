@@ -88,10 +88,26 @@ onRecordCreate((e) => {
   }
 
   const repLegal = record.getString('representante_legal')
+  // Se representante_legal não estiver preenchido diretamente, verifica se há nome de usuário logado
   if (!repLegal || repLegal.trim().length < 2) {
-    throw new BadRequestError(
-      'O nome do Representante Legal / Procurador é obrigatório (Art. 10, I da Res. ANP nº 11/2016).',
-    )
+    // Permite preenchimento automático a partir do usuário autenticado se disponível
+    let fallbackNome = ''
+    try {
+      if ($apis && $apis.requestInfo && $apis.requestInfo(e)) {
+        const info = $apis.requestInfo(e)
+        if (info.authRecord) {
+          fallbackNome =
+            info.authRecord.getString('responsavel') || info.authRecord.getString('name') || ''
+        }
+      }
+    } catch (_) {}
+    if (fallbackNome && fallbackNome.trim().length >= 2) {
+      record.set('representante_legal', fallbackNome.trim())
+    } else {
+      throw new BadRequestError(
+        'O nome do Representante Legal / Procurador é obrigatório (Art. 10, I da Res. ANP nº 11/2016).',
+      )
+    }
   }
 
   const capacidade = record.getFloat('capacidade')

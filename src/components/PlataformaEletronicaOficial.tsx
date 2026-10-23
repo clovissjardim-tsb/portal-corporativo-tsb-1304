@@ -223,9 +223,11 @@ export default function PlataformaEletronica({
 
   const handleSolicitarAcessoClick = () => {
     if (isAuthenticated) {
-      navigate('/poc')
+      navigate('/poc#solicitacao-acesso-inciso-vii')
     } else {
-      navigate('/login')
+      navigate('/login', {
+        state: { from: { pathname: '/poc', hash: '#solicitacao-acesso-inciso-vii' } },
+      })
     }
   }
   // Itens da Plataforma Eletrônica gerenciados pelo PocketBase

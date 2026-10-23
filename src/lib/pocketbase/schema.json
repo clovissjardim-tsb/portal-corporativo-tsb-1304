@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T17:39:21.872Z",
+  "generatedAt": "2026-10-23T17:52:36.043Z",
   "collections": [
     {
       "name": "users",
@@ -308,7 +308,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["portal_web", "manual_interno"]
+          "selectValues": ["portal_web", "manual_interno", "area_carregador"]
         },
         {
           "name": "observacoes",
