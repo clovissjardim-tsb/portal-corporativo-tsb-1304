@@ -214,11 +214,17 @@ export function POC() {
       const chavesPOCC = [
         'pocc_regulamento',
         'pocc_minuta_contrato',
+        'pocc_contrato_master_assinado',
         'pocc_proposta_tarifaria',
+        'pocc_tarifa_contrato_extraordinario',
         'pocc_capacidade_ofertada',
+        'pocc_calculo_capacidade',
+        'pocc_cronograma_indicativo',
+        'pocc_anexo4_pocc',
         'pocc_modelo_manifestacao_interesse',
         'pocc_modelo_proposta_garantida',
         'pocc_requisitos_habilitacao',
+        'pocc_aprovacao_anp_oficio555',
         'pocc_resultados_ciclo',
       ]
       const docs = itensTransp.filter((it) => chavesPOCC.includes(it.chave))
@@ -445,16 +451,28 @@ export function POC() {
         'Regras operacionais, requisitos de habilitação, metodologia de alocação e garantias exigidas dos Carregadores.',
       fallbackUrl: '',
       fallbackNome: 'Regulamento do POCC (PDF)',
+      formato: 'PDF',
     },
     {
       chave: 'pocc_minuta_contrato',
       inciso: 'Art. 37-A, §1º, II e §2º',
       titulo: 'Minuta do Contrato de Serviço de Transporte de Gás Natural',
       descricao:
-        'Minuta padronizada do Contrato de Serviço de Transporte Firme exigida pela Resolução ANP nº 961/2023.',
+        'Minuta padronizada do Contrato de Serviço de Transporte Firme exigida pela Resolução ANP nº 961/2023 (submetida à aprovação).',
       fallbackUrl:
         'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
       fallbackNome: 'Minuta Contrato de Transporte (PDF)',
+      formato: 'PDF',
+    },
+    {
+      chave: 'pocc_contrato_master_assinado',
+      inciso: 'Contrato Master TSB',
+      titulo: 'Contrato Master Completo (assinado, 2026)',
+      descricao:
+        'Instrumento contratual fechado e assinado padrão da Transportadora Sulbrasileira de Gás - TSB para o ciclo regulatório de 2026.',
+      fallbackUrl: 'https://www.tsb.com.br/wp-content/uploads/2025/12/CONTRATO-MASTER-2026.pdf',
+      fallbackNome: 'Contrato Master Completo 2026 (PDF)',
+      formato: 'PDF',
     },
     {
       chave: 'pocc_proposta_tarifaria',
@@ -464,6 +482,17 @@ export function POC() {
         'Proposta tarifária submetida à Consulta Pública Tarifária e homologada pela ANP para o ciclo.',
       fallbackUrl: '',
       fallbackNome: 'Proposta Tarifária (PDF)',
+      formato: 'PDF',
+    },
+    {
+      chave: 'pocc_tarifa_contrato_extraordinario',
+      inciso: 'Tarifa T3 2026',
+      titulo: 'Tarifa do Contrato Extraordinário (T3 para 2026)',
+      descricao:
+        'Número tarifário real homologado para o Trecho 3 (T3) no horizonte de 2026 para contratos de transporte extraordinário.',
+      fallbackUrl: 'https://www.tsb.com.br/wp-content/uploads/2026/02/Tarifa-T3-para-2026-1.docx',
+      fallbackNome: 'Tarifa T3 para 2026 (.docx)',
+      formato: 'DOC',
     },
   ]
 
@@ -494,6 +523,18 @@ export function POC() {
   // Slot e Documentos de Resultados do Ciclo
   const slotsResultadosCiclo = [
     {
+      chave: 'pocc_aprovacao_anp_oficio555',
+      inciso: 'Ofício ANP nº 555/2025-SIM',
+      titulo: 'Aprovação da ANP (Ofício nº 555/2025-SIM)',
+      descricao:
+        'Documento inaugural da ANP que autoriza a realização do ciclo do POCC para contratação de capacidade extraordinária na malha TSB.',
+      fallbackUrl:
+        'https://www.tsb.com.br/wp-content/uploads/2026/04/OFICIO-No-555_2025_SIM-CTC_SIM_ANP-RJ-e.pdf',
+      fallbackNome: 'Ofício ANP nº 555/2025-SIM (PDF)',
+      etapa: 'Inauguração do Ciclo • Autorização ANP',
+      formato: 'PDF',
+    },
+    {
       chave: 'pocc_resultados_ciclo',
       inciso: 'Art. 37-A, §5º, II a V',
       titulo: 'Despacho ANP e Atos Homologatórios das Etapas do POCC (DOU)',
@@ -503,6 +544,7 @@ export function POC() {
         'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.11-DESPACHO-SIM-ANP-No-1.328-11-2024-DOU.pdf',
       fallbackNome: 'Despacho ANP Proposta Tarifária e POCC (DOU)',
       etapa: 'Etapa II • Tarifas & Rito',
+      formato: 'PDF',
     },
     {
       chave: 'pocc_resultado_manifestacoes',
@@ -513,6 +555,7 @@ export function POC() {
       fallbackUrl: '',
       fallbackNome: 'Resultado das Manifestações de Interesse (PDF)',
       etapa: 'Etapa I • Demanda Apurada',
+      formato: 'PDF',
     },
     {
       chave: 'pocc_resultado_propostas_alocacao',
@@ -523,6 +566,7 @@ export function POC() {
       fallbackUrl: '',
       fallbackNome: 'Alocação Final de Capacidade (PDF)',
       etapa: 'Etapas III–V • Alocação e Registro',
+      formato: 'PDF',
     },
   ]
 
@@ -759,9 +803,20 @@ export function POC() {
                         <span className="text-xs font-mono font-semibold text-[#0284c7]">
                           {slot.inciso}
                         </span>
+                        {temDoc && (
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              slot.formato === 'DOC'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : 'bg-sky-50 text-[#0284c7] border border-sky-200'
+                            }`}
+                          >
+                            {slot.formato || 'PDF'}
+                          </span>
+                        )}
                         {temDoc && resolved.isUpload && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                            PDF Oficial
+                            Upload Oficial
                           </span>
                         )}
                       </div>
@@ -798,7 +853,9 @@ export function POC() {
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
               <span>
                 Editoria normativa: slots <code>pocc_regulamento</code>,{' '}
-                <code>pocc_minuta_contrato</code> e <code>pocc_proposta_tarifaria</code>.
+                <code>pocc_minuta_contrato</code>, <code>pocc_contrato_master_assinado</code>,{' '}
+                <code>pocc_proposta_tarifaria</code> e{' '}
+                <code>pocc_tarifa_contrato_extraordinario</code>.
               </span>
               <span className="text-slate-400">
                 Conformidade: Resolução ANP nº 961/2023 (Art. 37-A, §§ 1º ao 4º)
@@ -823,6 +880,20 @@ export function POC() {
                 isUpload: false,
               }
 
+          const itemCalc = instrumentosNormativos.find(
+            (it) => it.chave === 'pocc_calculo_capacidade',
+          )
+          const resolvedCalc = itemCalc
+            ? resolverUrlDocumento(
+                itemCalc,
+                'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.8-CA%CC%81LCULO-DA-CAPACIDADE-DE-TRANSPORTE.pdf',
+              )
+            : {
+                url: 'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.8-CA%CC%81LCULO-DA-CAPACIDADE-DE-TRANSPORTE.pdf',
+                nomeExibicao: 'Cálculo da Capacidade de Transporte (PDF)',
+                isUpload: false,
+              }
+
           return (
             <Card
               id="capacidade-ofertada"
@@ -843,17 +914,50 @@ export function POC() {
                       'Capacidade de transporte ofertada (m³/dia) e capacidade disponível por Ponto de Entrada e Zona de Saída na malha TSB.'}
                   </p>
                 </div>
-                {resolvedCap.url && (
-                  <a
-                    href={resolvedCap.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs self-start sm:self-auto shrink-0"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span>{resolvedCap.nomeExibicao || 'Demonstrativo Oficial (PDF)'}</span>
-                  </a>
-                )}
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
+                  {resolvedCap.url ? (
+                    <a
+                      href={resolvedCap.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-sky-500/20 text-sky-200 uppercase">
+                        PDF
+                      </span>
+                      <span>
+                        {resolvedCap.nomeExibicao || 'Demonstrativo de Capacidades (PDF)'}
+                      </span>
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-slate-500 bg-slate-100 border border-slate-200">
+                      Demonstrativo será publicado após aprovação pela ANP
+                    </span>
+                  )}
+
+                  {resolvedCalc.url ? (
+                    <a
+                      href={resolvedCalc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-white hover:bg-slate-50 text-[#0a2540] border border-slate-300 transition-colors cursor-pointer shadow-2xs"
+                      title={itemCalc?.descricao || 'Memória técnica 1.7.8'}
+                    >
+                      <Download className="h-3.5 w-3.5 text-[#0284c7]" />
+                      <span className="text-[10px] font-bold px-1 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200 uppercase">
+                        PDF
+                      </span>
+                      <span>
+                        {resolvedCalc.nomeExibicao || 'Cálculo da Capacidade (PDF 1.7.8)'}
+                      </span>
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-slate-500 bg-slate-100 border border-slate-200">
+                      Cálculo de capacidade será publicado após aprovação pela ANP
+                    </span>
+                  )}
+                </div>
               </CardHeader>
 
               <CardContent className="p-4 sm:p-6 space-y-4">
@@ -963,8 +1067,9 @@ export function POC() {
 
                 <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
                   <span>
-                    Editoria: slot <code>pocc_capacidade_ofertada</code> (gerenciável pela Gestão
-                    Interna da TSB).
+                    Editoria: slots <code>pocc_capacidade_ofertada</code> e{' '}
+                    <code>pocc_calculo_capacidade</code> (Item 1.7.8 — gerenciáveis pela Gestão
+                    Interna).
                   </span>
                   <span className="text-slate-400">
                     Padrão tsb.com.br/poc • Dados apurados para o horizonte regulatório vigente
@@ -1131,6 +1236,136 @@ export function POC() {
                 )
               })}
             </div>
+
+            {/* DOWNLOADS OFICIAIS DO CRONOGRAMA INDICATIVO E ANEXO 4 */}
+            {(() => {
+              const itemCronoInd = instrumentosNormativos.find(
+                (it) => it.chave === 'pocc_cronograma_indicativo',
+              )
+              const resolvedCronoInd = itemCronoInd
+                ? resolverUrlDocumento(
+                    itemCronoInd,
+                    'https://www.tsb.com.br/wp-content/uploads/2026/04/Cronograma-Indicativo-Ciclo-Regulatorio-2026-2030.pdf',
+                  )
+                : {
+                    url: 'https://www.tsb.com.br/wp-content/uploads/2026/04/Cronograma-Indicativo-Ciclo-Regulatorio-2026-2030.pdf',
+                    nomeExibicao: 'Cronograma Indicativo 2026–2030 (PDF)',
+                    isUpload: false,
+                  }
+
+              const itemAnexo4 = instrumentosNormativos.find(
+                (it) => it.chave === 'pocc_anexo4_pocc',
+              )
+              const resolvedAnexo4 = itemAnexo4
+                ? resolverUrlDocumento(
+                    itemAnexo4,
+                    'https://www.tsb.com.br/wp-content/uploads/2025/01/ANEXO-4-Cronograma-POCC-2025-PRODUTO-FIRME-ANUAL-TSB.pdf',
+                  )
+                : {
+                    url: 'https://www.tsb.com.br/wp-content/uploads/2025/01/ANEXO-4-Cronograma-POCC-2025-PRODUTO-FIRME-ANUAL-TSB.pdf',
+                    nomeExibicao: 'Anexo 4 — Cronograma POCC 2025 (PDF)',
+                    isUpload: false,
+                  }
+
+              return (
+                <div className="p-4 bg-white rounded-lg border border-slate-200 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                        <FileText className="h-4 w-4 text-[#0284c7]" />
+                        Documentação Oficial de Prazos e Cronogramas do POCC
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Baixe os cronogramas oficiais homologados e anexos normativos da TSB.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      Slots: pocc_cronograma_indicativo &bull; pocc_anexo4_pocc
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="p-3 bg-slate-50/70 border border-slate-200 rounded-lg flex flex-col justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-semibold text-[#0284c7]">
+                            Ciclo Regulatório 2026–2030
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
+                            PDF
+                          </span>
+                        </div>
+                        <div className="text-xs font-semibold text-slate-900">
+                          {itemCronoInd?.titulo ||
+                            'Cronograma Indicativo do Ciclo Regulatório 2026–2030'}
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          {itemCronoInd?.descricao ||
+                            'Cronograma indicativo oficial com o horizonte plurianual 2026–2030 do ciclo regulatório.'}
+                        </p>
+                      </div>
+                      <div className="pt-1">
+                        {resolvedCronoInd.url ? (
+                          <a
+                            href={resolvedCronoInd.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            <span>
+                              {resolvedCronoInd.nomeExibicao || 'Baixar Cronograma (PDF)'}
+                            </span>
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-slate-500 bg-slate-100 border border-slate-200">
+                            Documento será publicado após aprovação pela ANP
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-slate-50/70 border border-slate-200 rounded-lg flex flex-col justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-semibold text-[#0284c7]">
+                            POCC 2025 &bull; Produto Firme Anual
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
+                            PDF
+                          </span>
+                        </div>
+                        <div className="text-xs font-semibold text-slate-900">
+                          {itemAnexo4?.titulo ||
+                            'Anexo 4 — Cronograma POCC Produto Firme Anual TSB'}
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          {itemAnexo4?.descricao ||
+                            'Documento oficial do Anexo 4 contendo o detalhamento de prazos e ritos do POCC.'}
+                        </p>
+                      </div>
+                      <div className="pt-1">
+                        {resolvedAnexo4.url ? (
+                          <a
+                            href={resolvedAnexo4.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-white hover:bg-slate-50 text-[#0a2540] border border-slate-300 transition-colors cursor-pointer shadow-2xs"
+                          >
+                            <Download className="h-3.5 w-3.5 text-[#0284c7]" />
+                            <span>{resolvedAnexo4.nomeExibicao || 'Baixar Anexo 4 (PDF)'}</span>
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-slate-500 bg-slate-100 border border-slate-200">
+                            Documento será publicado após aprovação pela ANP
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* QUADRO INFORMATIVO SOBRE O RITO SEM LEILÃO */}
             <div className="p-3.5 bg-sky-50/70 rounded-lg border border-sky-200 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1420,16 +1655,17 @@ export function POC() {
                     <div className="space-y-0.5 max-w-2xl">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-semibold text-[#0284c7]">
+                          {slot.inciso ? `${slot.inciso} • ` : ''}
                           {slot.etapa}
                         </span>
                         {temDoc && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
-                            PDF
+                            {slot.formato || 'PDF'}
                           </span>
                         )}
                         {temDoc && resolved.isUpload && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                            PDF Oficial
+                            Upload Oficial
                           </span>
                         )}
                       </div>
@@ -1465,8 +1701,9 @@ export function POC() {
 
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
               <span>
-                Editoria: slot <code>pocc_resultados_ciclo</code> (atos homologatórios e Despachos
-                no DOU).
+                Editoria: slots <code>pocc_aprovacao_anp_oficio555</code> (inauguração do ciclo via
+                Ofício ANP) e <code>pocc_resultados_ciclo</code> (atos homologatórios e Despachos no
+                DOU).
               </span>
               <span className="text-slate-400">
                 Publicações abertas conforme Art. 37-A, §5º da Resolução ANP nº 961/2023

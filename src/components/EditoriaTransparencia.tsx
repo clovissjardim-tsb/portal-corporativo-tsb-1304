@@ -959,11 +959,11 @@ export function EditoriaTransparencia() {
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <Upload className="h-3.5 w-3.5 text-slate-500" />
-                    Enviar Novo Arquivo PDF (Upload Direto no Servidor):
+                    Enviar Novo Arquivo (Upload Direto no Servidor — PDF, DOCX, etc.):
                   </Label>
                   <Input
                     type="file"
-                    accept="application/pdf"
+                    accept="application/pdf,.docx,.doc,.xlsx,.xls"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         setArquivoSelecionado(e.target.files[0])
@@ -1035,11 +1035,11 @@ export function EditoriaTransparencia() {
 
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold text-slate-700">
-                      Upload PDF Secundário:
+                      Upload Arquivo Secundário:
                     </Label>
                     <Input
                       type="file"
-                      accept="application/pdf"
+                      accept="application/pdf,.docx,.doc,.xlsx,.xls"
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           setArquivoSecundarioSelecionado(e.target.files[0])
