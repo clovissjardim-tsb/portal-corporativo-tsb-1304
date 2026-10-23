@@ -37,6 +37,7 @@ import {
   FileCheck2,
   ExternalLink,
   Check,
+  Calendar,
 } from 'lucide-react'
 
 // 5 etapas literais do Art. 37-A, §5º da Resolução ANP nº 11/2016 (com redação da Res. 961/2023)
@@ -631,20 +632,92 @@ export function POC() {
               <p>
                 O POCC é o procedimento regulatório conduzido quando há{' '}
                 <strong>capacidade nova</strong> a oferecer (projetos de construção ou expansão da
-                malha). Quando não houver rodada aberta, os 3 instrumentos da transportadora
-                permanecem publicados neste ambiente para <strong>livre consulta</strong> de
-                potenciais carregadores e agentes de mercado, subvencionando o planejamento prévio e
-                as estimativas de contratação.
+                malha). Quando não houver rodada aberta, os instrumentos e cronogramas da
+                transportadora permanecem publicados neste ambiente para{' '}
+                <strong>livre consulta pública</strong> de potenciais carregadores e agentes de
+                mercado, subvencionando o planejamento prévio e as estimativas de contratação.
               </p>
+            </div>
+          </div>
+
+          {/* ÍNDICE RÁPIDO DOS 6 BLOCOS PÚBLICOS */}
+          <div className="pt-2">
+            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span>Seções Regulatórias de Acesso Público:</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <a
+                href="#instrumentos-art37a"
+                className="px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-[#0284c7] hover:bg-sky-50/50 text-[11px] font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  1
+                </span>
+                <span className="truncate">Instrumentos §2º</span>
+              </a>
+              <a
+                href="#capacidade-ofertada"
+                className="px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-[#0284c7] hover:bg-sky-50/50 text-[11px] font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  2
+                </span>
+                <span className="truncate">Capacidade Ofertada</span>
+              </a>
+              <a
+                href="#cronograma-pocc"
+                className="px-2.5 py-1.5 rounded-md border-2 border-sky-400 bg-sky-50 hover:bg-sky-100 text-[11px] font-bold text-[#0a2540] transition-colors flex items-center gap-1.5 shadow-2xs"
+              >
+                <span className="w-4 h-4 rounded-full bg-[#0a2540] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                  3
+                </span>
+                <span className="truncate flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-[#0284c7] shrink-0" />
+                  Cronograma (5 Etapas)
+                </span>
+              </a>
+              <a
+                href="#modelos-carregador"
+                className="px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-[#0284c7] hover:bg-sky-50/50 text-[11px] font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  4
+                </span>
+                <span className="truncate">Modelos Carregador</span>
+              </a>
+              <a
+                href="#requisitos-habilitacao"
+                className="px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-[#0284c7] hover:bg-sky-50/50 text-[11px] font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  5
+                </span>
+                <span className="truncate">Requisitos Habilitação</span>
+              </a>
+              <a
+                href="#resultados-ciclo"
+                className="px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-[#0284c7] hover:bg-sky-50/50 text-[11px] font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  6
+                </span>
+                <span className="truncate">Resultados do Ciclo</span>
+              </a>
             </div>
           </div>
         </div>
 
         {/* 1.1 OS 3 INSTRUMENTOS DA TRANSPORTADORA DO ART. 37-A §2º */}
-        <Card className="border border-slate-200 shadow-none bg-white">
+        <Card
+          id="instrumentos-art37a"
+          className="border border-slate-200 shadow-none bg-white scroll-mt-6"
+        >
           <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-slate-100 text-[#0a2540] text-xs font-bold flex items-center justify-center border border-slate-200">
+                  1
+                </span>
                 <FileText className="h-4 w-4 text-[#0a2540]" />
                 <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
                   Instrumentos da Transportadora (Art. 37-A, §2º)
@@ -751,11 +824,16 @@ export function POC() {
               }
 
           return (
-            <Card className="border border-slate-200 shadow-none bg-white">
+            <Card
+              id="capacidade-ofertada"
+              className="border border-slate-200 shadow-none bg-white scroll-mt-6"
+            >
               <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#0284c7]" />
+                    <span className="w-5 h-5 rounded-full bg-slate-100 text-[#0a2540] text-xs font-bold flex items-center justify-center border border-slate-200">
+                      2
+                    </span>
                     <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
                       Capacidade Ofertada e Disponível por Ponto
                     </CardTitle>
@@ -897,69 +975,119 @@ export function POC() {
           )
         })()}
 
-        {/* 1.3 LINHA DO TEMPO DAS 5 ETAPAS DO §5º (COM DESTAQUE E SEM LEILÃO) */}
-        <Card className="border border-slate-200 shadow-none bg-white">
-          <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="space-y-0.5">
+        {/* 1.3 LINHA DO TEMPO DAS 5 ETAPAS DO §5º (CRONOGRAMA OFICIAL COM ALTO DESTAQUE E SEM LEILÃO) */}
+        <Card
+          id="cronograma-pocc"
+          className="border-2 border-sky-300/80 shadow-md bg-gradient-to-b from-white via-sky-50/20 to-white scroll-mt-6 overflow-hidden ring-1 ring-sky-100"
+        >
+          {/* FAIXA SUPERIOR DE DESTAQUE DO CRONOGRAMA */}
+          <div className="bg-[#0a2540] text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 font-bold tracking-wide">
+              <Clock className="h-4 w-4 text-sky-400 shrink-0 animate-pulse" />
+              <span className="uppercase text-[11px] text-sky-200">Régua Temporal Regulatória</span>
+              <span className="text-slate-400 hidden sm:inline">•</span>
+              <span className="text-white text-[12px]">Cronograma Oficial do Ciclo 2026/2027</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono bg-sky-500/20 text-sky-200 px-2 py-0.5 rounded border border-sky-400/30">
+                Consulta Pública Livre
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/40">
+                Rito Sem Leilão
+              </span>
+            </div>
+          </div>
+
+          <CardHeader className="pb-3 pt-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#0a2540]" />
-                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
-                  Etapas Regulatórias do Rito do POCC (Art. 37-A, §5º)
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7]" />
+                <CardTitle className="text-base sm:text-xl font-bold text-[#0a2540]">
+                  3. Cronograma &amp; Linha do Tempo das 5 Etapas (Art. 37-A, §5º)
                 </CardTitle>
               </div>
-              <p className="text-xs text-slate-500">
-                Rito oficial de 5 etapas sequenciais estabelecido pelo §5º do Art. 37-A da Resolução
-                ANP nº 11/2016 (com redação da Resolução ANP nº 961/2023).
+              <p className="text-xs text-slate-600 max-w-3xl leading-relaxed">
+                Linha do tempo oficial com os prazos estimados, marcos regulatórios e a fase ativa
+                do ciclo do POCC, estabelecidos pela Resolução ANP nº 961/2023. Disponível para
+                consulta pública sem necessidade de autenticação.
               </p>
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-sky-50 text-[#0284c7] border border-sky-200 self-start sm:self-auto">
-              {temManifestacao
-                ? `Etapa Atual do seu Cadastro: ${ETAPAS_ART37A[etapaAtivaNumero - 1].romano}`
-                : 'Ciclo em Andamento: Etapa I'}
-            </span>
+            <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded bg-sky-100 text-[#0a2540] border border-sky-300 shadow-2xs">
+                {temManifestacao
+                  ? `Etapa Atual do seu Cadastro: ${ETAPAS_ART37A[etapaAtivaNumero - 1].romano}`
+                  : 'Fase Regulatória Ativa: Etapa I'}
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">
+                5 etapas sequenciais • Ciclo 2026/2027
+              </span>
+            </div>
           </CardHeader>
 
-          <CardContent className="p-4 sm:p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <CardContent className="p-4 sm:p-6 space-y-5">
+            {/* LINHA DO TEMPO HORIZONTAL / EM GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3.5">
               {ETAPAS_ART37A.map((etapa) => {
-                const isAtiva = etapa.numero === etapaAtivaNumero
-                const isPassada = etapa.numero < etapaAtivaNumero
                 const cronoItem = cronograma.find((c) => c.numero_etapa === etapa.numero)
+                // Se o backend tiver status da etapa configurado na Gestão, usa para compor estado
+                const statusBackend = cronoItem?.status_etapa
+                const isAtiva = statusBackend
+                  ? statusBackend === 'Fase Ativa' || statusBackend === 'Em Andamento'
+                  : etapa.numero === etapaAtivaNumero
+                const isPassada = statusBackend
+                  ? statusBackend === 'Concluída'
+                  : etapa.numero < etapaAtivaNumero
+
+                const rotuloStatus =
+                  statusBackend || (isAtiva ? 'Fase Ativa' : isPassada ? 'Concluída' : 'Pendente')
 
                 return (
                   <div
                     key={etapa.numero}
-                    className={`p-3.5 rounded-lg border text-left flex flex-col justify-between transition-colors ${
+                    className={`p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all relative ${
                       isAtiva
-                        ? 'border-[#0a2540] bg-slate-50/90 shadow-2xs'
+                        ? 'border-[#0a2540] bg-white ring-2 ring-[#0a2540]/20 shadow-sm'
                         : isPassada
                           ? 'border-emerald-300 bg-emerald-50/40'
-                          : 'border-slate-200 bg-white'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-1">
-                        <span
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            isAtiva
-                              ? 'bg-[#0a2540] text-white'
-                              : isPassada
-                                ? 'bg-[#15803d] text-white'
-                                : 'bg-slate-200 text-slate-600'
-                          }`}
-                        >
-                          {isPassada ? '✓' : etapa.romano}
-                        </span>
+                    {/* Indicador de fase ativa no topo */}
+                    {isAtiva && (
+                      <div className="absolute -top-2.5 right-3 bg-[#0a2540] text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                        Em Andamento
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-1 pt-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-transform ${
+                              isAtiva
+                                ? 'bg-[#0a2540] text-white shadow-xs scale-105'
+                                : isPassada
+                                  ? 'bg-[#15803d] text-white'
+                                  : 'bg-slate-100 text-slate-700 border border-slate-300'
+                            }`}
+                          >
+                            {isPassada ? '✓' : etapa.romano}
+                          </span>
+                          <span className="text-[11px] font-bold text-[#0a2540]">
+                            Etapa {etapa.romano}
+                          </span>
+                        </div>
+
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                             isAtiva
-                              ? 'bg-[#0a2540] text-white'
+                              ? 'bg-sky-100 text-[#0a2540] border border-sky-300'
                               : isPassada
                                 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
                                 : 'bg-slate-100 text-slate-600'
                           }`}
                         >
-                          {isAtiva ? 'Etapa Atual' : isPassada ? 'Concluída' : 'Pendente'}
+                          {rotuloStatus}
                         </span>
                       </div>
 
@@ -967,8 +1095,8 @@ export function POC() {
                         {etapa.inciso}
                       </div>
 
-                      <h4 className="text-xs font-bold text-[#0a2540] leading-snug">
-                        {etapa.titulo}
+                      <h4 className="text-xs font-bold text-[#0a2540] leading-snug min-h-[2rem]">
+                        {cronoItem?.titulo || etapa.titulo}
                       </h4>
 
                       <p className="text-[11px] text-slate-600 leading-relaxed">
@@ -976,35 +1104,63 @@ export function POC() {
                       </p>
                     </div>
 
-                    {cronoItem?.periodo_estimado && (
-                      <div className="text-[10px] text-slate-500 font-mono mt-2 pt-1.5 border-t border-slate-200">
-                        Prazo: {cronoItem.periodo_estimado}
+                    <div className="mt-3 pt-2 border-t border-slate-200/80 space-y-1">
+                      <div className="text-[10px] text-slate-700 font-mono font-semibold flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-[#0284c7] shrink-0" />
+                        <span>
+                          {cronoItem?.periodo_estimado
+                            ? cronoItem.periodo_estimado
+                            : etapa.numero === 1
+                              ? 'Janeiro a Março de 2026'
+                              : etapa.numero === 2
+                                ? 'Abril a Junho de 2026'
+                                : etapa.numero === 3
+                                  ? 'Julho a Agosto de 2026'
+                                  : etapa.numero === 4
+                                    ? 'Setembro a Outubro de 2026'
+                                    : 'Novembro a Dezembro de 2026'}
+                        </span>
                       </div>
-                    )}
+                      {cronoItem?.observacoes && (
+                        <p className="text-[10px] text-slate-500 italic leading-snug">
+                          {cronoItem.observacoes}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )
               })}
             </div>
 
-            {/* NOTA DE AUSÊNCIA DE LEILÃO NO ESCOPO TSB */}
-            <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span>
-                <strong>Nota Regulatória:</strong> Em conformidade com o escopo do POCC da TSB, a
-                alocação é realizada diretamente a partir das propostas vinculantes garantidas e das
-                tarifas homologadas pela ANP, <em>sem etapa de leilão</em>.
-              </span>
-              <span className="font-semibold text-slate-800 shrink-0 font-mono">
-                Ciclo: 2026/2027
+            {/* QUADRO INFORMATIVO SOBRE O RITO SEM LEILÃO */}
+            <div className="p-3.5 bg-sky-50/70 rounded-lg border border-sky-200 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5 sm:mt-0" />
+                <span>
+                  <strong>Rito Regulatória TSB:</strong> A alocação é conduzida diretamente a partir
+                  das <em>propostas vinculantes garantidas</em> (Etapa III) sob tarifas homologadas
+                  pela ANP, <strong>sem etapa de leilão</strong>, conforme diretrizes da Resolução
+                  ANP nº 961/2023.
+                </span>
+              </div>
+              <span className="font-semibold text-slate-900 shrink-0 font-mono bg-white px-2 py-0.5 rounded border border-sky-200 self-start sm:self-auto">
+                Ciclo Oficial: 2026/2027
               </span>
             </div>
           </CardContent>
         </Card>
 
         {/* 1.4 MODELOS DOS INSTRUMENTOS DO CARREGADOR (NOVO ITEM 2) */}
-        <Card className="border border-slate-200 shadow-none bg-white">
+        <Card
+          id="modelos-carregador"
+          className="border border-slate-200 shadow-none bg-white scroll-mt-6"
+        >
           <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-slate-100 text-[#0a2540] text-xs font-bold flex items-center justify-center border border-slate-200">
+                  4
+                </span>
                 <FileText className="h-4 w-4 text-[#0a2540]" />
                 <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
                   Modelos dos Instrumentos do Carregador
@@ -1116,10 +1272,16 @@ export function POC() {
               }
 
           return (
-            <Card className="border border-slate-200 shadow-none bg-white">
+            <Card
+              id="requisitos-habilitacao"
+              className="border border-slate-200 shadow-none bg-white scroll-mt-6"
+            >
               <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 text-[#0a2540] text-xs font-bold flex items-center justify-center border border-slate-200">
+                      5
+                    </span>
                     <ShieldCheck className="h-4 w-4 text-[#0a2540]" />
                     <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
                       Requisitos de Habilitação do Carregador
@@ -1209,10 +1371,16 @@ export function POC() {
         })()}
 
         {/* 1.6 RESULTADOS DAS ETAPAS DO CICLO (NOVO ITEM 4) */}
-        <Card className="border border-slate-200 shadow-none bg-white">
+        <Card
+          id="resultados-ciclo"
+          className="border border-slate-200 shadow-none bg-white scroll-mt-6"
+        >
           <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-slate-100 text-[#0a2540] text-xs font-bold flex items-center justify-center border border-slate-200">
+                  6
+                </span>
                 <FileCheck className="h-4 w-4 text-[#0a2540]" />
                 <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
                   Resultados das Etapas do Ciclo
