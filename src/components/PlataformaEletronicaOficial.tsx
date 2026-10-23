@@ -968,388 +968,6 @@ export default function PlataformaEletronica({
           </section>
 
           {/* ========================================================
-              TABELA CONSOLIDADA DOS INCISOS I A VIII (PRESERVADA COM SEUS BOTÕES)
-              ======================================================== */}
-          {subAba === 'i_vi' && (
-            <div className="space-y-4 pt-6 border-t border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-                <h3 className="text-sm font-bold text-[#0a2540] uppercase tracking-wider font-display">
-                  Quadro Consolidado de Documentos e Estudos (Incisos I a VIII)
-                </h3>
-                <span className="text-xs text-slate-500">Resolução ANP nº 11/2016 • Art. 9º</span>
-              </div>
-
-              {/* TABELA PRINCIPAL NO MESMO PADRÃO DO BOLETIM ELETRÔNICO OFICIAL */}
-              <div className="overflow-x-auto border border-slate-200 rounded-md bg-white">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3 w-16 text-center border-r border-slate-200 tracking-wider uppercase text-[11px]">
-                        Inciso
-                      </th>
-                      <th className="p-3 w-3/5 sm:w-2/3 border-r border-slate-200 tracking-wider uppercase text-[11px]">
-                        Exigência Legal (Art. 9º, Res. ANP 11/2016)
-                      </th>
-                      <th className="p-3 w-2/5 sm:w-1/3 text-center tracking-wider uppercase text-[11px]">
-                        Arquivo / Consulta
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {/* INCISO I */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_i')
-                      if (item && item.ativo === false) return null
-                      const doc = resolverUrlDocumento(
-                        item,
-                        'https://tsb.com.br/wp-content/uploads/2023/04/fluxo_fisico.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            I
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo || 'I - Fluxo Físico'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <FileDown className="h-3.5 w-3.5" />
-                              {doc.nomeExibicao || '- Baixar Arquivo'}
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* INCISO II */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_ii')
-                      if (item && item.ativo === false) return null
-                      const doc = resolverUrlDocumento(
-                        item,
-                        'https://tsb.com.br/wp-content/uploads/2023/04/bibArq000438-2.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            II
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo ||
-                                'II - Características técnicas e operacionais de Instalação de Transporte'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <FileDown className="h-3.5 w-3.5" />
-                              {doc.nomeExibicao || '- Baixar Arquivo'}
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* INCISO III */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_iii')
-                      if (item && item.ativo === false) return null
-                      const doc = resolverUrlDocumento(
-                        item,
-                        'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-Disponivel-SITE.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            III
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <div className="space-y-1">
-                              <span className="font-semibold text-[#0a2540]">
-                                {item?.titulo ||
-                                  'III - Capacidade disponível, capacidade em fluxo oposto ao fluxo físico e capacidade ociosa por ponto relevante.'}
-                              </span>
-                              <div className="p-2 rounded bg-slate-50 border border-slate-200 text-[11px] text-slate-700 leading-relaxed">
-                                <span className="font-semibold text-[#0a2540]">
-                                  Previsão de Disponibilidade (Padrão TBG):
-                                </span>{' '}
-                                A previsão rolante de 7 anos (capacidade firme) e 2 anos (capacidade
-                                não-firme) é publicada neste documento oficial em PDF e atualizada
-                                periodicamente pela área técnica da TSB.
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <FileDown className="h-3.5 w-3.5" />
-                              {doc.nomeExibicao || '- Baixar Arquivo'}
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* INCISO IV */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_iv')
-                      if (item && item.ativo === false) return null
-                      const doc = resolverUrlDocumento(
-                        item,
-                        'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-gasoduto-A.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            IV
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo ||
-                                'IV - Capacidades contratadas por contrato de serviço de transporte celebrado'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <FileDown className="h-3.5 w-3.5" />
-                              {doc.nomeExibicao || '- Baixar Arquivo'}
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* INCISO V */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_v')
-                      if (item && item.ativo === false) return null
-                      const doc1 = resolverUrlDocumento(
-                        item,
-                        'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-1.pdf',
-                      )
-                      const doc2 = resolverUrlSecundaria(
-                        item,
-                        'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-3.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            V
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo || 'V - Simulação termo-hidráulica'}
-                            </span>
-                            <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-600">
-                              <a
-                                href={doc1.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
-                              >
-                                <FileDown className="h-3 w-3" />
-                                {doc1.nomeExibicao || 'Simulação Trecho 1 (PDF)'}
-                              </a>
-                              <span className="text-slate-300">•</span>
-                              <a
-                                href={doc2.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[#0284c7] hover:underline inline-flex items-center gap-1 font-medium"
-                              >
-                                <FileDown className="h-3 w-3" />
-                                {doc2.nomeExibicao || 'Simulação Trecho 3 (PDF)'}
-                              </a>
-                            </div>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href="https://www.tsb.com.br/v-simulacao-termo-hidraulica/"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                              Acessar Página Oficial
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* INCISO VI */}
-                    {(() => {
-                      const item = incisosBdMap.get('inciso_vi')
-                      if (item && item.ativo === false) return null
-                      const doc = resolverUrlDocumento(
-                        item,
-                        'https://tsb.com.br/wp-content/uploads/2023/04/termo_de_acesso.pdf',
-                      )
-                      return (
-                        <tr className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                            VI
-                          </td>
-                          <td className="p-3 text-slate-800 border-r border-slate-200">
-                            <span className="font-semibold text-[#0a2540]">
-                              {item?.titulo ||
-                                'VI - Termos e condições tarifárias e não tarifárias'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline"
-                            >
-                              <FileDown className="h-3.5 w-3.5" />
-                              {doc.nomeExibicao || '- Baixar Arquivo'}
-                            </a>
-                          </td>
-                        </tr>
-                      )
-                    })()}
-
-                    {/* ATALHOS DIRETOS PARA OS INCISOS VII E VIII */}
-                    <tr className="bg-slate-50/60 hover:bg-slate-100/60 transition-colors border-t-2 border-slate-200">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        VII
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          VII - Consulta de disponibilidade de acesso (Solicitação de Acesso)
-                        </span>
-                        <div className="mt-1 flex flex-wrap items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setSubAba('vii')}
-                            className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            &rarr; Ver publicação pública, canal POCC e formulário PDF
-                          </button>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-[11px] text-slate-500">
-                            Transação via POCC (com login)
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="inline-flex flex-wrap items-center justify-center gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const docVII = resolverUrlDocumento(
-                                incisosBdMap.get('resumo_solicitacoes_vii_pdf'),
-                                '',
-                              )
-                              if (docVII.url) {
-                                window.open(docVII.url, '_blank', 'noopener,noreferrer')
-                              } else {
-                                setSubAba('vii')
-                                setTimeout(() => {
-                                  document
-                                    .getElementById('secao-resumos-oficiais-vii')
-                                    ?.scrollIntoView({ behavior: 'smooth' })
-                                }, 100)
-                              }
-                            }}
-                            className="border-slate-300 text-slate-700 hover:bg-slate-100 text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <FileDown className="h-3.5 w-3.5 text-slate-600" />
-                            Resumo das Solicitações de Acesso Efetuadas
-                          </Button>
-                          <Link to="/poc">
-                            <Button
-                              size="sm"
-                              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
-                            >
-                              <Lock className="h-3 w-3 text-slate-200" />
-                              Solicitar Acesso
-                            </Button>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-
-                    <tr className="bg-slate-50/60 hover:bg-slate-100/60 transition-colors">
-                      <td className="p-3 text-center font-bold text-[#0a2540] border-r border-slate-200">
-                        VIII
-                      </td>
-                      <td className="p-3 text-slate-800 border-r border-slate-200">
-                        <span className="font-semibold text-[#0a2540]">
-                          VIII - Resumo das Ofertas de Cessão de Capacidade Contratada Informadas ao
-                          Transportador por Carregadores
-                        </span>
-                        <div className="mt-1 flex flex-wrap items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setSubAba('viii')}
-                            className="text-[11px] font-medium text-[#0284c7] hover:underline inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            &rarr; Ver publicação do resumo das ofertas de cessão em PDF
-                          </button>
-                        </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="inline-flex items-center justify-center gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const docVIII = resolverUrlDocumento(
-                                incisosBdMap.get('resumo_cessoes_viii_pdf'),
-                                '',
-                              )
-                              if (docVIII.url) {
-                                window.open(docVIII.url, '_blank', 'noopener,noreferrer')
-                              } else {
-                                setSubAba('viii')
-                                setTimeout(() => {
-                                  document
-                                    .getElementById('secao-resumo-oficial-viii')
-                                    ?.scrollIntoView({ behavior: 'smooth' })
-                                }, 100)
-                              }
-                            }}
-                            className="border-slate-300 text-slate-700 hover:bg-slate-100 text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <FileDown className="h-3.5 w-3.5 text-slate-600" />
-                            Resumo das Ofertas de Cessão
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================
               SUB-ABA 2: INCISO VII (FORMALIZAÇÃO POR E-MAIL COM FORMULÁRIO EM PDF)
               ======================================================== */}
           {subAba === 'vii' && (
@@ -1793,14 +1411,21 @@ export default function PlataformaEletronica({
                 </div>
               </div>
 
-              {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}
+              {/* NAVEGAÇÃO ENTRE INCISOS VII E VIII */}
               <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
                 <button
                   type="button"
-                  onClick={() => setSubAba('i_vi')}
+                  onClick={() => {
+                    setSubAba('i_vi')
+                    setTimeout(() => {
+                      document
+                        .getElementById('bloco-incisos-acordeao')
+                        ?.scrollIntoView({ behavior: 'smooth' })
+                    }, 100)
+                  }}
                   className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
                 >
-                  &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
+                  &larr; Voltar para os Incisos I a VIII
                 </button>
                 <button
                   type="button"
@@ -1912,14 +1537,21 @@ export default function PlataformaEletronica({
                 })()}
               </div>
 
-              {/* MECANISMO DISCRETO DE RETORNO À TABELA CONSOLIDADA */}
+              {/* NAVEGAÇÃO ENTRE INCISOS VII E VIII */}
               <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
                 <button
                   type="button"
-                  onClick={() => setSubAba('i_vi')}
+                  onClick={() => {
+                    setSubAba('i_vi')
+                    setTimeout(() => {
+                      document
+                        .getElementById('bloco-incisos-acordeao')
+                        ?.scrollIntoView({ behavior: 'smooth' })
+                    }, 100)
+                  }}
                   className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
                 >
-                  &larr; Voltar para a tabela de Documentos e Estudos (Incisos I a VIII)
+                  &larr; Voltar para os Incisos I a VIII
                 </button>
                 <button
                   type="button"
