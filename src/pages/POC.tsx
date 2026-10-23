@@ -470,12 +470,13 @@ export function POC() {
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#0a2540] tracking-tight">
-            Área do Carregador — POCC TSB
+            Área do Carregador
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
-            Ambiente exclusivo para consulta de protocolos, manifestação de interesse em capacidade
-            firme e acompanhamento das etapas do Art. 37-A da Resolução ANP nº 11/2016 (alterada
-            pela Resolução ANP nº 961/2023).
+            Ambiente corporativo de acesso da Transportadora Sulbrasileira de Gás — TSB. Consulte os
+            dois ritos regulatórios distintos previstos na norma: o canal permanente de Solicitação
+            de Acesso à Malha (Res. ANP nº 11/2016) e o procedimento temporário para capacidade nova
+            do POCC (Res. ANP nº 961/2023).
           </p>
         </div>
 
@@ -525,844 +526,930 @@ export function POC() {
       </div>
 
       {/* =========================================================================
-          NOVO FORMULÁRIO DESTACADO: SOLICITAÇÃO DE ACESSO À MALHA — INCISO VII
-          Resolução ANP nº 11/2016, Art. 10 (Submissão Autenticada pelo POCC)
-          Layout Limpo e Compacto com os 4 Requisitos Mínimos da Norma + Identificação
+          BLOCO 1 — SOLICITAÇÃO DE ACESSO À MALHA (INCISO VII — ART. 10, RES. ANP Nº 11/2016)
+          Canal PERMANENTE de solicitação de acesso à capacidade de transporte dutoviário.
+          Contém:
+            1. Subtítulo/note explicativo sobre canal permanente, 20 dias úteis e cópia à ANP (§3º).
+            2. Formulário de Submissão com identificação automática do usuário e 4 itens mínimos.
+            3. Consulta de Protocolo & SLA dentro do próprio Bloco 1.
           ========================================================================= */}
-      <Card
-        id="solicitacao-acesso-inciso-vii"
-        className="border-2 border-[#0a2540] shadow-sm bg-white overflow-hidden scroll-mt-6"
+      <section
+        aria-label="Bloco 1: Solicitação de Acesso à Malha"
+        className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xs"
       >
-        <CardHeader className="p-5 sm:p-6 bg-slate-50/70 border-b border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white">
-                <Scale className="h-3.5 w-3.5 text-sky-400" />
-                Art. 10 da Resolução ANP nº 11/2016 • Carregador Identificado
-              </div>
-              <CardTitle className="text-lg sm:text-xl font-bold text-[#0a2540]">
-                Solicitação de Acesso à Malha (Inciso VII — Art. 10, Res. ANP 11/2016)
-              </CardTitle>
-              <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
-                Instrumento formal para requisição de capacidade de transporte dutoviário na malha
-                TSB. Apresente os 4 itens mínimos regulamentares do Art. 10. Prazo de resposta da
-                Transportadora: <strong>20 dias úteis</strong> (§2º).
-              </p>
+        {/* CABEÇALHO DO BLOCO 1 */}
+        <div className="space-y-2 pb-4 border-b border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white uppercase tracking-wider">
+                Bloco 1 • Canal Permanente
+              </span>
+              <span className="text-[11px] font-mono font-semibold text-[#0284c7]">
+                Inciso VII — Art. 10, Res. ANP nº 11/2016
+              </span>
             </div>
-            <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] border border-sky-200 self-start sm:self-auto shrink-0">
-              SLA Regulatório: 20 dias úteis
+            <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
+              SLA Regulatório: 20 dias úteis (Art. 10, §2º)
             </span>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-5 sm:p-6 space-y-5">
-          {/* CONFIRMAÇÃO VISUAL DO PROTOCOLO GERADO */}
-          {protocoloGeradoVII && (
-            <div className="p-4 sm:p-5 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3 animate-fade-in">
-              <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <Check className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
-                      Solicitação Protocolada com Sucesso
-                    </span>
-                    <span className="font-mono text-lg sm:text-xl font-bold text-emerald-950">
-                      {protocoloGeradoVII.protocolo}
-                    </span>
-                  </div>
-                </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
+            Solicitação de Acesso à Malha (Inciso VII — Art. 10, Res. ANP nº 11/2016)
+          </h2>
 
-                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-semibold">
-                  Origem: Área do Carregador (autenticado)
-                </Badge>
-              </div>
-
-              <p className="text-xs text-emerald-900 leading-relaxed">
-                Sua solicitação de acesso foi autuada com sucesso no sistema da TSB sob o protocolo{' '}
-                <strong className="font-mono">{protocoloGeradoVII.protocolo}</strong>. O prazo
-                regulatório de <strong>20 dias úteis</strong> para emissão do Parecer Técnico
-                Fundamentado da Transportadora (Art. 10, §2º) está em contagem a partir de hoje. O
-                protocolo já pode ser acompanhado no bloco de consulta abaixo.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = document.getElementById('consulta-protocolo-vii')
-                    el?.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                  className="font-semibold text-emerald-900 hover:text-emerald-950 underline inline-flex items-center gap-1 cursor-pointer"
-                >
-                  <Search className="h-3.5 w-3.5" />
-                  Verificar na Consulta de Protocolo &amp; SLA &darr;
-                </button>
-                <span className="text-emerald-600">&bull;</span>
-                <button
-                  type="button"
-                  onClick={() => setProtocoloGeradoVII(null)}
-                  className="text-emerald-800 hover:underline cursor-pointer"
-                >
-                  Fechar aviso
-                </button>
-              </div>
+          <div className="p-3.5 bg-sky-50/60 border border-sky-200 rounded-lg text-xs text-slate-700 leading-relaxed space-y-1">
+            <div className="flex items-center gap-2 font-semibold text-[#0a2540]">
+              <Scale className="h-4 w-4 text-[#0284c7] shrink-0" />
+              <span>Rito Permanente de Solicitação de Acesso — Distinto do POCC</span>
             </div>
-          )}
-
-          {/* BLOCO DE IDENTIFICAÇÃO DO CARREGADOR (NÃO EDITÁVEL - DADOS DO LOGIN) */}
-          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
-                <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
-                Identificação do Carregador Interessado (Art. 10, caput — Ambiente Autenticado)
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">
-                Carregado automaticamente da sessão logada (não editável)
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 pt-1">
-              <div className="p-2.5 bg-white border border-slate-200 rounded">
-                <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                  Razão Social
-                </span>
-                <span className="font-bold text-slate-900 truncate block">
-                  {(user as unknown as { razao_social?: string })?.razao_social ||
-                    user?.name ||
-                    'Carregador Cadastrado'}
-                </span>
-              </div>
-
-              <div className="p-2.5 bg-white border border-slate-200 rounded">
-                <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                  CNPJ
-                </span>
-                <span className="font-mono font-semibold text-slate-900 block">
-                  {(user as unknown as { cnpj?: string })?.cnpj || 'Cadastro ativo'}
-                </span>
-              </div>
-
-              <div className="p-2.5 bg-white border border-slate-200 rounded">
-                <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                  Representante / E-mail do Carregador
-                </span>
-                <span className="text-slate-900 truncate block font-mono text-[11px]">
-                  {user?.email || 'contato@carregador.com.br'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* FORMULÁRIO LIMPO COM OS 4 ITENS MÍNIMOS DA NORMA */}
-          <form onSubmit={handleEnviarSolicitacaoVII} className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* (I) MODALIDADE PRETENDIDA */}
-              <div className="space-y-1">
-                <Label htmlFor="vii_mod" className="text-xs font-semibold text-slate-700">
-                  (I) Modalidade Pretendida *
-                </Label>
-                <select
-                  id="vii_mod"
-                  value={formVII.modalidade}
-                  onChange={(e) =>
-                    setFormVII({
-                      ...formVII,
-                      modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
-                    })
-                  }
-                  className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                >
-                  <option value="Firme Ordinário">Firme Ordinário</option>
-                  <option value="Interruptível">Interruptível</option>
-                </select>
-                <span className="text-[10px] text-slate-500 block">Art. 10, I</span>
-              </div>
-
-              {/* (II) PERÍODO DE CONTRATAÇÃO: DATA INÍCIO */}
-              <div className="space-y-1">
-                <Label htmlFor="vii_dt_ini" className="text-xs font-semibold text-slate-700">
-                  (II) Data Início do Período *
-                </Label>
-                <Input
-                  id="vii_dt_ini"
-                  type="date"
-                  required
-                  value={formVII.data_inicio}
-                  onChange={(e) => setFormVII({ ...formVII, data_inicio: e.target.value })}
-                  className="h-9 text-xs bg-white"
-                />
-                <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
-              </div>
-
-              {/* (II) PERÍODO DE CONTRATAÇÃO: DATA FIM */}
-              <div className="space-y-1">
-                <Label htmlFor="vii_dt_fim" className="text-xs font-semibold text-slate-700">
-                  (II) Data Término do Período *
-                </Label>
-                <Input
-                  id="vii_dt_fim"
-                  type="date"
-                  required
-                  value={formVII.data_fim}
-                  onChange={(e) => setFormVII({ ...formVII, data_fim: e.target.value })}
-                  className="h-9 text-xs bg-white"
-                />
-                <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
-              </div>
-
-              {/* (III) CAPACIDADE PRETENDIDA EM M³/DIA */}
-              <div className="space-y-1">
-                <Label htmlFor="vii_cap" className="text-xs font-semibold text-slate-700">
-                  (III) Capacidade Pretendida (m³/dia) *
-                </Label>
-                <Input
-                  id="vii_cap"
-                  type="number"
-                  required
-                  min={1}
-                  value={formVII.capacidade}
-                  onChange={(e) => setFormVII({ ...formVII, capacidade: Number(e.target.value) })}
-                  className="h-9 text-xs font-mono font-bold bg-white"
-                />
-                <span className="text-[10px] text-slate-500 block">Art. 10, III</span>
-              </div>
-            </div>
-
-            {/* (IV) PONTOS DE RECEBIMENTO E ENTREGA (MALHA TSB - TRECHOS 1 E 3) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2 space-y-1">
-                <Label htmlFor="vii_ponto_sel" className="text-xs font-semibold text-slate-700">
-                  (IV) Ponto Relevante e Rota Dutoviária (Trechos 1 e 3 da Malha TSB) *
-                </Label>
-                <select
-                  id="vii_ponto_sel"
-                  value={formVII.ponto_relevante_id}
-                  onChange={(e) => setFormVII({ ...formVII, ponto_relevante_id: e.target.value })}
-                  className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                >
-                  {PONTOS_RELEVANTES_TSB.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-[10px] text-slate-500 block">
-                  Art. 10, IV • Seleção entre os pontos homologados da infraestrutura TSB
-                </span>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="vii_obs" className="text-xs font-semibold text-slate-700">
-                  Observações Técnicas (Opcional)
-                </Label>
-                <Input
-                  id="vii_obs"
-                  placeholder="Ex: perfil de pressão, sazonalidade..."
-                  value={formVII.observacoes}
-                  onChange={(e) => setFormVII({ ...formVII, observacoes: e.target.value })}
-                  className="h-9 text-xs bg-white"
-                />
-                <span className="text-[10px] text-slate-500 block">Informações complementares</span>
-              </div>
-            </div>
-
-            {/* RESUMO DOS PONTOS SELECIONADOS */}
-            {(() => {
-              const sel =
-                PONTOS_RELEVANTES_TSB.find((p) => p.id === formVII.ponto_relevante_id) ||
-                PONTOS_RELEVANTES_TSB[0]
-              return (
-                <div className="p-3 bg-slate-50/80 border border-slate-200 rounded text-[11px] text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="space-x-1">
-                    <span className="font-semibold text-slate-700">Ponto de Recebimento:</span>
-                    <strong className="text-[#0a2540]">{sel.ponto_recebimento}</strong>
-                    <span className="text-slate-400">&rarr;</span>
-                    <span className="font-semibold text-slate-700">Ponto de Entrega:</span>
-                    <strong className="text-[#0a2540]">{sel.ponto_entrega}</strong>
-                  </div>
-                  <span className="font-mono text-[10px] font-semibold text-slate-500">
-                    {sel.trecho}
-                  </span>
-                </div>
-              )
-            })()}
-
-            {/* BOTÃO DE SUBMISSÃO DA SOLICITAÇÃO VII */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-200">
-              <span className="text-[11px] text-slate-500">
-                A submissão gera o protocolo <strong>TSB-AAAA-XXXX</strong> com contagem do SLA de
-                20 dias úteis (Art. 10, §2º).
-              </span>
-
-              {isAuthenticated ? (
-                <Button
-                  type="submit"
-                  disabled={enviandoVII}
-                  className="h-10 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors shrink-0"
-                >
-                  {enviandoVII ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                      Protocolando Solicitação...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
-                      Submeter Solicitação de Acesso (Inciso VII)
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Link
-                  to="/login"
-                  state={{ from: { pathname: '/poc', hash: '#solicitacao-acesso-inciso-vii' } }}
-                >
-                  <Button
-                    type="button"
-                    className="h-10 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs"
-                  >
-                    <Lock className="h-3.5 w-3.5 mr-1.5" />
-                    Identifique-se para Submeter
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* =========================================================================
-          CARD EXISTENTE: MANIFESTAÇÃO DE INTERESSE NO POCC (ART. 37-A §5º, I - NÃO VINCULANTE)
-          Rótulo e título ajustados para desambiguação clara com a Solicitação do Inciso VII
-          ========================================================================= */}
-      <Card className="border border-slate-200 bg-white shadow-xs overflow-hidden">
-        <div className="p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-gradient-to-r from-slate-50 via-white to-sky-50/40">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-sky-100 text-[#0a2540]">
-              <Sparkles className="h-3 w-3 text-[#0284c7]" />
-              Etapa I do Art. 37-A, §5º — Manifestação de Interesse Não Vinculante
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold text-[#0a2540]">
-              Manifestação de Interesse no POCC (Art. 37-A §5º, I — não vinculante)
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Manifeste o interesse da sua empresa no Processo de Oferta e Contratação de Capacidade
-              (POCC) — Ciclo 2026/2027. O registro é <strong>não vinculante</strong>, destina-se ao
-              levantamento de demanda para aprovação das Tarifas de Referência pela ANP e habilita o
-              carregador para a posterior apresentação de Propostas Vinculantes na Etapa III.
+            <p>
+              Este é o canal permanente para requisição de acesso à capacidade de transporte na
+              malha dutoviária da TSB. Conforme o Art. 10, §2º da Resolução ANP nº 11/2016, a
+              Transportadora emitirá Parecer Técnico Fundamentado no prazo de até{' '}
+              <strong>20 dias úteis</strong> contados da autuação. Nos desfechos previstos no Art.
+              10, §3º (recusa fundamentada, celebração de contrato ou oferta de condições
+              alternativas), cópia formal do parecer e das comunicações é encaminhada à ANP.
             </p>
-          </div>
-
-          <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
-            {isAuthenticated ? (
-              <Button
-                onClick={() => setModalManifestacaoAberto(true)}
-                className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
-              >
-                <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
-                Registrar Manifestação de Interesse
-              </Button>
-            ) : (
-              <Link to="/login" state={{ from: { pathname: '/poc' } }}>
-                <Button className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs">
-                  <Lock className="h-3.5 w-3.5 mr-1.5" />
-                  Identifique-se para Registrar
-                </Button>
-              </Link>
-            )}
-            <span className="text-[11px] text-slate-500 text-center sm:text-right">
-              Capacidade Firme Ofertada no Ciclo: <strong>150.000 m³/dia</strong>
-            </span>
           </div>
         </div>
 
-        {/* HISTÓRICO DE MANIFESTAÇÕES DO PRÓPRIO CARREGADOR (SE HOUVER) */}
-        {isAuthenticated && temManifestacao && (
-          <div className="border-t border-slate-200 bg-slate-50/70 p-4 sm:p-5 space-y-2">
-            <div className="text-xs font-bold text-[#0a2540] uppercase tracking-wider flex items-center gap-1.5">
-              <FileCheck2 className="h-3.5 w-3.5 text-[#0284c7]" />
-              Sua Manifestação Registrada para o Ciclo Vigente do POCC:
+        {/* 1.1 FORMULÁRIO DE SUBMISSÃO DA SOLICITAÇÃO (ART. 10) */}
+        <Card
+          id="solicitacao-acesso-inciso-vii"
+          className="border border-slate-200 shadow-none bg-slate-50/40 overflow-hidden scroll-mt-6"
+        >
+          <CardHeader className="p-4 sm:p-5 bg-white border-b border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="space-y-0.5">
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540] flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#0284c7]" />
+                  Submissão de Nova Solicitação de Acesso
+                </CardTitle>
+                <p className="text-xs text-slate-600">
+                  Apresente os 4 itens mínimos regulamentares do Art. 10 da Resolução ANP nº
+                  11/2016.
+                </p>
+              </div>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                Protocolo TSB-AAAA-XXXX gerado automaticamente
+              </span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left bg-white border border-slate-200 rounded">
-                <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
-                  <tr>
-                    <th className="p-2.5">Protocolo</th>
-                    <th className="p-2.5">Capacidade</th>
-                    <th className="p-2.5">Modalidade</th>
-                    <th className="p-2.5">Trecho</th>
-                    <th className="p-2.5">Status</th>
-                    <th className="p-2.5">Data</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {minhasManifestacoes.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-50">
-                      <td className="p-2.5 font-mono font-bold text-[#0284c7]">{m.protocolo}</td>
-                      <td className="p-2.5 font-bold text-slate-800">
-                        {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
-                      </td>
-                      <td className="p-2.5 text-slate-700">{m.modalidade}</td>
-                      <td className="p-2.5 text-slate-600">
-                        {m.ponto_recebimento} &rarr; {m.ponto_entrega}
-                      </td>
-                      <td className="p-2.5">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          {m.status || 'Recebida'}
-                        </span>
-                      </td>
-                      <td className="p-2.5 text-slate-500 font-mono">
-                        {new Date(m.created).toLocaleDateString('pt-BR')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          </CardHeader>
+
+          <CardContent className="p-4 sm:p-6 space-y-5">
+            {/* CONFIRMAÇÃO VISUAL DO PROTOCOLO GERADO */}
+            {protocoloGeradoVII && (
+              <div className="p-4 sm:p-5 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3 animate-fade-in">
+                <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <Check className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
+                        Solicitação Protocolada com Sucesso
+                      </span>
+                      <span className="font-mono text-lg sm:text-xl font-bold text-emerald-950">
+                        {protocoloGeradoVII.protocolo}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-semibold">
+                    Origem: Área do Carregador (autenticado)
+                  </Badge>
+                </div>
+
+                <p className="text-xs text-emerald-900 leading-relaxed">
+                  Sua solicitação de acesso foi autuada com sucesso no sistema da TSB sob o
+                  protocolo <strong className="font-mono">{protocoloGeradoVII.protocolo}</strong>. O
+                  prazo regulatório de <strong>20 dias úteis</strong> para emissão do Parecer
+                  Técnico Fundamentado da Transportadora (Art. 10, §2º) está em contagem a partir de
+                  hoje. O protocolo já pode ser acompanhado no campo de consulta abaixo.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('consulta-protocolo-vii')
+                      el?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="font-semibold text-emerald-900 hover:text-emerald-950 underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    Verificar na Consulta de Protocolo &amp; SLA &darr;
+                  </button>
+                  <span className="text-emerald-600">&bull;</span>
+                  <button
+                    type="button"
+                    onClick={() => setProtocoloGeradoVII(null)}
+                    className="text-emerald-800 hover:underline cursor-pointer"
+                  >
+                    Fechar aviso
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* IDENTIFICAÇÃO AUTOMÁTICA DO CARREGADOR (NÃO EDITÁVEL) */}
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg text-xs space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                  <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                  Identificação do Carregador Solicitante (Art. 10, caput)
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Preenchido automaticamente a partir da conta autenticada (não editável)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 pt-1">
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                    Razão Social
+                  </span>
+                  <span className="font-bold text-slate-900 truncate block">
+                    {(user as unknown as { razao_social?: string })?.razao_social ||
+                      user?.name ||
+                      'Carregador Cadastrado'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                    CNPJ
+                  </span>
+                  <span className="font-mono font-semibold text-slate-900 block">
+                    {(user as unknown as { cnpj?: string })?.cnpj || 'Cadastro ativo'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                    E-mail Institucional do Carregador
+                  </span>
+                  <span className="text-slate-900 truncate block font-mono text-[11px]">
+                    {user?.email || 'contato@carregador.com.br'}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+
+            {/* FORMULÁRIO COM OS 4 ITENS MÍNIMOS DA NORMA */}
+            <form onSubmit={handleEnviarSolicitacaoVII} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* (I) MODALIDADE PRETENDIDA */}
+                <div className="space-y-1">
+                  <Label htmlFor="vii_mod" className="text-xs font-semibold text-slate-700">
+                    (I) Modalidade Pretendida *
+                  </Label>
+                  <select
+                    id="vii_mod"
+                    value={formVII.modalidade}
+                    onChange={(e) =>
+                      setFormVII({
+                        ...formVII,
+                        modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
+                      })
+                    }
+                    className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                  >
+                    <option value="Firme Ordinário">Firme Ordinário</option>
+                    <option value="Interruptível">Interruptível</option>
+                  </select>
+                  <span className="text-[10px] text-slate-500 block">Art. 10, I</span>
+                </div>
+
+                {/* (II) PERÍODO DE CONTRATAÇÃO: DATA INÍCIO */}
+                <div className="space-y-1">
+                  <Label htmlFor="vii_dt_ini" className="text-xs font-semibold text-slate-700">
+                    (II) Data Início do Período *
+                  </Label>
+                  <Input
+                    id="vii_dt_ini"
+                    type="date"
+                    required
+                    value={formVII.data_inicio}
+                    onChange={(e) => setFormVII({ ...formVII, data_inicio: e.target.value })}
+                    className="h-9 text-xs bg-white"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
+                </div>
+
+                {/* (II) PERÍODO DE CONTRATAÇÃO: DATA FIM */}
+                <div className="space-y-1">
+                  <Label htmlFor="vii_dt_fim" className="text-xs font-semibold text-slate-700">
+                    (II) Data Término do Período *
+                  </Label>
+                  <Input
+                    id="vii_dt_fim"
+                    type="date"
+                    required
+                    value={formVII.data_fim}
+                    onChange={(e) => setFormVII({ ...formVII, data_fim: e.target.value })}
+                    className="h-9 text-xs bg-white"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
+                </div>
+
+                {/* (III) CAPACIDADE PRETENDIDA EM M³/DIA */}
+                <div className="space-y-1">
+                  <Label htmlFor="vii_cap" className="text-xs font-semibold text-slate-700">
+                    (III) Capacidade Pretendida (m³/dia) *
+                  </Label>
+                  <Input
+                    id="vii_cap"
+                    type="number"
+                    required
+                    min={1}
+                    value={formVII.capacidade}
+                    onChange={(e) => setFormVII({ ...formVII, capacidade: Number(e.target.value) })}
+                    className="h-9 text-xs font-mono font-bold bg-white"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Art. 10, III</span>
+                </div>
+              </div>
+
+              {/* (IV) PONTOS DE RECEBIMENTO E ENTREGA (MALHA TSB - TRECHOS 1 E 3) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2 space-y-1">
+                  <Label htmlFor="vii_ponto_sel" className="text-xs font-semibold text-slate-700">
+                    (IV) Ponto Relevante e Rota Dutoviária (Trechos 1 e 3 da Malha TSB) *
+                  </Label>
+                  <select
+                    id="vii_ponto_sel"
+                    value={formVII.ponto_relevante_id}
+                    onChange={(e) => setFormVII({ ...formVII, ponto_relevante_id: e.target.value })}
+                    className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                  >
+                    {PONTOS_RELEVANTES_TSB.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[10px] text-slate-500 block">
+                    Art. 10, IV • Seleção entre os pontos homologados da infraestrutura TSB
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vii_obs" className="text-xs font-semibold text-slate-700">
+                    Observações Técnicas (Opcional)
+                  </Label>
+                  <Input
+                    id="vii_obs"
+                    placeholder="Ex: perfil de pressão, sazonalidade..."
+                    value={formVII.observacoes}
+                    onChange={(e) => setFormVII({ ...formVII, observacoes: e.target.value })}
+                    className="h-9 text-xs bg-white"
+                  />
+                  <span className="text-[10px] text-slate-500 block">
+                    Informações complementares
+                  </span>
+                </div>
+              </div>
+
+              {/* RESUMO DOS PONTOS SELECIONADOS */}
+              {(() => {
+                const sel =
+                  PONTOS_RELEVANTES_TSB.find((p) => p.id === formVII.ponto_relevante_id) ||
+                  PONTOS_RELEVANTES_TSB[0]
+                return (
+                  <div className="p-3 bg-white border border-slate-200 rounded text-[11px] text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="space-x-1">
+                      <span className="font-semibold text-slate-700">Ponto de Recebimento:</span>
+                      <strong className="text-[#0a2540]">{sel.ponto_recebimento}</strong>
+                      <span className="text-slate-400">&rarr;</span>
+                      <span className="font-semibold text-slate-700">Ponto de Entrega:</span>
+                      <strong className="text-[#0a2540]">{sel.ponto_entrega}</strong>
+                    </div>
+                    <span className="font-mono text-[10px] font-semibold text-slate-500">
+                      {sel.trecho}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {/* BOTÃO DE SUBMISSÃO DA SOLICITAÇÃO VII */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-200">
+                <span className="text-[11px] text-slate-500">
+                  A submissão autua o protocolo <strong>TSB-AAAA-XXXX</strong> com prazo de resposta
+                  de 20 dias úteis (Art. 10, §2º).
+                </span>
+
+                {isAuthenticated ? (
+                  <Button
+                    type="submit"
+                    disabled={enviandoVII}
+                    className="h-10 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors shrink-0"
+                  >
+                    {enviandoVII ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                        Protocolando Solicitação...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
+                        Submeter Solicitação de Acesso (Inciso VII)
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Link
+                    to="/login"
+                    state={{ from: { pathname: '/poc', hash: '#solicitacao-acesso-inciso-vii' } }}
+                  >
+                    <Button
+                      type="button"
+                      className="h-10 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs"
+                    >
+                      <Lock className="h-3.5 w-3.5 mr-1.5" />
+                      Identifique-se para Submeter
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* 1.2 CONSULTA DE PROTOCOLO & SLA (DENTRO DO BLOCO 1 DO ART. 10) */}
+        <Card
+          id="consulta-protocolo-vii"
+          className="border border-slate-200 shadow-none bg-slate-50/40 scroll-mt-6"
+        >
+          <CardHeader className="p-4 sm:p-5 bg-white border-b border-slate-200">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-[#0a2540]" />
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Consulta de Protocolo &amp; SLA (Inciso VII)
+                </CardTitle>
+              </div>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                Parecer Técnico &amp; SLA de 20 dias úteis (Art. 10, §2º)
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Acompanhe a tramitação, o prazo regulatório e o Parecer Fundamentado da Transportadora
+              informando o número de protocolo autuado.
+            </p>
+          </CardHeader>
+
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            {/* Formulário de Busca */}
+            <form onSubmit={handleConsultarProtocolo} className="flex flex-col sm:flex-row gap-3">
+              <Input
+                type="text"
+                value={consultaProtocolo}
+                onChange={(e) => setConsultaProtocolo(e.target.value)}
+                placeholder="INFORME O PROTOCOLO (EX: TSB-2026-8942)"
+                className="font-mono text-xs uppercase h-11 border-slate-300 focus-visible:ring-1 focus-visible:ring-[#0a2540] flex-1 tracking-wider bg-white"
+              />
+              <Button
+                type="submit"
+                disabled={consultandoProtocolo || !consultaProtocolo.trim()}
+                className="h-11 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs"
+              >
+                {consultandoProtocolo ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    Consultando...
+                  </>
+                ) : (
+                  'Verificar Protocolo'
+                )}
+              </Button>
+            </form>
+
+            {/* Resultado da Consulta do Protocolo VII */}
+            {resultadoConsulta && resultadoConsulta.buscado && (
+              <div className="pt-2 animate-fade-in">
+                {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
+                  (() => {
+                    const sol = resultadoConsulta.dados
+                    const userCnpj = (user as unknown as { cnpj?: string })?.cnpj || ''
+                    const userEmail = user?.email || ''
+                    const isTitular = Boolean(
+                      (sol.cnpj &&
+                        userCnpj &&
+                        sol.cnpj.replace(/\D/g, '') === userCnpj.replace(/\D/g, '')) ||
+                      (sol.email &&
+                        userEmail &&
+                        sol.email.toLowerCase() === userEmail.toLowerCase()),
+                    )
+
+                    return (
+                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg space-y-4">
+                        {/* Cabeçalho do Resultado */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                              Protocolo Autuado
+                            </span>
+                            <div className="font-mono font-bold text-base sm:text-lg text-[#0a2540] flex items-center gap-2">
+                              <span>{sol.protocolo}</span>
+                              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-semibold">
+                                {sol.status || 'Em Análise Técnica'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-left sm:text-right text-xs text-slate-600">
+                            <div className="font-semibold text-slate-800">
+                              SLA Regulatório: {sol.sla_dias || 20} dias úteis
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-mono">
+                              Data de Entrada:{' '}
+                              {sol.created
+                                ? new Date(sol.created).toLocaleDateString('pt-BR')
+                                : 'Conforme Registro'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Grid Técnico */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Modalidade
+                            </span>
+                            <span className="font-semibold text-[#0a2540]">
+                              {sol.modalidade || 'Firme Ordinário'}
+                            </span>
+                          </div>
+
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Capacidade Solicitada
+                            </span>
+                            <span className="font-semibold text-[#0a2540] font-mono">
+                              {Number(sol.capacidade).toLocaleString('pt-BR')} m³/dia
+                            </span>
+                          </div>
+
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Trecho / Instalação
+                            </span>
+                            <span className="font-semibold text-[#0a2540] truncate block">
+                              {sol.trecho || 'Gasoduto Uruguaiana - Triunfo'}
+                            </span>
+                          </div>
+
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                              Pontos (Recebimento &rarr; Entrega)
+                            </span>
+                            <span className="font-semibold text-[#0a2540] truncate block">
+                              {sol.ponto_recebimento || 'EMED Uruguaiana'} &rarr;{' '}
+                              {sol.ponto_entrega || 'Triunfo'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Dados Cadastrais se for o titular logado */}
+                        {isTitular && (
+                          <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded text-xs space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-[#0a2540] flex items-center gap-1.5 text-xs">
+                                <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                                Dados Cadastrais da Titularidade (Ambiente Seguro)
+                              </span>
+                              <Badge className="bg-blue-100 text-[#143b73] border-blue-300 text-[10px]">
+                                Solicitante Autenticado
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-700 pt-1">
+                              {sol.razao_social && (
+                                <div>
+                                  <span className="text-slate-500 font-medium">Razão Social:</span>{' '}
+                                  <strong className="text-slate-900">{sol.razao_social}</strong>
+                                </div>
+                              )}
+                              {sol.cnpj && (
+                                <div>
+                                  <span className="text-slate-500 font-medium">CNPJ:</span>{' '}
+                                  <strong className="font-mono text-slate-900">{sol.cnpj}</strong>
+                                </div>
+                              )}
+                              {sol.periodo && (
+                                <div>
+                                  <span className="text-slate-500 font-medium">
+                                    Período Demandado:
+                                  </span>{' '}
+                                  <strong className="text-slate-900">{sol.periodo}</strong>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Parecer Fundamentado Técnico */}
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                            <FileText className="h-4 w-4 text-[#0284c7]" />
+                            Parecer Fundamentado da Transportadora (Art. 10, §2º da Res. ANP nº
+                            11/2016):
+                          </span>
+                          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 leading-relaxed whitespace-pre-line shadow-2xs">
+                            {sol.parecer_fundamentado ||
+                              'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.'}
+                          </div>
+                        </div>
+
+                        {/* Desfecho Regulatório se houver */}
+                        {sol.desfecho_tipo && (
+                          <div className="p-3 bg-amber-50/70 border border-amber-200 rounded text-xs text-amber-950 space-y-1">
+                            <span className="font-bold block">
+                              Desfecho Regulatório (Art. 10, §2º): {sol.desfecho_tipo}
+                            </span>
+                            {sol.termos_condicoes && (
+                              <p className="text-[11px] text-slate-700">
+                                <strong>Termos e Condições:</strong> {sol.termos_condicoes}
+                              </p>
+                            )}
+                            {sol.previsao_disponibilidade && (
+                              <p className="text-[11px] text-slate-700">
+                                <strong>Previsão de Disponibilidade:</strong>{' '}
+                                {sol.previsao_disponibilidade}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                      Protocolo não localizado
+                    </div>
+                    <p className="leading-relaxed">
+                      Nenhum registro foi encontrado para o código{' '}
+                      <strong className="font-mono">{resultadoConsulta.protocoloPesquisado}</strong>
+                      . Verifique se o número foi digitado corretamente conforme o comprovante
+                      formal recebido por e-mail (Ex: TSB-2026-8942).
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Nota de rodapé da consulta */}
+            <div className="text-[11px] text-slate-500 pt-1 flex items-start gap-1.5">
+              <HelpCircle className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
+              <span>
+                O Parecer Fundamentado é emitido no prazo regulatório de 20 dias úteis e registrado
+                nos termos do Art. 10 da Resolução ANP nº 11/2016, com envio de cópia à ANP nos
+                desfechos do §3º. Dúvidas:{' '}
+                <strong className="text-slate-700">regulacao@tsb.com.br</strong>.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* =========================================================================
-          ITEM 1: CONSULTA DE PROTOCOLO & SLA (INCISO VII) — MANTIDO INTACTO
+          BLOCO 2 — POCC — PROCEDIMENTO DE OFERTA DE CAPACIDADE DE CONTRATAÇÃO
+          (ART. 37-A, RES. ANP Nº 961/2023)
+          Procedimento TEMPORÁRIO, vinculado a capacidade nova (construção/expansão).
+          Contém:
+            1. Aviso/explicação em 1 linha: o POCC é conduzido quando há capacidade nova; sem rodada aberta,
+               os instrumentos permanecem publicados para consulta.
+            2. Os 3 instrumentos da transportadora do Art. 37-A §2º (regulamento, contrato, proposta tarifária).
+            3. Manifestação de Interesse (§5º, I, não vinculante) com botão/modal e tabela de histórico.
+            4. Linha do tempo das 5 etapas do §5º com a etapa atual destacada.
+            5. Nota de que não há etapa de leilão no escopo TSB.
           ========================================================================= */}
-      <Card
-        id="consulta-protocolo-vii"
-        className="border border-slate-200 shadow-xs bg-white scroll-mt-6"
+      <section
+        aria-label="Bloco 2: Procedimento de Oferta de Capacidade de Contratação - POCC"
+        className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 sm:p-7 shadow-xs"
       >
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-[#0a2540]" />
-              <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
-                Consulta de Protocolo &amp; SLA (Inciso VII)
-              </CardTitle>
+        {/* CABEÇALHO DO BLOCO 2 */}
+        <div className="space-y-2 pb-4 border-b border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#0284c7] text-white uppercase tracking-wider">
+                Bloco 2 • Procedimento Temporário
+              </span>
+              <span className="text-[11px] font-mono font-semibold text-[#0a2540]">
+                Art. 37-A, Res. ANP nº 961/2023
+              </span>
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-              Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016
+            <span className="text-[11px] font-mono font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
+              Capacidade Nova • Construção / Expansão
             </span>
           </div>
-          <p className="text-xs text-slate-500">
-            Acompanhe o andamento regulatório da sua solicitação de acesso pelo número de protocolo
-            autuado (SLA regulatório padrão: 20 dias úteis).
-          </p>
-        </CardHeader>
 
-        <CardContent className="p-5 sm:p-6 space-y-4">
-          {/* Formulário de Busca */}
-          <form onSubmit={handleConsultarProtocolo} className="flex flex-col sm:flex-row gap-3">
-            <Input
-              type="text"
-              value={consultaProtocolo}
-              onChange={(e) => setConsultaProtocolo(e.target.value)}
-              placeholder="INFORME O PROTOCOLO (EX: TSB-2026-8942)"
-              className="font-mono text-xs uppercase h-11 border-slate-300 focus-visible:ring-1 focus-visible:ring-[#0a2540] flex-1 tracking-wider"
-            />
-            <Button
-              type="submit"
-              disabled={consultandoProtocolo || !consultaProtocolo.trim()}
-              className="h-11 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs"
-            >
-              {consultandoProtocolo ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                  Consultando...
-                </>
-              ) : (
-                'Verificar Protocolo'
-              )}
-            </Button>
-          </form>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
+            POCC — Procedimento de Oferta de Capacidade de Contratação (Art. 37-A, Res. ANP nº
+            961/2023)
+          </h2>
 
-          {/* Resultado da Consulta do Protocolo VII */}
-          {resultadoConsulta && resultadoConsulta.buscado && (
-            <div className="pt-2 animate-fade-in">
-              {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
-                (() => {
-                  const sol = resultadoConsulta.dados
-                  const userCnpj = (user as unknown as { cnpj?: string })?.cnpj || ''
-                  const userEmail = user?.email || ''
-                  const isTitular = Boolean(
-                    (sol.cnpj &&
-                      userCnpj &&
-                      sol.cnpj.replace(/\D/g, '') === userCnpj.replace(/\D/g, '')) ||
-                    (sol.email && userEmail && sol.email.toLowerCase() === userEmail.toLowerCase()),
-                  )
+          {/* AVISO/EXPLICAÇÃO EM UMA LINHA CONFORME EXIGIDO */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong>Procedimento Temporário:</strong> O POCC é conduzido quando há capacidade nova
+              a oferecer (projetos de construção ou expansão da malha); quando não houver rodada
+              aberta, os instrumentos da transportadora permanecem publicados neste ambiente para
+              consulta pública e subsidiar o planejamento dos Carregadores.
+            </p>
+          </div>
+        </div>
 
-                  return (
-                    <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
-                      {/* Cabeçalho do Resultado */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
-                        <div className="space-y-0.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                            Protocolo Autuado
-                          </span>
-                          <div className="font-mono font-bold text-base sm:text-lg text-[#0a2540] flex items-center gap-2">
-                            <span>{sol.protocolo}</span>
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-semibold">
-                              {sol.status || 'Em Análise Técnica'}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="text-left sm:text-right text-xs text-slate-600">
-                          <div className="font-semibold text-slate-800">
-                            SLA Regulatório: {sol.sla_dias || 20} dias úteis
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-mono">
-                            Data de Entrada:{' '}
-                            {sol.created
-                              ? new Date(sol.created).toLocaleDateString('pt-BR')
-                              : 'Conforme Registro'}
-                          </div>
-                        </div>
-                      </div>
+        {/* 2.1 OS 3 INSTRUMENTOS DA TRANSPORTADORA DO ART. 37-A §2º */}
+        <Card className="border border-slate-200 shadow-none bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[#0a2540]" />
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Instrumentos da Transportadora (Art. 37-A, §2º)
+                </CardTitle>
+              </div>
+              <p className="text-xs text-slate-500">
+                Minuta do regulamento do POCC, minuta do Contrato de Serviço de Transporte e
+                proposta tarifária disponibilizados para consulta dos Carregadores.
+              </p>
+            </div>
+            <span className="text-[11px] text-slate-500 font-mono">
+              {instrumentosNormativos.length} de {slotsArt37A.length} slots publicados
+            </span>
+          </CardHeader>
 
-                      {/* Grid Técnico */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                        <div className="p-3 bg-white border border-slate-200 rounded">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
-                            Modalidade
-                          </span>
-                          <span className="font-semibold text-[#0a2540]">
-                            {sol.modalidade || 'Firme Ordinário'}
-                          </span>
-                        </div>
+          <CardContent className="p-4 sm:p-6">
+            <ul className="divide-y divide-slate-200">
+              {slotsArt37A.map((slot) => {
+                const itemEditavel = instrumentosNormativos.find((it) => it.chave === slot.chave)
+                const resolved = itemEditavel
+                  ? resolverUrlDocumento(itemEditavel, slot.fallbackUrl)
+                  : slot.fallbackUrl
+                    ? {
+                        url: slot.fallbackUrl,
+                        nomeExibicao: slot.fallbackNome,
+                        isUpload: false,
+                      }
+                    : { url: '', nomeExibicao: slot.fallbackNome, isUpload: false }
 
-                        <div className="p-3 bg-white border border-slate-200 rounded">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
-                            Capacidade Solicitada
-                          </span>
-                          <span className="font-semibold text-[#0a2540] font-mono">
-                            {Number(sol.capacidade).toLocaleString('pt-BR')} m³/dia
-                          </span>
-                        </div>
+                const temDoc = Boolean(resolved.url)
 
-                        <div className="p-3 bg-white border border-slate-200 rounded">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
-                            Trecho / Instalação
-                          </span>
-                          <span className="font-semibold text-[#0a2540] truncate block">
-                            {sol.trecho || 'Gasoduto Uruguaiana - Triunfo'}
-                          </span>
-                        </div>
-
-                        <div className="p-3 bg-white border border-slate-200 rounded">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase block">
-                            Pontos (Recebimento &rarr; Entrega)
-                          </span>
-                          <span className="font-semibold text-[#0a2540] truncate block">
-                            {sol.ponto_recebimento || 'EMED Uruguaiana'} &rarr;{' '}
-                            {sol.ponto_entrega || 'Triunfo'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Dados Cadastrais se for o titular logado */}
-                      {isTitular && (
-                        <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded text-xs space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-[#0a2540] flex items-center gap-1.5 text-xs">
-                              <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
-                              Dados Cadastrais da Titularidade (Ambiente Seguro)
-                            </span>
-                            <Badge className="bg-blue-100 text-[#143b73] border-blue-300 text-[10px]">
-                              Solicitante Autenticado
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-700 pt-1">
-                            {sol.razao_social && (
-                              <div>
-                                <span className="text-slate-500 font-medium">Razão Social:</span>{' '}
-                                <strong className="text-slate-900">{sol.razao_social}</strong>
-                              </div>
-                            )}
-                            {sol.cnpj && (
-                              <div>
-                                <span className="text-slate-500 font-medium">CNPJ:</span>{' '}
-                                <strong className="font-mono text-slate-900">{sol.cnpj}</strong>
-                              </div>
-                            )}
-                            {sol.periodo && (
-                              <div>
-                                <span className="text-slate-500 font-medium">
-                                  Período Demandado:
-                                </span>{' '}
-                                <strong className="text-slate-900">{sol.periodo}</strong>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Parecer Fundamentado Técnico */}
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
-                          <FileText className="h-4 w-4 text-[#0284c7]" />
-                          Parecer Fundamentado da Transportadora (Art. 10, §2º da Res. ANP nº
-                          11/2016):
+                return (
+                  <li
+                    key={slot.chave}
+                    className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-0.5 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-semibold text-[#0284c7]">
+                          {slot.inciso}
                         </span>
-                        <div className="p-3.5 bg-white border border-slate-200 rounded text-xs text-slate-700 leading-relaxed whitespace-pre-line shadow-2xs">
-                          {sol.parecer_fundamentado ||
-                            'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.'}
-                        </div>
-                      </div>
-
-                      {/* Desfecho Regulatório se houver */}
-                      {sol.desfecho_tipo && (
-                        <div className="p-3 bg-amber-50/70 border border-amber-200 rounded text-xs text-amber-950 space-y-1">
-                          <span className="font-bold block">
-                            Desfecho Regulatório (Art. 10, §2º): {sol.desfecho_tipo}
+                        {temDoc && resolved.isUpload && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                            PDF Oficial
                           </span>
-                          {sol.termos_condicoes && (
-                            <p className="text-[11px] text-slate-700">
-                              <strong>Termos e Condições:</strong> {sol.termos_condicoes}
-                            </p>
-                          )}
-                          {sol.previsao_disponibilidade && (
-                            <p className="text-[11px] text-slate-700">
-                              <strong>Previsão de Disponibilidade:</strong>{' '}
-                              {sol.previsao_disponibilidade}
-                            </p>
-                          )}
-                        </div>
+                        )}
+                      </div>
+                      <div className="text-xs sm:text-sm font-semibold text-slate-900">
+                        {itemEditavel?.titulo || slot.titulo}
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {itemEditavel?.descricao || slot.descricao}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 self-start sm:self-center">
+                      {temDoc ? (
+                        <a
+                          href={resolved.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{resolved.nomeExibicao || 'Baixar Arquivo'}</span>
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200">
+                          Documento será publicado após aprovação pela ANP
+                        </span>
                       )}
                     </div>
-                  )
-                })()
+                  </li>
+                )
+              })}
+            </ul>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+              <span>
+                Gerenciado via <strong>Editoria de Transparência</strong> na Gestão Interna da TSB.
+              </span>
+              <span className="text-slate-400">
+                Conformidade: Resolução ANP nº 961/2023 (Art. 37-A, §§ 1º ao 4º)
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2.2 MANIFESTAÇÃO DE INTERESSE (§5º, I — NÃO VINCULANTE) */}
+        <Card className="border border-slate-200 bg-white shadow-none overflow-hidden">
+          <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-gradient-to-r from-slate-50 via-white to-sky-50/40">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-sky-100 text-[#0a2540]">
+                <Sparkles className="h-3 w-3 text-[#0284c7]" />
+                Etapa I do Art. 37-A, §5º — Manifestação de Interesse Não Vinculante
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                Manifestação de Interesse no POCC (Art. 37-A, §5º, I — não vinculante)
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Manifeste o interesse da sua empresa no Processo de Oferta e Contratação de
+                Capacidade (POCC) — Ciclo 2026/2027. O registro é <strong>não vinculante</strong>,
+                destina-se ao levantamento de demanda para aprovação das Tarifas de Referência pela
+                ANP e habilita o carregador para a posterior apresentação de Propostas Vinculantes
+                na Etapa III.
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => setModalManifestacaoAberto(true)}
+                  className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
+                >
+                  <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
+                  Registrar Manifestação de Interesse
+                </Button>
               ) : (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-                    Protocolo não localizado
-                  </div>
-                  <p className="leading-relaxed">
-                    Nenhum registro foi encontrado para o código{' '}
-                    <strong className="font-mono">{resultadoConsulta.protocoloPesquisado}</strong>.
-                    Verifique se o número foi digitado corretamente conforme o comprovante formal
-                    recebido por e-mail (Ex: TSB-2026-8942).
-                  </p>
-                </div>
+                <Link to="/login" state={{ from: { pathname: '/poc' } }}>
+                  <Button className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs">
+                    <Lock className="h-3.5 w-3.5 mr-1.5" />
+                    Identifique-se para Registrar
+                  </Button>
+                </Link>
               )}
+              <span className="text-[11px] text-slate-500 text-center sm:text-right">
+                Capacidade Firme Ofertada no Ciclo: <strong>150.000 m³/dia</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* HISTÓRICO DE MANIFESTAÇÕES DO PRÓPRIO CARREGADOR (SE HOUVER) */}
+          {isAuthenticated && temManifestacao && (
+            <div className="border-t border-slate-200 bg-slate-50/70 p-4 sm:p-5 space-y-2">
+              <div className="text-xs font-bold text-[#0a2540] uppercase tracking-wider flex items-center gap-1.5">
+                <FileCheck2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                Sua Manifestação Registrada para o Ciclo Vigente do POCC:
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left bg-white border border-slate-200 rounded">
+                  <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="p-2.5">Protocolo</th>
+                      <th className="p-2.5">Capacidade</th>
+                      <th className="p-2.5">Modalidade</th>
+                      <th className="p-2.5">Trecho</th>
+                      <th className="p-2.5">Status</th>
+                      <th className="p-2.5">Data</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {minhasManifestacoes.map((m) => (
+                      <tr key={m.id} className="hover:bg-slate-50">
+                        <td className="p-2.5 font-mono font-bold text-[#0284c7]">{m.protocolo}</td>
+                        <td className="p-2.5 font-bold text-slate-800">
+                          {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                        </td>
+                        <td className="p-2.5 text-slate-700">{m.modalidade}</td>
+                        <td className="p-2.5 text-slate-600">
+                          {m.ponto_recebimento} &rarr; {m.ponto_entrega}
+                        </td>
+                        <td className="p-2.5">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            {m.status || 'Recebida'}
+                          </span>
+                        </td>
+                        <td className="p-2.5 text-slate-500 font-mono">
+                          {new Date(m.created).toLocaleDateString('pt-BR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
+        </Card>
 
-          {/* Nota de rodapé da consulta */}
-          <div className="text-[11px] text-slate-500 pt-1 flex items-start gap-1.5">
-            <HelpCircle className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />
-            <span>
-              O Parecer Fundamentado é emitido no prazo de até 20 dias úteis e registrado nos termos
-              do Art. 10 da Resolução ANP nº 11/2016. Em caso de dúvidas, contate{' '}
-              <strong className="text-slate-700">regulacao@tsb.com.br</strong>.
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* =========================================================================
-          ITEM 3: BLOCO NORMATIVO DO PROCESSO DE OFERTA E CONTRATAÇÃO (ART. 37-A)
-          5 etapas literais do §5º com a etapa atual destacada conforme o carregador
-          ========================================================================= */}
-      <Card className="border border-slate-200 shadow-xs bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-[#0a2540]" />
-              <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
-                Rito do Processo de Oferta e Contratação de Capacidade (Art. 37-A)
-              </CardTitle>
+        {/* 2.3 LINHA DO TEMPO DAS 5 ETAPAS DO §5º (COM DESTAQUE DA ETAPA ATUAL) */}
+        <Card className="border border-slate-200 shadow-none bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#0a2540]" />
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Etapas Regulatórias do POCC (Art. 37-A, §5º)
+                </CardTitle>
+              </div>
+              <p className="text-xs text-slate-500">
+                Procedimento oficial de 5 etapas sequenciais estabelecido pelo §5º do Art. 37-A da
+                Resolução ANP nº 11/2016 (com redação da Resolução ANP nº 961/2023).
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Procedimento oficial de 5 etapas sequenciais estabelecido pelo §5º do Art. 37-A da
-              Resolução ANP nº 11/2016 (sem etapa de leilão).
-            </p>
-          </div>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-sky-50 text-[#0284c7] border border-sky-200 self-start sm:self-auto">
-            {temManifestacao
-              ? `Etapa Atual do seu Cadastro: ${ETAPAS_ART37A[etapaAtivaNumero - 1].romano}`
-              : 'Ciclo em Andamento: Etapa I'}
-          </span>
-        </CardHeader>
-
-        <CardContent className="p-5 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-            {ETAPAS_ART37A.map((etapa) => {
-              const isAtiva = etapa.numero === etapaAtivaNumero
-              const isPassada = etapa.numero < etapaAtivaNumero
-
-              // Tentar puxar dados customizados do cronograma persistido, se houver
-              const cronoItem = cronograma.find((c) => c.numero_etapa === etapa.numero)
-
-              return (
-                <div
-                  key={etapa.numero}
-                  className={`p-3.5 rounded-lg border text-left flex flex-col justify-between transition-colors ${
-                    isAtiva
-                      ? 'border-[#0a2540] bg-slate-50/90 shadow-2xs'
-                      : isPassada
-                        ? 'border-emerald-300 bg-emerald-50/40'
-                        : 'border-slate-200 bg-white'
-                  }`}
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-1">
-                      <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          isAtiva
-                            ? 'bg-[#0a2540] text-white'
-                            : isPassada
-                              ? 'bg-[#15803d] text-white'
-                              : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {isPassada ? '✓' : etapa.romano}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                          isAtiva
-                            ? 'bg-[#0a2540] text-white'
-                            : isPassada
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                              : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {isAtiva ? 'Etapa Atual' : isPassada ? 'Concluída' : 'Pendente'}
-                      </span>
-                    </div>
-
-                    <div className="text-[10px] font-mono font-semibold text-[#0284c7]">
-                      {etapa.inciso}
-                    </div>
-
-                    <h4 className="text-xs font-bold text-[#0a2540] leading-snug">
-                      {etapa.titulo}
-                    </h4>
-
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      {cronoItem?.descricao || etapa.descricao}
-                    </p>
-                  </div>
-
-                  {cronoItem?.periodo_estimado && (
-                    <div className="text-[10px] text-slate-500 font-mono mt-2 pt-1.5 border-t border-slate-200">
-                      Prazo: {cronoItem.periodo_estimado}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span>
-              <strong>Nota Regulatória:</strong> Em conformidade com o escopo do POCC da TSB, a
-              alocação é realizada diretamente a partir das propostas vinculantes garantidas e das
-              tarifas homologadas pela ANP, <em>sem realização de leilão</em>.
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-sky-50 text-[#0284c7] border border-sky-200 self-start sm:self-auto">
+              {temManifestacao
+                ? `Etapa Atual do seu Cadastro: ${ETAPAS_ART37A[etapaAtivaNumero - 1].romano}`
+                : 'Ciclo em Andamento: Etapa I'}
             </span>
-            <span className="font-semibold text-slate-800 shrink-0 font-mono">
-              Ciclo: 2026/2027
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
 
-      {/* =========================================================================
-          ITEM 4: INSTRUMENTOS DO §2º DO ART. 37-A (REGULAMENTO, CONTRATO, TARIFA)
-          Slots de documentos para download alimentados pela Editoria da Gestão Interna
-          Estilo compacto NTS com estados vazios honestos
-          ========================================================================= */}
-      <Card className="border border-slate-200 shadow-xs bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[#0a2540]" />
-              <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
-                Instrumentos do Art. 37-A, §2º (Documentos Oficiais)
-              </CardTitle>
-            </div>
-            <p className="text-xs text-slate-500">
-              Minuta do regulamento, minuta do Contrato de Serviço de Transporte e proposta
-              tarifária disponibilizados pelo Transportador após aprovação da ANP.
-            </p>
-          </div>
-          <span className="text-[11px] text-slate-500 font-mono">
-            {instrumentosNormativos.length} de {slotsArt37A.length} slots publicados
-          </span>
-        </CardHeader>
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              {ETAPAS_ART37A.map((etapa) => {
+                const isAtiva = etapa.numero === etapaAtivaNumero
+                const isPassada = etapa.numero < etapaAtivaNumero
 
-        <CardContent className="p-5 sm:p-6">
-          <ul className="divide-y divide-slate-200">
-            {slotsArt37A.map((slot) => {
-              const itemEditavel = instrumentosNormativos.find((it) => it.chave === slot.chave)
-              const resolved = itemEditavel
-                ? resolverUrlDocumento(itemEditavel, slot.fallbackUrl)
-                : slot.fallbackUrl
-                  ? {
-                      url: slot.fallbackUrl,
-                      nomeExibicao: slot.fallbackNome,
-                      isUpload: false,
-                    }
-                  : { url: '', nomeExibicao: slot.fallbackNome, isUpload: false }
+                // Tentar puxar dados customizados do cronograma persistido, se houver
+                const cronoItem = cronograma.find((c) => c.numero_etapa === etapa.numero)
 
-              const temDoc = Boolean(resolved.url)
-
-              return (
-                <li
-                  key={slot.chave}
-                  className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="space-y-0.5 max-w-2xl">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-semibold text-[#0284c7]">
-                        {slot.inciso}
-                      </span>
-                      {temDoc && resolved.isUpload && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                          PDF Oficial
+                return (
+                  <div
+                    key={etapa.numero}
+                    className={`p-3.5 rounded-lg border text-left flex flex-col justify-between transition-colors ${
+                      isAtiva
+                        ? 'border-[#0a2540] bg-slate-50/90 shadow-2xs'
+                        : isPassada
+                          ? 'border-emerald-300 bg-emerald-50/40'
+                          : 'border-slate-200 bg-white'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-1">
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            isAtiva
+                              ? 'bg-[#0a2540] text-white'
+                              : isPassada
+                                ? 'bg-[#15803d] text-white'
+                                : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {isPassada ? '✓' : etapa.romano}
                         </span>
-                      )}
-                    </div>
-                    <div className="text-xs sm:text-sm font-semibold text-slate-900">
-                      {itemEditavel?.titulo || slot.titulo}
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      {itemEditavel?.descricao || slot.descricao}
-                    </p>
-                  </div>
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            isAtiva
+                              ? 'bg-[#0a2540] text-white'
+                              : isPassada
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {isAtiva ? 'Etapa Atual' : isPassada ? 'Concluída' : 'Pendente'}
+                        </span>
+                      </div>
 
-                  <div className="shrink-0 self-start sm:self-center">
-                    {temDoc ? (
-                      <a
-                        href={resolved.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        <span>{resolved.nomeExibicao || 'Baixar Arquivo'}</span>
-                      </a>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200">
-                        Documento será publicado após aprovação pela ANP
-                      </span>
+                      <div className="text-[10px] font-mono font-semibold text-[#0284c7]">
+                        {etapa.inciso}
+                      </div>
+
+                      <h4 className="text-xs font-bold text-[#0a2540] leading-snug">
+                        {etapa.titulo}
+                      </h4>
+
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {cronoItem?.descricao || etapa.descricao}
+                      </p>
+                    </div>
+
+                    {cronoItem?.periodo_estimado && (
+                      <div className="text-[10px] text-slate-500 font-mono mt-2 pt-1.5 border-t border-slate-200">
+                        Prazo: {cronoItem.periodo_estimado}
+                      </div>
                     )}
                   </div>
-                </li>
-              )
-            })}
-          </ul>
+                )
+              })}
+            </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
-            <span>
-              Gerenciado via <strong>Editoria de Transparência</strong> na Gestão Interna da TSB.
-            </span>
-            <span className="text-slate-400">
-              Conformidade: Resolução ANP nº 961/2023 (Art. 37-A, §§ 1º ao 4º)
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+            {/* NOTA DE AUSÊNCIA DE LEILÃO NO ESCOPO TSB */}
+            <div className="p-3 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span>
+                <strong>Nota Regulatória:</strong> Em conformidade com o escopo do POCC da TSB, a
+                alocação é realizada diretamente a partir das propostas vinculantes garantidas e das
+                tarifas homologadas pela ANP, <em>sem etapa de leilão</em>.
+              </span>
+              <span className="font-semibold text-slate-800 shrink-0 font-mono">
+                Ciclo: 2026/2027
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* =========================================================================
           MODAL: SUBMISSÃO DE MANIFESTAÇÃO DE INTERESSE (ETAPA I — ESSENCIAL DA NORMA)
