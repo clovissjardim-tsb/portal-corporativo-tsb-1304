@@ -403,6 +403,25 @@ export function EditoriaTransparencia() {
         <button
           type="button"
           onClick={() => {
+            setSubSecaoAtiva('plataforma_inciso')
+            setFiltroPesquisa('')
+          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            subSecaoAtiva === 'plataforma_inciso'
+              ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5 text-emerald-500" />
+          Plataforma Eletrônica &amp; POCC Art. 37-A
+          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-200 text-[#0a2540] font-bold">
+            {contagens.plataforma_inciso}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
             setSubSecaoAtiva('cabecalho')
             setFiltroPesquisa('')
           }}
@@ -492,25 +511,6 @@ export function EditoriaTransparencia() {
           Monitoramento de Congestionamento (Art. 11)
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-amber-200 text-[#0a2540] font-bold">
             {contagens.monitoramento_congestionamento}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setSubSecaoAtiva('plataforma_inciso')
-            setFiltroPesquisa('')
-          }}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            subSecaoAtiva === 'plataforma_inciso'
-              ? 'bg-[#0a2540] text-white shadow-xs'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-          }`}
-        >
-          <Layers className="h-3.5 w-3.5 text-emerald-500" />
-          Plataforma Eletrônica (Incisos I a VIII)
-          <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-200 text-[#0a2540] font-bold">
-            {contagens.plataforma_inciso}
           </span>
         </button>
       </div>

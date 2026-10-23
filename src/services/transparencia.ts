@@ -113,6 +113,26 @@ export const CABECALHOS_FALLBACK: Record<
     descricao:
       'Publicação pública dos resumos consolidados na Plataforma Eletrônica (padrão TBG). A solicitação de acesso e contratação de capacidade ocorre no ambiente seguro e autenticado do POCC (com login), mantendo-se a formalização via formulário PDF e e-mail como canal alternativo.',
   },
+  pocc_regulamento: {
+    titulo: 'Minuta do Regulamento para Oferta e Contratação de Capacidade',
+    descricao:
+      'Regras operacionais, requisitos de habilitação, metodologia de alocação e garantias exigidas dos Carregadores (Art. 37-A, §1º, I e §2º da Resolução ANP nº 11/2016).',
+    nome_arquivo_custom: 'Regulamento do POCC (PDF)',
+  },
+  pocc_minuta_contrato: {
+    titulo: 'Minuta do Contrato de Serviço de Transporte de Gás Natural',
+    descricao:
+      'Minuta padronizada do Contrato de Serviço de Transporte Firme exigida pela Resolução ANP nº 961/2023 (Art. 37-A, §1º, II e §2º).',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2025/03/CONTRATO-MASTER-TSB-2025-2029.pdf',
+    nome_arquivo_custom: 'Minuta Contrato de Transporte (PDF)',
+  },
+  pocc_proposta_tarifaria: {
+    titulo: 'Proposta Tarifária e Tarifas de Referência',
+    descricao:
+      'Proposta tarifária submetida à Consulta Pública Tarifária e homologada pela ANP para o ciclo (Art. 37-A, §1º, III e §2º).',
+    nome_arquivo_custom: 'Proposta Tarifária (PDF)',
+  },
 }
 
 export interface ItemTransparencia {
