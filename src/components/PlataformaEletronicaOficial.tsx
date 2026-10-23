@@ -601,15 +601,30 @@ export default function PlataformaEletronica({
                         </div>
                       </td>
                       <td className="p-3 text-center">
-                        <div className="inline-flex items-center gap-1.5">
+                        <div className="inline-flex flex-wrap items-center justify-center gap-1.5">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setSubAba('vii')}
+                            onClick={() => {
+                              const docVII = resolverUrlDocumento(
+                                incisosBdMap.get('resumo_solicitacoes_vii_pdf'),
+                                '',
+                              )
+                              if (docVII.url) {
+                                window.open(docVII.url, '_blank', 'noopener,noreferrer')
+                              } else {
+                                setSubAba('vii')
+                                setTimeout(() => {
+                                  document
+                                    .getElementById('secao-resumos-oficiais-vii')
+                                    ?.scrollIntoView({ behavior: 'smooth' })
+                                }, 100)
+                              }
+                            }}
                             className="border-slate-300 text-slate-700 hover:bg-slate-100 text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
                           >
-                            <FileText className="h-3.5 w-3.5" />
-                            Painel VII
+                            <FileDown className="h-3.5 w-3.5 text-slate-600" />
+                            Resumo das Solicitações de Acesso Efetuadas
                           </Button>
                           <Link to="/poc">
                             <Button
@@ -617,7 +632,7 @@ export default function PlataformaEletronica({
                               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-[11px] h-7 px-2.5 font-semibold inline-flex items-center gap-1 cursor-pointer"
                             >
                               <Lock className="h-3 w-3 text-slate-200" />
-                              Via POCC
+                              Solicitar Acesso
                             </Button>
                           </Link>
                         </div>
@@ -1011,7 +1026,7 @@ export default function PlataformaEletronica({
                   PADRÃO TBG: RESUMOS DO INCISO VII PUBLICADOS EM PDF ESTÁTICO
                   SUBSTITUIÇÃO DAS TABELAS VIVAS PÚBLICAS POR CARDS DE DOCUMENTO OFICIAL
                   ===================================================================== */}
-              <div className="space-y-4">
+              <div id="secao-resumos-oficiais-vii" className="space-y-4">
                 <div className="space-y-1 pb-2 border-b border-slate-200">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 uppercase tracking-wider font-display">
