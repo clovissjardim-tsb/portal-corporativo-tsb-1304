@@ -26,8 +26,8 @@ export default function Transparencia() {
     'boletim',
   )
 
-  // Sub-abas da Plataforma: 'i_vi' | 'vii' | 'viii'
-  const [subAbaPlataforma, setSubAbaPlataforma] = useState<'i_vi' | 'vii' | 'viii'>('i_vi')
+  // Sub-abas da Plataforma: 'i_vi' | 'vii'
+  const [subAbaPlataforma, setSubAbaPlataforma] = useState<'i_vi' | 'vii'>('i_vi')
 
   // Filtros da Programação Mensal
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
@@ -75,10 +75,8 @@ export default function Transparencia() {
   useEffect(() => {
     if (activePilar === 'plataforma' && subAbaPlataforma === 'vii') {
       carregarResumoVII()
-    } else if (activePilar === 'plataforma' && subAbaPlataforma === 'viii') {
-      carregarOfertasCessao()
     }
-  }, [activePilar, subAbaPlataforma, carregarResumoVII, carregarOfertasCessao])
+  }, [activePilar, subAbaPlataforma, carregarResumoVII])
 
   return (
     <div className="space-y-8 animate-fade-in">

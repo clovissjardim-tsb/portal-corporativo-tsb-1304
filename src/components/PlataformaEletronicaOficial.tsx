@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/hooks/use-toast'
 import {
   FileDown,
   ExternalLink,
@@ -125,8 +126,8 @@ function DocumentLinkRow({ url, label, title, external, sublabel, onClick }: Doc
 
 export interface PlataformaEletronicaProps {
   // Sub-abas
-  subAba: 'i_vi' | 'vii' | 'viii'
-  setSubAba: (aba: 'i_vi' | 'vii' | 'viii') => void
+  subAba: 'i_vi' | 'vii'
+  setSubAba: (aba: 'i_vi' | 'vii') => void
 
   // Inciso VII (opcional/legado para retrocompatibilidade)
   formVII?: {
@@ -218,6 +219,7 @@ export default function PlataformaEletronica({
 }: PlataformaEletronicaProps) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
 
   const handleSolicitarAcessoClick = () => {
     if (isAuthenticated) {
@@ -336,7 +338,7 @@ export default function PlataformaEletronica({
       tituloCurto:
         'Resumo das Ofertas de Cessão de Capacidade Contratada Informadas ao Transportador',
       descricaoPadrao:
-        'Publicação passiva periódica em documento oficial (PDF) do resumo das ofertas de cessão de capacidade contratada informadas à TSB por carregadores, promovendo o aproveitamento eficiente do sistema com garantia de sigilo e conformidade com a LGPD.',
+        'Mecanismo de divulgação de ofertas de capacidade ociosa para cessão entre carregadores, promovendo o aproveitamento eficiente e secundário da malha dutoviária da TSB. Consulta e cadastro públicos de ofertas.',
     },
   }
 
@@ -911,41 +913,22 @@ export default function PlataformaEletronica({
                                   ? docResumoCessoes.nomeExibicao
                                   : 'Resumo das Ofertas de Cessão de Capacidade Contratada (PDF)'
                               }
+                              sublabel="Documento oficial publicado pela TSB"
                             />
                           ) : (
                             <DocumentLinkRow
-                              url="#secao-resumo-oficial-viii"
+                              url="#"
                               onClick={() => {
-                                setSubAba('viii')
-                                setTimeout(() => {
-                                  document
-                                    .getElementById('secao-resumo-oficial-viii')
-                                    ?.scrollIntoView({ behavior: 'smooth' })
-                                }, 100)
+                                toast({
+                                  title: 'Resumo das Ofertas de Cessão de Capacidade Contratada',
+                                  description:
+                                    'Documento oficial publicado periodicamente pela equipe da TSB.',
+                                })
                               }}
                               label="Resumo das Ofertas de Cessão de Capacidade Contratada (PDF)"
-                              sublabel="Consultar card regulatório de publicação do resumo"
+                              sublabel="Documento oficial publicado pela TSB"
                             />
                           )}
-                        </div>
-
-                        {/* ATALHO PARA SEÇÃO RICA PASSIVA DO INCISO VIII */}
-                        <div className="pt-2 border-t border-slate-200/80 flex items-center text-xs">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSubAba('viii')
-                              setTimeout(() => {
-                                document
-                                  .getElementById('secao-resumo-oficial-viii')
-                                  ?.scrollIntoView({ behavior: 'smooth' })
-                              }, 100)
-                            }}
-                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            Ver Publicação Oficial Passiva do Inciso VIII (padrão TAG/NTS) &rarr;
-                          </button>
                         </div>
                       </div>
                     )}
@@ -1121,7 +1104,7 @@ export default function PlataformaEletronica({
                 </div>
               </div>
 
-              {/* NAVEGAÇÃO ENTRE INCISOS VII E VIII */}
+              {/* NAVEGAÇÃO DO INCISO VII */}
               <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
                 <button
                   type="button"
@@ -1136,139 +1119,6 @@ export default function PlataformaEletronica({
                   className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
                 >
                   &larr; Voltar para os Incisos I a VIII
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSubAba('viii')}
-                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:underline font-medium transition-colors cursor-pointer"
-                >
-                  Ir para Inciso VIII (Ofertas de Cessão) &rarr;
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================
-              SUB-ABA 3: INCISO VIII (PUBLICAÇÃO PASSIVA DO RESUMO DE OFERTAS DE CESSÃO EM PDF)
-              ======================================================== */}
-          {subAba === 'viii' && (
-            <div className="space-y-6">
-              {/* =====================================================================
-                  PADRÃO TAG/NTS: PUBLICAÇÃO PASSIVA DO RESUMO DAS OFERTAS DE CESSÃO EM PDF
-                  ===================================================================== */}
-              <div id="secao-resumo-oficial-viii" className="space-y-4">
-                <div className="space-y-1 pb-2 border-b border-slate-200">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 uppercase tracking-wider font-display">
-                      Art. 9º, VIII • Resolução ANP nº 11/2016
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      Padrão TAG/NTS • Publicação Passiva em Documento Oficial (PDF)
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
-                    <ShieldCheck className="h-4 w-4 text-[#0284c7]" />
-                    Resumo das Ofertas de Cessão Informadas ao Transportador por Carregadores
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify">
-                    Em conformidade com o Art. 9º, VIII da Resolução ANP nº 11/2016, a TSB
-                    disponibiliza publicamente o resumo das ofertas de cessão de capacidade
-                    contratada informadas ao Transportador por Carregadores. Trata-se de uma
-                    publicação passiva realizada diretamente pela TSB em formato de documento
-                    oficial (PDF), assegurando a transparência regulatória e a conformidade com as
-                    regras de confidencialidade da LGPD.
-                  </p>
-                </div>
-
-                {(() => {
-                  const itemDoc = incisosBdMap.get('resumo_cessoes_viii_pdf')
-                  const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
-                  const dataAtualizacao = itemDoc?.updated
-                    ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
-                    : null
-                  const dataReferencia = itemDoc?.periodo || null
-
-                  return (
-                    <div className="p-5 sm:p-6 bg-white border border-slate-200 rounded-lg shadow-xs space-y-4 max-w-2xl">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
-                            Documento Oficial • Inciso VIII
-                          </span>
-                          {dataReferencia && (
-                            <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                              Período de Referência: {dataReferencia}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-bold text-sm sm:text-base text-[#0a2540]">
-                          {itemDoc?.titulo || 'Ofertas Ativas de Cessão de Capacidade Contratada'}
-                        </h4>
-                        <p className="text-xs text-slate-600 leading-relaxed text-justify">
-                          {itemDoc?.descricao ||
-                            'Publicação oficial das ofertas ativas de capacidade ociosa informadas por carregadores à TSB, elaborada e atualizada manualmente após verificação de conformidade regulatória (Art. 9º, VIII da Resolução ANP nº 11/2016).'}
-                        </p>
-                        <div className="text-[11px] text-slate-500 pt-1">
-                          {dataAtualizacao ? (
-                            <span>Última atualização: {dataAtualizacao}</span>
-                          ) : (
-                            <span className="italic">
-                              Atualização periódica pela equipe técnica da TSB
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100">
-                        {doc.url ? (
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
-                          >
-                            <FileDown className="h-4 w-4 text-slate-300" />
-                            {doc.nomeExibicao || 'Baixar Resumo de Ofertas Ativas (PDF)'}
-                          </a>
-                        ) : (
-                          <div className="p-4 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
-                            <span className="font-semibold block text-slate-700">
-                              Ainda não há ofertas ativas publicadas.
-                            </span>
-                            <span>
-                              Quando houver ofertas ativas comunicadas e validadas, o documento
-                              oficial em PDF será disponibilizado aqui.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-
-              {/* NAVEGAÇÃO ENTRE INCISOS VII E VIII */}
-              <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSubAba('i_vi')
-                    setTimeout(() => {
-                      document
-                        .getElementById('bloco-incisos-acordeao')
-                        ?.scrollIntoView({ behavior: 'smooth' })
-                    }, 100)
-                  }}
-                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
-                >
-                  &larr; Voltar para os Incisos I a VIII
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSubAba('vii')}
-                  className="inline-flex items-center gap-1.5 text-[#0284c7] hover:underline font-medium transition-colors cursor-pointer"
-                >
-                  Ir para Inciso VII (Solicitação de Acesso) &rarr;
                 </button>
               </div>
             </div>
