@@ -70,12 +70,15 @@ export interface ManifestacaoInteressePOC extends RecordModel {
   ponto_entrega?: string
   periodo_vigencia?: string
   status:
+    | 'Manifestação registrada — aguardando conferência da assinatura'
     | 'Recebida - Em Análise'
     | 'Habilitada para Etapa II'
     | 'Em Ajuste Cadastral'
     | 'Indeferida'
   observacoes_internas?: string
   declaracao_anp_aceita?: boolean
+  arquivo_formulario?: string
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
 }
 
 export interface NovaManifestacaoInput {
@@ -93,6 +96,9 @@ export interface NovaManifestacaoInput {
   ponto_entrega?: string
   periodo_vigencia?: string
   declaracao_anp_aceita: boolean
+  arquivo_formulario?: File | null
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
+  status?: ManifestacaoInteressePOC['status']
 }
 
 export type GarantiaTipo =
@@ -160,9 +166,12 @@ export interface NovaPropostaInput {
   ponto_entrega?: string
 }
 
-export function gerarProtocoloPOC(tipo: 'POCC' | 'PROP' = 'POCC'): string {
+export function gerarProtocoloPOC(tipo: 'POCC' | 'PROP' | 'TSB' = 'TSB'): string {
   const ano = new Date().getFullYear()
   const random4 = Math.floor(1000 + Math.random() * 9000)
+  if (tipo === 'TSB') {
+    return `TSB-${ano}-${random4}`
+  }
   return `${tipo}-TSB-${ano}-${random4}`
 }
 
@@ -294,28 +303,44 @@ export const pocService = {
       throw new Error('Usuário deve estar autenticado para enviar manifestação de interesse.')
     }
 
-    const protocolo = gerarProtocoloPOC('POCC')
+    const protocolo = gerarProtocoloPOC('TSB')
     const ciclo = input.ciclo || '2026/2027'
+    const statusInicial: ManifestacaoInteressePOC['status'] =
+      input.status || 'Manifestação registrada — aguardando conferência da assinatura'
+    const origem = input.origem || 'area_carregador'
 
-    return await pb.collection<ManifestacaoInteressePOC>('poc_manifestacoes').create({
-      user_id: userId,
-      protocolo,
-      ciclo,
-      razao_social: input.razao_social.trim(),
-      cnpj: input.cnpj.trim(),
-      email: input.email.trim(),
-      telefone: input.telefone?.trim() || '',
-      responsavel_nome: input.responsavel_nome.trim(),
-      autorizacao_anp: input.autorizacao_anp?.trim() || '',
-      capacidade_solicitada: input.capacidade_solicitada,
-      modalidade: input.modalidade,
-      trecho: input.trecho,
-      ponto_recebimento: input.ponto_recebimento || 'Paso de Los Libres',
-      ponto_entrega: input.ponto_entrega || 'Triunfo',
-      periodo_vigencia: input.periodo_vigencia || '2026/2027',
-      status: 'Recebida - Em Análise',
-      declaracao_anp_aceita: input.declaracao_anp_aceita,
+    const formData = new FormData()
+    formData.append('user_id', userId)
+    formData.append('protocolo', protocolo)
+    formData.append('ciclo', ciclo)
+    formData.append('razao_social', input.razao_social.trim())
+    formData.append('cnpj', input.cnpj.trim())
+    formData.append('email', input.email.trim())
+    formData.append('telefone', input.telefone?.trim() || '')
+    formData.append('responsavel_nome', input.responsavel_nome.trim())
+    formData.append('autorizacao_anp', input.autorizacao_anp?.trim() || '')
+    formData.append('capacidade_solicitada', String(input.capacidade_solicitada))
+    formData.append('modalidade', input.modalidade)
+    formData.append('trecho', input.trecho)
+    formData.append('ponto_recebimento', input.ponto_recebimento || 'Paso de Los Libres')
+    formData.append('ponto_entrega', input.ponto_entrega || 'Triunfo')
+    formData.append('periodo_vigencia', input.periodo_vigencia || '2026/2027')
+    formData.append('status', statusInicial)
+    formData.append('origem', origem)
+    formData.append('declaracao_anp_aceita', input.declaracao_anp_aceita ? 'true' : 'false')
+
+    if (input.arquivo_formulario instanceof File) {
+      formData.append('arquivo_formulario', input.arquivo_formulario)
+    }
+
+    return await pb.collection<ManifestacaoInteressePOC>('poc_manifestacoes').create(formData, {
+      requestKey: null,
     })
+  },
+
+  obterUrlArquivoManifestacao(record: ManifestacaoInteressePOC): string | null {
+    if (!record.arquivo_formulario) return null
+    return pb.files.getURL(record, record.arquivo_formulario)
   },
 
   async listarManifestacoesDoUsuario(userId?: string): Promise<ManifestacaoInteressePOC[]> {

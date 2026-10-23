@@ -9,6 +9,7 @@ import {
   ItemTransparencia,
   resolverUrlDocumento,
 } from '@/services/transparencia'
+import { gerarManifestacaoPocPdf } from '@/services/formularioManifestacaoPocPdf'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +39,7 @@ import {
   ExternalLink,
   Check,
   Calendar,
+  UploadCloud,
 } from 'lucide-react'
 
 // 5 etapas literais do Art. 37-A, §5º da Resolução ANP nº 11/2016 (com redação da Res. 961/2023)
@@ -136,20 +138,49 @@ export function POC() {
     dados?: SolicitacaoIncisoVII
   } | null>(null)
 
-  // Modal Manifestação de Interesse (Etapa I, não vinculante)
+  // Modal Manifestação de Interesse (Etapa I, não vinculante) — Fluxo Híbrido
   const [modalManifestacaoAberto, setModalManifestacaoAberto] = useState(false)
+  const [etapaFluxoManif, setEtapaFluxoManif] = useState<'formulario' | 'upload_assinatura'>(
+    'formulario',
+  )
+  const [gerandoPdf, setGerandoPdf] = useState(false)
   const [enviandoForm, setEnviandoForm] = useState(false)
+  const [arquivoAssinadoManif, setArquivoAssinadoManif] = useState<File | null>(null)
+  const [protocoloGeradoPOCC, setProtocoloGeradoPOCC] = useState<{
+    protocolo: string
+    registro: ManifestacaoInteressePOC
+  } | null>(null)
+
+  // Opções de trechos e pontos integrados com a malha da TSB
+  const opcoesTrechosManif = [
+    {
+      id: 'trecho_1',
+      trecho: 'Trecho 1 (Gasoduto Uruguaiana)',
+      ponto_recebimento: 'PE Uruguaiana (Paso de Los Libres / Fronteira)',
+      ponto_entrega: 'ZS Uruguaiana (UTE Uruguaiana)',
+      label: 'Trecho 1 — PE Uruguaiana ➔ ZS Uruguaiana',
+    },
+    {
+      id: 'trecho_3',
+      trecho: 'Trecho 3 (Gasoduto Triunfo)',
+      ponto_recebimento: 'PE Canoas (Interconexão TBG)',
+      ponto_entrega: 'ZS Triunfo (Polo Petroquímico)',
+      label: 'Trecho 3 — PE Canoas ➔ ZS Triunfo (Polo Petroquímico)',
+    },
+  ]
 
   // Formulário essencial da Manifestação de Interesse (Art. 37-A, §5º, I e Art. 10 da Res. 11/2016)
   const [formManif, setFormManif] = useState({
-    razao_social: '',
-    cnpj: '',
+    trecho_opcao_id: 'trecho_3',
     capacidade_solicitada: 150000,
-    modalidade: 'Firme Ordinário' as 'Firme Ordinário' | 'Extraordinário' | 'Interruptível',
-    trecho: 'Gasoduto Uruguaiana - Triunfo (Trechos 1 e 3)',
-    ponto_recebimento: 'EMED Paso de Los Libres (Fronteira Argentina)',
-    ponto_entrega: 'Triunfo (Polo Petroquímico)',
-    periodo_vigencia: '2026/2027',
+    modalidade: 'Firme Ordinário' as 'Firme Ordinário' | 'Interruptível',
+    trecho: 'Trecho 3 (Gasoduto Triunfo)',
+    ponto_recebimento: 'PE Canoas (Interconexão TBG)',
+    ponto_entrega: 'ZS Triunfo (Polo Petroquímico)',
+    data_inicio: '2026-01-01',
+    data_fim: '2026-12-31',
+    periodo_vigencia: '2026-01-01 a 2026-12-31',
+    observacoes: '',
     declaracao_nao_vinculante: true,
   })
 
@@ -187,17 +218,15 @@ export function POC() {
     }
   }, [location.hash])
 
-  // Pré-preenchimento dos dados cadastrais do Carregador autenticado
+  // Atualiza datas de vigência ao alterar data de início/fim
   useEffect(() => {
-    if (user) {
+    if (formManif.data_inicio && formManif.data_fim) {
       setFormManif((prev) => ({
         ...prev,
-        razao_social:
-          (user as unknown as { razao_social?: string }).razao_social || user.name || '',
-        cnpj: (user as unknown as { cnpj?: string }).cnpj || '',
+        periodo_vigencia: `${prev.data_inicio} a ${prev.data_fim}`,
       }))
     }
-  }, [user])
+  }, [formManif.data_inicio, formManif.data_fim])
 
   // Carregar dados normativos, cronograma e manifestações
   const carregarDados = useCallback(async () => {
@@ -287,8 +316,131 @@ export function POC() {
     }
   }
 
-  // Submissão da Manifestação de Interesse (Etapa I — Não Vinculante)
-  const handleEnviarManifestacao = async (e: React.FormEvent) => {
+  // Dados de identificação do usuário logado (fixos e não editáveis)
+  const razaoSocialUsuario =
+    (user as unknown as { razao_social?: string })?.razao_social ||
+    user?.name ||
+    'Carregador Cadastrado'
+  const cnpjUsuario = (user as unknown as { cnpj?: string })?.cnpj || 'Cadastro ativo'
+  const representanteLegalUsuario =
+    (user as unknown as { responsavel?: string })?.responsavel ||
+    user?.name ||
+    'Representante Legal'
+  const emailUsuario = user?.email || 'contato@carregador.com.br'
+  const telefoneUsuario = (user as unknown as { telefone?: string })?.telefone || ''
+
+  // Etapa 1 do Fluxo Híbrido: Concluir formulário e Baixar PDF oficial no modelo TSB
+  const handleBaixarPdfManifestacao = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: 'Autenticação necessária',
+        description: 'Faça login com sua conta de Carregador para acessar o POCC.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!formManif.capacidade_solicitada || formManif.capacidade_solicitada <= 0) {
+      toast({
+        title: 'Capacidade obrigatória',
+        description: 'Informe uma capacidade pretendida válida (m³/dia).',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!formManif.data_inicio || !formManif.data_fim) {
+      toast({
+        title: 'Período obrigatório',
+        description: 'Preencha as datas de início e término do período de interesse.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!formManif.declaracao_nao_vinculante) {
+      toast({
+        title: 'Termo de não vinculação obrigatório',
+        description: 'Confirme a ciência do termo de não vinculação do Art. 37-A, §5º, I.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setGerandoPdf(true)
+    try {
+      await gerarManifestacaoPocPdf({
+        emailDestino: emailUsuario,
+        dadosPreenchidos: {
+          razaoSocial: razaoSocialUsuario,
+          cnpj: cnpjUsuario,
+          representanteLegal: representanteLegalUsuario,
+          emailCorporativo: emailUsuario,
+          telefoneCorporativo: telefoneUsuario,
+          capacidade: formManif.capacidade_solicitada,
+          modalidade: formManif.modalidade,
+          trecho: formManif.trecho,
+          pontoRecebimento: formManif.ponto_recebimento,
+          pontoEntrega: formManif.ponto_entrega,
+          periodoInicio: formManif.data_inicio,
+          periodoFim: formManif.data_fim,
+          periodoTexto: `${formManif.data_inicio} a ${formManif.data_fim}`,
+          observacoes: formManif.observacoes,
+          ciclo: 'Ciclo POCC 2026/2027',
+        },
+      })
+
+      // Avança para a etapa de reanexo do documento assinado
+      setEtapaFluxoManif('upload_assinatura')
+      toast({
+        title: 'PDF gerado com sucesso!',
+        description:
+          'Documento oficial baixado. Colete a assinatura do representante legal e faça o upload abaixo para emissão do protocolo definitivo.',
+      })
+    } catch (err: unknown) {
+      console.error('Erro ao gerar PDF da Manifestação:', err)
+      toast({
+        title: 'Falha na geração do PDF',
+        description: 'Não foi possível compor o documento oficial. Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setGerandoPdf(false)
+    }
+  }
+
+  // Validação e seleção do arquivo PDF assinado
+  const handleSelecionarArquivoAssinado = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast({
+        title: 'Formato inválido',
+        description: 'São aceitos exclusivamente arquivos em formato PDF (.pdf).',
+        variant: 'destructive',
+      })
+      e.target.value = ''
+      setArquivoAssinadoManif(null)
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito extenso',
+        description: 'O arquivo PDF não pode exceder 50 MB.',
+        variant: 'destructive',
+      })
+      e.target.value = ''
+      setArquivoAssinadoManif(null)
+      return
+    }
+
+    setArquivoAssinadoManif(file)
+  }
+
+  // Etapa 2 do Fluxo Híbrido: Reanexo do PDF assinado e emissão do protocolo TSB-AAAA-XXXX
+  const handleConfirmarUploadAssinado = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isAuthenticated) {
       toast({
@@ -299,10 +451,12 @@ export function POC() {
       return
     }
 
-    if (!formManif.razao_social.trim() || !formManif.cnpj.trim()) {
+    // VALIDAÇÃO CRÍTICA: O protocolo final NÃO nasce sem o arquivo assinado anexado
+    if (!arquivoAssinadoManif) {
       toast({
-        title: 'Dados cadastrais obrigatórios',
-        description: 'Razão Social e CNPJ do Carregador são indispensáveis.',
+        title: 'Documento assinado obrigatório',
+        description:
+          'O protocolo regulatório só pode ser autuado mediante o anexo do PDF assinado pelo representante legal.',
         variant: 'destructive',
       })
       return
@@ -312,27 +466,36 @@ export function POC() {
     try {
       const nova = await pocService.criarManifestacao({
         ciclo: '2026/2027',
-        razao_social: formManif.razao_social,
-        cnpj: formManif.cnpj,
-        email: user?.email || '',
-        telefone: (user as unknown as { telefone?: string })?.telefone || '',
-        responsavel_nome:
-          (user as unknown as { responsavel?: string })?.responsavel || user?.name || '',
+        razao_social: razaoSocialUsuario,
+        cnpj: cnpjUsuario,
+        email: emailUsuario,
+        telefone: telefoneUsuario,
+        responsavel_nome: representanteLegalUsuario,
         autorizacao_anp: (user as unknown as { autorizacao_anp?: string })?.autorizacao_anp || '',
         capacidade_solicitada: Number(formManif.capacidade_solicitada),
         modalidade: formManif.modalidade,
         trecho: formManif.trecho,
         ponto_recebimento: formManif.ponto_recebimento,
         ponto_entrega: formManif.ponto_entrega,
-        periodo_vigencia: formManif.periodo_vigencia,
+        periodo_vigencia: `${formManif.data_inicio} a ${formManif.data_fim}`,
         declaracao_anp_aceita: formManif.declaracao_nao_vinculante,
+        arquivo_formulario: arquivoAssinadoManif,
+        origem: 'area_carregador',
+        status: 'Manifestação registrada — aguardando conferência da assinatura',
       })
 
       setMinhasManifestacoes((prev) => [nova, ...prev])
+      setProtocoloGeradoPOCC({
+        protocolo: nova.protocolo,
+        registro: nova,
+      })
       setModalManifestacaoAberto(false)
+      setEtapaFluxoManif('formulario')
+      setArquivoAssinadoManif(null)
+
       toast({
-        title: 'Manifestação de Interesse Registrada!',
-        description: `Protocolo único gerado: ${nova.protocolo}. Acompanhe as próximas etapas do Art. 37-A do POCC.`,
+        title: 'Manifestação de Interesse Protocolada!',
+        description: `Protocolo único gerado: ${nova.protocolo}. Status: Manifestação registrada — aguardando conferência da assinatura.`,
       })
     } catch (err: unknown) {
       const msg =
@@ -2446,7 +2609,11 @@ export function POC() {
 
                   <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
                     <Button
-                      onClick={() => setModalManifestacaoAberto(true)}
+                      onClick={() => {
+                        setEtapaFluxoManif('formulario')
+                        setArquivoAssinadoManif(null)
+                        setModalManifestacaoAberto(true)
+                      }}
                       className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
                     >
                       <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
@@ -2457,6 +2624,56 @@ export function POC() {
                     </span>
                   </div>
                 </div>
+
+                {/* BANNER DE CONFIRMAÇÃO DO PROTOCOLO POCC */}
+                {protocoloGeradoPOCC && (
+                  <div className="p-4 sm:p-5 bg-emerald-50 border-t border-b border-emerald-300 space-y-3 animate-fade-in">
+                    <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                          <Check className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
+                            Manifestação de Interesse Protocolada
+                          </span>
+                          <span className="font-mono text-lg sm:text-xl font-bold text-emerald-950">
+                            {protocoloGeradoPOCC.protocolo}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-semibold">
+                        Origem: Área do Carregador (autenticado)
+                      </Badge>
+                    </div>
+
+                    <p className="text-xs text-emerald-900 leading-relaxed">
+                      Sua manifestação de interesse foi protocolada sob o número{' '}
+                      <strong className="font-mono">{protocoloGeradoPOCC.protocolo}</strong> com o
+                      documento oficial assinado devidamente anexado. O registro encontra-se no
+                      status{' '}
+                      <strong>
+                        &ldquo;Manifestação registrada — aguardando conferência da assinatura&rdquo;
+                      </strong>{' '}
+                      e foi encaminhado para a fila de Gestão Interna da TSB para conferência
+                      cadastral e habilitação para a Etapa II do POCC (Art. 37-A, §5º, II).
+                    </p>
+
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      <span className="text-emerald-700 text-[11px]">
+                        Comprovante oficial arquivado no sistema regulatório da TSB.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProtocoloGeradoPOCC(null)}
+                        className="text-emerald-800 hover:underline cursor-pointer font-medium"
+                      >
+                        Fechar aviso
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* HISTÓRICO DE MANIFESTAÇÕES DO PRÓPRIO CARREGADOR */}
                 {temManifestacao ? (
@@ -2474,32 +2691,52 @@ export function POC() {
                             <th className="p-2.5">Modalidade</th>
                             <th className="p-2.5">Trecho</th>
                             <th className="p-2.5">Status</th>
+                            <th className="p-2.5">Doc. Assinado</th>
                             <th className="p-2.5">Data</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                          {minhasManifestacoes.map((m) => (
-                            <tr key={m.id} className="hover:bg-slate-50">
-                              <td className="p-2.5 font-mono font-bold text-[#0284c7]">
-                                {m.protocolo}
-                              </td>
-                              <td className="p-2.5 font-bold text-slate-800">
-                                {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
-                              </td>
-                              <td className="p-2.5 text-slate-700">{m.modalidade}</td>
-                              <td className="p-2.5 text-slate-600">
-                                {m.ponto_recebimento} &rarr; {m.ponto_entrega}
-                              </td>
-                              <td className="p-2.5">
-                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                  {m.status || 'Recebida'}
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-slate-500 font-mono">
-                                {new Date(m.created).toLocaleDateString('pt-BR')}
-                              </td>
-                            </tr>
-                          ))}
+                          {minhasManifestacoes.map((m) => {
+                            const urlArquivo = pocService.obterUrlArquivoManifestacao(m)
+                            return (
+                              <tr key={m.id} className="hover:bg-slate-50">
+                                <td className="p-2.5 font-mono font-bold text-[#0284c7]">
+                                  {m.protocolo}
+                                </td>
+                                <td className="p-2.5 font-bold text-slate-800">
+                                  {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                                </td>
+                                <td className="p-2.5 text-slate-700">{m.modalidade}</td>
+                                <td className="p-2.5 text-slate-600">
+                                  {m.ponto_recebimento} &rarr; {m.ponto_entrega}
+                                </td>
+                                <td className="p-2.5">
+                                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    {m.status ||
+                                      'Manifestação registrada — aguardando conferência da assinatura'}
+                                  </span>
+                                </td>
+                                <td className="p-2.5">
+                                  {urlArquivo ? (
+                                    <a
+                                      href={urlArquivo}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:underline"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                      PDF Assinado
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-400 text-[11px]">N/D</span>
+                                  )}
+                                </td>
+                                <td className="p-2.5 text-slate-500 font-mono">
+                                  {new Date(m.created).toLocaleDateString('pt-BR')}
+                                </td>
+                              </tr>
+                            )
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -2517,210 +2754,484 @@ export function POC() {
       </section>
 
       {/* =========================================================================
-          MODAL: SUBMISSÃO DE MANIFESTAÇÃO DE INTERESSE (ETAPA I — ESSENCIAL DA NORMA)
-          Razão social, CNPJ, capacidade, trecho/pontos, modalidade firme, período.
-          Manifestação de interesse NÃO vinculante (§5º, I).
+          MODAL: FLUXO HÍBRIDO DE MANIFESTAÇÃO DE INTERESSE NO POCC (ART. 37-A §5º, I)
+          1. Formulário no portal com identificação pré-preenchida não editável;
+          2. Geração e download do PDF no modelo oficial institucional TSB;
+          3. Reanexo do documento assinado (upload obrigatório);
+          4. Protocolo TSB-AAAA-XXXX emitido após conferência.
           ========================================================================= */}
       {modalManifestacaoAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200 max-h-[92vh] overflow-y-auto relative">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[92vh] overflow-y-auto relative">
             <button
               type="button"
-              onClick={() => setModalManifestacaoAberto(false)}
+              onClick={() => {
+                setModalManifestacaoAberto(false)
+                setEtapaFluxoManif('formulario')
+                setArquivoAssinadoManif(null)
+              }}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-3 text-[#0a2540]">
+            {/* Cabeçalho do Modal com identificação das 2 etapas do rito híbrido */}
+            <div className="flex items-center gap-3 text-[#0a2540] border-b border-slate-200 pb-3">
               <div className="p-2 bg-sky-50 rounded-full text-[#0284c7]">
                 <Send className="h-5 w-5" />
               </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold">
-                  Manifestação de Interesse no POCC (Art. 37-A §5º, I — não vinculante)
+              <div className="space-y-0.5">
+                <h3 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Manifestação de Interesse no POCC (Art. 37-A, §5º, I — não vinculante)
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Etapa I do Art. 37-A, §5º da Resolução ANP nº 11/2016 (Res. 961/2023)
+                  Rito Híbrido: Preenchimento &bull; Download do Modelo Oficial &bull; Assinatura
+                  &bull; Reanexo
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleEnviarManifestacao} className="space-y-4 text-xs">
-              <div className="p-3 bg-sky-50/70 border border-sky-200 rounded text-sky-950 leading-relaxed">
-                <strong>Manifestação Não Vinculante (§5º, I):</strong> Este registro formaliza a
-                identificação do Carregador Interessado e a indicação de demanda para embasamento
-                das Tarifas de Referência pela ANP. Não constitui obrigação financeira ou reserva
-                definitiva.
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1 sm:col-span-2">
-                  <Label htmlFor="m_razao" className="text-xs font-semibold text-slate-700">
-                    Razão Social do Carregador Interessado *
-                  </Label>
-                  <Input
-                    id="m_razao"
-                    required
-                    value={formManif.razao_social}
-                    onChange={(e) => setFormManif({ ...formManif, razao_social: e.target.value })}
-                    className="h-8 text-xs bg-slate-50 font-medium"
-                  />
-                </div>
-
-                <div className="space-y-1 sm:col-span-2">
-                  <Label htmlFor="m_cnpj" className="text-xs font-semibold text-slate-700">
-                    CNPJ *
-                  </Label>
-                  <Input
-                    id="m_cnpj"
-                    required
-                    value={formManif.cnpj}
-                    onChange={(e) => setFormManif({ ...formManif, cnpj: e.target.value })}
-                    className="h-8 text-xs font-mono bg-slate-50"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="m_cap" className="text-xs font-semibold text-slate-700">
-                    Capacidade de Interesse (m³/dia) *
-                  </Label>
-                  <Input
-                    id="m_cap"
-                    type="number"
-                    required
-                    min={1}
-                    value={formManif.capacidade_solicitada}
-                    onChange={(e) =>
-                      setFormManif({ ...formManif, capacidade_solicitada: Number(e.target.value) })
-                    }
-                    className="h-8 text-xs font-bold"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="m_mod" className="text-xs font-semibold text-slate-700">
-                    Modalidade *
-                  </Label>
-                  <select
-                    id="m_mod"
-                    value={formManif.modalidade}
-                    onChange={(e) =>
-                      setFormManif({
-                        ...formManif,
-                        modalidade: e.target.value as
-                          | 'Firme Ordinário'
-                          | 'Extraordinário'
-                          | 'Interruptível',
-                      })
-                    }
-                    className="w-full h-8 px-2 rounded border border-slate-300 text-xs bg-white"
+            {/* Stepper explicativo das duas etapas */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div
+                className={`p-2.5 rounded border transition-colors ${
+                  etapaFluxoManif === 'formulario'
+                    ? 'bg-sky-50 border-sky-300 text-[#0a2540] font-semibold'
+                    : 'bg-slate-50 border-slate-200 text-slate-500'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
+                      etapaFluxoManif === 'formulario'
+                        ? 'bg-[#0284c7] text-white'
+                        : 'bg-slate-300 text-slate-700'
+                    }`}
                   >
-                    <option value="Firme Ordinário">Firme Ordinário (POCC Anual)</option>
-                    <option value="Extraordinário">Extraordinário</option>
-                    <option value="Interruptível">Interruptível</option>
-                  </select>
+                    1
+                  </span>
+                  <span>1. Preenchimento &amp; Download</span>
+                </div>
+              </div>
+
+              <div
+                className={`p-2.5 rounded border transition-colors ${
+                  etapaFluxoManif === 'upload_assinatura'
+                    ? 'bg-sky-50 border-sky-300 text-[#0a2540] font-semibold'
+                    : 'bg-slate-50 border-slate-200 text-slate-500'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
+                      etapaFluxoManif === 'upload_assinatura'
+                        ? 'bg-[#0284c7] text-white'
+                        : 'bg-slate-300 text-slate-700'
+                    }`}
+                  >
+                    2
+                  </span>
+                  <span>2. Reanexo do PDF Assinado</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TERMO DE NÃO VINCULAÇÃO VISÍVEL NO FORMULÁRIO */}
+            <div className="p-3 bg-sky-50/70 border border-sky-200 rounded text-xs text-sky-950 leading-relaxed">
+              <strong>Termo de Não Vinculação (Art. 37-A, §5º, I):</strong> Esta Manifestação de
+              Interesse possui caráter <strong>não vinculante</strong> e destina-se exclusivamente
+              ao levantamento preliminar de demanda para embasamento das Tarifas de Referência pela
+              ANP (§5º, II). A submissão habilita o Carregador para apresentação posterior de
+              Propostas Garantidas Vinculantes na Etapa III (§5º, III).
+            </div>
+
+            {/* ETAPA 1: PREENCHIMENTO DO FORMULÁRIO & BAIXAR PDF */}
+            {etapaFluxoManif === 'formulario' && (
+              <div className="space-y-4 text-xs">
+                {/* BLOCO DE IDENTIFICAÇÃO PREENCHIDO AUTOMATICAMENTE E NÃO EDITÁVEL */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                      <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                      Identificação do Carregador Interessado (Autenticado)
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Preenchido automaticamente a partir da conta (não editável)
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 pt-1">
+                    <div className="p-2 bg-white border border-slate-200 rounded">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                        Razão Social
+                      </span>
+                      <span className="font-bold text-slate-900 truncate block">
+                        {razaoSocialUsuario}
+                      </span>
+                    </div>
+
+                    <div className="p-2 bg-white border border-slate-200 rounded">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                        CNPJ
+                      </span>
+                      <span className="font-mono font-semibold text-slate-900 block">
+                        {cnpjUsuario}
+                      </span>
+                    </div>
+
+                    <div className="p-2 bg-white border border-slate-200 rounded">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                        Representante Legal
+                      </span>
+                      <span className="font-medium text-slate-900 truncate block">
+                        {representanteLegalUsuario}
+                      </span>
+                    </div>
+
+                    <div className="p-2 bg-white border border-slate-200 rounded">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                        E-mail Corporativo
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-900 truncate block">
+                        {emailUsuario}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-1 sm:col-span-2">
-                  <Label htmlFor="m_trecho" className="text-xs font-semibold text-slate-700">
-                    Trecho / Instalação Objeto *
-                  </Label>
-                  <Input
-                    id="m_trecho"
-                    required
-                    value={formManif.trecho}
-                    onChange={(e) => setFormManif({ ...formManif, trecho: e.target.value })}
-                    className="h-8 text-xs"
-                  />
+                {/* CAMPOS DO RITO PREENCHIDOS PELO CARREGADOR */}
+                <div className="space-y-3">
+                  <span className="font-bold text-[#0a2540] block text-xs uppercase tracking-wide">
+                    Especificações da Demanda Pretendida no POCC
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* CAPACIDADE PRETENDIDA */}
+                    <div className="space-y-1">
+                      <Label htmlFor="m_cap" className="text-xs font-semibold text-slate-700">
+                        Capacidade Pretendida (m³/dia) *
+                      </Label>
+                      <Input
+                        id="m_cap"
+                        type="number"
+                        required
+                        min={1}
+                        value={formManif.capacidade_solicitada}
+                        onChange={(e) =>
+                          setFormManif({
+                            ...formManif,
+                            capacidade_solicitada: Number(e.target.value),
+                          })
+                        }
+                        className="h-8.5 text-xs font-mono font-bold bg-white"
+                      />
+                      <span className="text-[10px] text-slate-500 block">
+                        Mínimo 1 m³/dia • Volume diário médio contratado
+                      </span>
+                    </div>
+
+                    {/* MODALIDADE */}
+                    <div className="space-y-1">
+                      <Label htmlFor="m_mod" className="text-xs font-semibold text-slate-700">
+                        Modalidade de Contratação *
+                      </Label>
+                      <select
+                        id="m_mod"
+                        value={formManif.modalidade}
+                        onChange={(e) =>
+                          setFormManif({
+                            ...formManif,
+                            modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
+                          })
+                        }
+                        className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                      >
+                        <option value="Firme Ordinário">Firme Ordinário (POCC Anual)</option>
+                        <option value="Interruptível">Interruptível</option>
+                      </select>
+                      <span className="text-[10px] text-slate-500 block">
+                        Art. 37-A, §5º, I da Resolução ANP nº 961/2023
+                      </span>
+                    </div>
+
+                    {/* SELEÇÃO DO TRECHO E PONTOS RELEVANTES */}
+                    <div className="space-y-1 sm:col-span-2">
+                      <Label
+                        htmlFor="m_trecho_sel"
+                        className="text-xs font-semibold text-slate-700"
+                      >
+                        Trecho e Pontos da Malha TSB (Pontos Homologados) *
+                      </Label>
+                      <select
+                        id="m_trecho_sel"
+                        value={formManif.trecho_opcao_id}
+                        onChange={(e) => {
+                          const op =
+                            opcoesTrechosManif.find((o) => o.id === e.target.value) ||
+                            opcoesTrechosManif[0]
+                          setFormManif({
+                            ...formManif,
+                            trecho_opcao_id: op.id,
+                            trecho: op.trecho,
+                            ponto_recebimento: op.ponto_recebimento,
+                            ponto_entrega: op.ponto_entrega,
+                          })
+                        }}
+                        className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                      >
+                        {opcoesTrechosManif.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* DETALHAMENTO DOS PONTOS DE ENTRADA E SAÍDA SELECIONADOS */}
+                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded sm:col-span-2 text-[11px] text-slate-600 space-y-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div>
+                          <span className="font-semibold text-slate-700">
+                            Ponto de Entrada (PE):
+                          </span>{' '}
+                          <strong className="text-[#0a2540]">{formManif.ponto_recebimento}</strong>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-700">Ponto de Saída (ZS):</span>{' '}
+                          <strong className="text-[#0a2540]">{formManif.ponto_entrega}</strong>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        Trecho vinculado: <strong>{formManif.trecho}</strong>
+                      </div>
+                    </div>
+
+                    {/* PERÍODO DE INTERESSE: DATA INÍCIO */}
+                    <div className="space-y-1">
+                      <Label htmlFor="m_dt_ini" className="text-xs font-semibold text-slate-700">
+                        Período de Interesse: Data Início *
+                      </Label>
+                      <Input
+                        id="m_dt_ini"
+                        type="date"
+                        required
+                        value={formManif.data_inicio}
+                        onChange={(e) =>
+                          setFormManif({ ...formManif, data_inicio: e.target.value })
+                        }
+                        className="h-8.5 text-xs bg-white"
+                      />
+                    </div>
+
+                    {/* PERÍODO DE INTERESSE: DATA FIM */}
+                    <div className="space-y-1">
+                      <Label htmlFor="m_dt_fim" className="text-xs font-semibold text-slate-700">
+                        Período de Interesse: Data Fim *
+                      </Label>
+                      <Input
+                        id="m_dt_fim"
+                        type="date"
+                        required
+                        value={formManif.data_fim}
+                        onChange={(e) => setFormManif({ ...formManif, data_fim: e.target.value })}
+                        className="h-8.5 text-xs bg-white"
+                      />
+                    </div>
+
+                    {/* OBSERVAÇÕES OPCIONAIS */}
+                    <div className="space-y-1 sm:col-span-2">
+                      <Label htmlFor="m_obs" className="text-xs font-semibold text-slate-700">
+                        Observações Opcionais / Condicionantes Técnicas
+                      </Label>
+                      <Input
+                        id="m_obs"
+                        placeholder="Ex: perfil operacional pretendido, sazonalidade, pontos de conexão..."
+                        value={formManif.observacoes}
+                        onChange={(e) =>
+                          setFormManif({ ...formManif, observacoes: e.target.value })
+                        }
+                        className="h-8.5 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="m_rec" className="text-xs font-semibold text-slate-700">
-                    Ponto de Entrada / Recebimento *
-                  </Label>
-                  <Input
-                    id="m_rec"
-                    required
-                    value={formManif.ponto_recebimento}
+                {/* CHECKBOX DO TERMO DE NÃO VINCULAÇÃO */}
+                <div className="p-3 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    id="m_decl_hibrido"
+                    checked={formManif.declaracao_nao_vinculante}
                     onChange={(e) =>
-                      setFormManif({ ...formManif, ponto_recebimento: e.target.value })
+                      setFormManif({ ...formManif, declaracao_nao_vinculante: e.target.checked })
                     }
-                    className="h-8 text-xs"
+                    className="mt-0.5 rounded text-[#0a2540] focus:ring-[#0a2540]"
                   />
+                  <label htmlFor="m_decl_hibrido" className="cursor-pointer leading-snug">
+                    Declaro estar ciente de que esta manifestação é <strong>NÃO VINCULANTE</strong>,
+                    destinada ao levantamento de demanda preliminar para instrução das Tarifas de
+                    Referência pela ANP no POCC (Art. 37-A, §5º, I).
+                  </label>
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="m_ent" className="text-xs font-semibold text-slate-700">
-                    Ponto de Saída / Entrega *
+                {/* BOTÕES DA ETAPA 1 */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
+                  <span className="text-[11px] text-slate-500">
+                    Ao clicar em gerar, o documento oficial do POCC será baixado para coleta da
+                    assinatura.
+                  </span>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setModalManifestacaoAberto(false)}
+                      className="text-xs h-9 cursor-pointer"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleBaixarPdfManifestacao}
+                      disabled={gerandoPdf || !formManif.declaracao_nao_vinculante}
+                      className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold h-9 px-4 cursor-pointer shadow-xs"
+                    >
+                      {gerandoPdf ? (
+                        <>
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          Gerando Documento Oficial...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
+                          Baixar Documento para Assinatura &rarr;
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ETAPA 2: REANEXAR DOCUMENTO ASSINADO & EMITIR PROTOCOLO */}
+            {etapaFluxoManif === 'upload_assinatura' && (
+              <form onSubmit={handleConfirmarUploadAssinado} className="space-y-4 text-xs">
+                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-950 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-900">
+                    <FileCheck className="h-4 w-4 text-emerald-600" />
+                    Etapa de Reanexo do Documento Assinado
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-emerald-900">
+                    O documento oficial da Manifestação de Interesse foi gerado e baixado no seu
+                    dispositivo. Agora, colete a assinatura do representante legal da sociedade
+                    (assinatura digital padrão ICP-Brasil / Gov.br ou física com carimbo) e faça o
+                    upload abaixo para concluir a autuação regulatória.
+                  </p>
+                </div>
+
+                {/* RESUMO DOS DADOS PREENCHIDOS */}
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[11px] space-y-1 text-slate-700">
+                  <div className="font-semibold text-slate-800">Resumo da Manifestação Pronta:</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5">
+                    <div>
+                      <span className="text-slate-500">Capacidade:</span>{' '}
+                      <strong>
+                        {Number(formManif.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Modalidade:</span>{' '}
+                      <strong>{formManif.modalidade}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Trecho:</span>{' '}
+                      <strong>{formManif.trecho}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CAMPO DE UPLOAD DO PDF ASSINADO */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="pdf_assinado"
+                    className="text-xs font-semibold text-slate-700 block"
+                  >
+                    Upload da Manifestação de Interesse Assinada (Apenas PDF) *
                   </Label>
-                  <Input
-                    id="m_ent"
-                    required
-                    value={formManif.ponto_entrega}
-                    onChange={(e) => setFormManif({ ...formManif, ponto_entrega: e.target.value })}
-                    className="h-8 text-xs"
-                  />
+
+                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-5 bg-slate-50/60 hover:bg-slate-50 text-center transition-colors">
+                    <input
+                      type="file"
+                      id="pdf_assinado"
+                      accept="application/pdf"
+                      required
+                      onChange={handleSelecionarArquivoAssinado}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="pdf_assinado"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                    >
+                      <UploadCloud className="h-8 w-8 text-[#0284c7]" />
+                      <span className="text-xs font-semibold text-slate-800">
+                        {arquivoAssinadoManif ? (
+                          <span className="text-emerald-700 font-bold flex items-center gap-1">
+                            <Check className="h-4 w-4" /> Arquivo selecionado:{' '}
+                            {arquivoAssinadoManif.name} (
+                            {(arquivoAssinadoManif.size / 1024).toFixed(1)} KB)
+                          </span>
+                        ) : (
+                          'Clique aqui para selecionar o arquivo PDF assinado'
+                        )}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        Formato aceito: exclusivamente PDF (.pdf) até 50 MB
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* VALIDAÇÃO VISÍVEL */}
+                  <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>
+                      <strong>Validação Regulatória:</strong> O protocolo oficial{' '}
+                      <span className="font-mono">TSB-AAAA-XXXX</span> não nasce sem o anexo do PDF
+                      assinado.
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-1 sm:col-span-2">
-                  <Label htmlFor="m_per" className="text-xs font-semibold text-slate-700">
-                    Período de Contratação Desejado *
-                  </Label>
-                  <Input
-                    id="m_per"
-                    required
-                    value={formManif.periodo_vigencia}
-                    onChange={(e) =>
-                      setFormManif({ ...formManif, periodo_vigencia: e.target.value })
-                    }
-                    className="h-8 text-xs font-medium"
-                  />
+                {/* BOTÕES DA ETAPA 2 */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEtapaFluxoManif('formulario')}
+                    className="text-xs h-9 cursor-pointer"
+                  >
+                    &larr; Voltar ao Formulário
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    disabled={enviandoForm || !arquivoAssinadoManif}
+                    className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold h-9 px-5 cursor-pointer shadow-xs"
+                  >
+                    {enviandoForm ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                        Autuando Protocolo Oficial...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
+                        Protocolar Manifestação Assinada
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  id="m_decl"
-                  checked={formManif.declaracao_nao_vinculante}
-                  onChange={(e) =>
-                    setFormManif({ ...formManif, declaracao_nao_vinculante: e.target.checked })
-                  }
-                  className="mt-0.5 rounded text-[#0a2540] focus:ring-[#0a2540]"
-                />
-                <label htmlFor="m_decl" className="cursor-pointer leading-snug">
-                  Declaro que esta manifestação de interesse é <strong>não vinculante</strong> (§5º,
-                  I), servindo para subsidiar a ANP na homologação tarifária e eventual
-                  redistribuição da capacidade disponível para o Ciclo POCC 2026/2027.
-                </label>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setModalManifestacaoAberto(false)}
-                  className="text-xs"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={enviandoForm || !formManif.declaracao_nao_vinculante}
-                  className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold cursor-pointer"
-                >
-                  {enviandoForm ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                      Registrando Protocolo...
-                    </>
-                  ) : (
-                    'Confirmar Manifestação de Interesse'
-                  )}
-                </Button>
-              </div>
-            </form>
+              </form>
+            )}
           </div>
         </div>
       )}

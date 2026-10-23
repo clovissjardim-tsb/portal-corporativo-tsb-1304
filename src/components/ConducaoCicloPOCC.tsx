@@ -33,6 +33,7 @@ import {
   Building2,
   X,
   FileCheck,
+  Download,
 } from 'lucide-react'
 
 export function ConducaoCicloPOCC() {
@@ -493,9 +494,11 @@ export function ConducaoCicloPOCC() {
               <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Protocolo</th>
+                  <th className="p-3">Origem</th>
                   <th className="p-3">Carregador (Razão / CNPJ)</th>
-                  <th className="p-3">Capacidade Requisitada</th>
+                  <th className="p-3">Capacidade</th>
                   <th className="p-3">Modalidade</th>
+                  <th className="p-3">Doc. Assinado</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Data</th>
                   <th className="p-3 text-right">Ação</th>
@@ -503,44 +506,77 @@ export function ConducaoCicloPOCC() {
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
                 {manifestacoes.length > 0 ? (
-                  manifestacoes.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-mono font-bold text-[#0284c7]">{m.protocolo}</td>
-                      <td className="p-3">
-                        <div className="font-semibold text-slate-800">{m.razao_social}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">CNPJ: {m.cnpj}</div>
-                      </td>
-                      <td className="p-3 font-bold text-slate-800">
-                        {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
-                      </td>
-                      <td className="p-3">{m.modalidade}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
-                          {m.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-500 font-mono">
-                        {new Date(m.created).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="p-3 text-right">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setManifSelecionada(m)
-                            setStatusManifForm(m.status)
-                            setObsManifForm(m.observacoes_internas || '')
-                            setModalManifAberto(true)
-                          }}
-                          className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-2.5"
-                        >
-                          Analisar
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
+                  manifestacoes.map((m) => {
+                    const urlArquivo = pocService.obterUrlArquivoManifestacao(m)
+                    const isAreaCarregador = m.origem === 'area_carregador' || !m.origem
+
+                    return (
+                      <tr key={m.id} className="hover:bg-slate-50">
+                        <td className="p-3 font-mono font-bold text-[#0284c7]">{m.protocolo}</td>
+                        <td className="p-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              isAreaCarregador
+                                ? 'bg-sky-100 text-sky-800 border border-sky-300'
+                                : 'bg-slate-100 text-slate-700 border border-slate-300'
+                            }`}
+                          >
+                            {isAreaCarregador
+                              ? 'Área do Carregador (autenticado)'
+                              : m.origem || 'Interno'}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="font-semibold text-slate-800">{m.razao_social}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">CNPJ: {m.cnpj}</div>
+                        </td>
+                        <td className="p-3 font-bold text-slate-800">
+                          {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                        </td>
+                        <td className="p-3">{m.modalidade}</td>
+                        <td className="p-3">
+                          {urlArquivo ? (
+                            <a
+                              href={urlArquivo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:underline"
+                            >
+                              <Download className="h-3 w-3" />
+                              Baixar PDF
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-[10px]">Sem anexo</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                            {m.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-500 font-mono">
+                          {new Date(m.created).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="p-3 text-right">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setManifSelecionada(m)
+                              setStatusManifForm(m.status)
+                              setObsManifForm(m.observacoes_internas || '')
+                              setModalManifAberto(true)
+                            }}
+                            className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-2.5"
+                          >
+                            Analisar
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-slate-500">
+                    <td colSpan={9} className="p-6 text-center text-slate-500">
                       Nenhuma manifestação de interesse registrada no momento.
                     </td>
                   </tr>
@@ -790,22 +826,51 @@ export function ConducaoCicloPOCC() {
               <h3 className="text-base font-bold">Análise da Manifestação de Interesse</h3>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded border text-xs space-y-1">
-              <div>
-                <strong>Protocolo:</strong> {manifSelecionada.protocolo}
+            <div className="p-3 bg-slate-50 rounded border text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Protocolo:</strong>{' '}
+                  <span className="font-mono font-bold text-[#0284c7]">
+                    {manifSelecionada.protocolo}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-100 text-sky-800 border border-sky-300">
+                  {manifSelecionada.origem === 'area_carregador' || !manifSelecionada.origem
+                    ? 'Área do Carregador (autenticado)'
+                    : manifSelecionada.origem}
+                </span>
               </div>
               <div>
                 <strong>Carregador:</strong> {manifSelecionada.razao_social} (CNPJ:{' '}
                 {manifSelecionada.cnpj})
               </div>
               <div>
-                <strong>Capacidade:</strong>{' '}
-                {Number(manifSelecionada.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                <strong>Responsável / Signatário:</strong> {manifSelecionada.responsavel_nome}{' '}
+                &bull; {manifSelecionada.email}
               </div>
               <div>
-                <strong>Autorização ANP:</strong>{' '}
-                {manifSelecionada.autorizacao_anp || 'Não informada (a consolidar no ciclo)'}
+                <strong>Capacidade:</strong>{' '}
+                {Number(manifSelecionada.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                &bull; <strong>Modalidade:</strong> {manifSelecionada.modalidade}
               </div>
+              <div>
+                <strong>Trecho:</strong> {manifSelecionada.trecho} (
+                {manifSelecionada.ponto_recebimento} &rarr; {manifSelecionada.ponto_entrega})
+              </div>
+              {pocService.obterUrlArquivoManifestacao(manifSelecionada) && (
+                <div className="pt-1 border-t border-slate-200">
+                  <strong>Documento Assinado do Carregador:</strong>{' '}
+                  <a
+                    href={pocService.obterUrlArquivoManifestacao(manifSelecionada)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-bold text-[#0284c7] hover:underline ml-1"
+                  >
+                    <Download className="h-3 w-3" />
+                    Abrir / Baixar PDF Assinado
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3 text-xs">
@@ -819,6 +884,9 @@ export function ConducaoCicloPOCC() {
                   }
                   className="w-full h-8 px-2 rounded border border-slate-300 text-xs bg-white"
                 >
+                  <option value="Manifestação registrada — aguardando conferência da assinatura">
+                    Manifestação registrada — aguardando conferência da assinatura
+                  </option>
                   <option value="Recebida - Em Análise">Recebida - Em Análise</option>
                   <option value="Habilitada para Etapa II">
                     Habilitada para Etapa II (Aprovação de Tarifas e Redistribuição)

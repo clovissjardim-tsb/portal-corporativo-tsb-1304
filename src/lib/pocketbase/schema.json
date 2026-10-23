@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T19:06:42.425Z",
+  "generatedAt": "2026-10-23T19:24:54.217Z",
   "collections": [
     {
       "name": "users",
@@ -999,7 +999,8 @@
             "Recebida - Em Análise",
             "Habilitada para Etapa II",
             "Em Ajuste Cadastral",
-            "Indeferida"
+            "Indeferida",
+            "Manifestação registrada — aguardando conferência da assinatura"
           ]
         },
         {
@@ -1027,6 +1028,19 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "arquivo_formulario",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["area_carregador", "manual_interno", "portal_web"]
         }
       ],
       "indexes": [
