@@ -33,15 +33,6 @@ export default function Transparencia() {
   const [filtroAnoMensal, setFiltroAnoMensal] = useState('2026')
   const [filtroMesMensal, setFiltroMesMensal] = useState('Setembro')
 
-  // Consulta de protocolo Inciso VII (mantida intacta)
-  const [consultaProtocolo, setConsultaProtocolo] = useState('')
-  const [consultandoSLA, setConsultandoSLA] = useState(false)
-  const [resultadoConsulta, setResultadoConsulta] = useState<{
-    buscado: boolean
-    encontrado: boolean
-    dados?: SolicitacaoIncisoVII
-  } | null>(null)
-
   // Resumo público agregado do Inciso VII (Art. 9º, VII - sem dados pessoais)
   const [resumoPublicoVII, setResumoPublicoVII] = useState<ResumoPublicoSolicitacao[]>([])
   const [resumoInstalacaoVII, setResumoInstalacaoVII] = useState<ResumoPublicoInstalacao[]>([])
@@ -88,36 +79,6 @@ export default function Transparencia() {
       carregarOfertasCessao()
     }
   }, [activePilar, subAbaPlataforma, carregarResumoVII, carregarOfertasCessao])
-
-  // Consulta de SLA / Protocolo
-  const handleVerificarSLA = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!consultaProtocolo.trim()) return
-
-    setConsultandoSLA(true)
-    try {
-      const record = await solicitacoesService.buscarPorProtocolo(consultaProtocolo.trim())
-      if (record) {
-        setResultadoConsulta({
-          buscado: true,
-          encontrado: true,
-          dados: record,
-        })
-      } else {
-        setResultadoConsulta({
-          buscado: true,
-          encontrado: false,
-        })
-      }
-    } catch {
-      setResultadoConsulta({
-        buscado: true,
-        encontrado: false,
-      })
-    } finally {
-      setConsultandoSLA(false)
-    }
-  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -266,11 +227,6 @@ export default function Transparencia() {
         <PlataformaEletronica
           subAba={subAbaPlataforma}
           setSubAba={setSubAbaPlataforma}
-          consultaProtocolo={consultaProtocolo}
-          setConsultaProtocolo={setConsultaProtocolo}
-          consultandoSLA={consultandoSLA}
-          handleVerificarSLA={handleVerificarSLA}
-          resultadoConsulta={resultadoConsulta}
           resumoPublicoVII={resumoPublicoVII}
           resumoInstalacaoVII={resumoInstalacaoVII}
           carregandoResumoVII={carregandoResumoVII}

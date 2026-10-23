@@ -162,12 +162,12 @@ export interface PlataformaEletronicaProps {
   erroFormVII?: string | null
   handleSubmeterVII?: (e: React.FormEvent) => void
 
-  // Consulta Inciso VII
-  consultaProtocolo: string
-  setConsultaProtocolo: (val: string) => void
-  consultandoSLA: boolean
-  handleVerificarSLA: (e: React.FormEvent) => void
-  resultadoConsulta: {
+  // Consulta Inciso VII (opcional/legado)
+  consultaProtocolo?: string
+  setConsultaProtocolo?: (val: string) => void
+  consultandoSLA?: boolean
+  handleVerificarSLA?: (e: React.FormEvent) => void
+  resultadoConsulta?: {
     buscado: boolean
     encontrado: boolean
     dados?: SolicitacaoIncisoVII
@@ -211,11 +211,6 @@ export interface PlataformaEletronicaProps {
 export default function PlataformaEletronica({
   subAba,
   setSubAba,
-  consultaProtocolo,
-  setConsultaProtocolo,
-  consultandoSLA,
-  handleVerificarSLA,
-  resultadoConsulta,
   resumoPublicoVII,
   resumoInstalacaoVII = [],
   carregandoResumoVII,
@@ -857,22 +852,6 @@ export default function PlataformaEletronica({
                               setSubAba('vii')
                               setTimeout(() => {
                                 document
-                                  .getElementById('secao-consulta-protocolo-vii')
-                                  ?.scrollIntoView({ behavior: 'smooth' })
-                              }, 100)
-                            }}
-                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <Search className="h-3.5 w-3.5" />
-                            Consultar Protocolo / SLA (Art. 10) &rarr;
-                          </button>
-                          <span className="text-slate-300">•</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSubAba('vii')
-                              setTimeout(() => {
-                                document
                                   .getElementById('secao-resumos-oficiais-vii')
                                   ?.scrollIntoView({ behavior: 'smooth' })
                               }, 100)
@@ -1080,185 +1059,6 @@ export default function PlataformaEletronica({
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* ITEM 2: CONSULTA DE PROTOCOLO E SLA */}
-              <div
-                id="secao-consulta-protocolo-vii"
-                className="p-5 sm:p-6 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3"
-              >
-                <h3 className="text-sm font-bold text-[#0a2540] flex items-center gap-2">
-                  <Search className="h-4 w-4 text-[#0284c7]" />
-                  Consulta Pública de Protocolo, SLA e Parecer Fundamentado
-                </h3>
-                <p className="text-xs text-slate-600">
-                  Acompanhe o andamento regulatório da sua manifestação técnica pelo número de
-                  protocolo gerado.
-                </p>
-
-                <form onSubmit={handleVerificarSLA} className="flex gap-2 max-w-xl">
-                  <Input
-                    placeholder="Informe o protocolo (Ex: TSB-2026-8942)"
-                    value={consultaProtocolo}
-                    onChange={(e) => setConsultaProtocolo(e.target.value)}
-                    className="text-xs bg-white uppercase font-mono"
-                    disabled={consultandoSLA}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={consultandoSLA || !consultaProtocolo.trim()}
-                    className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0 cursor-pointer"
-                  >
-                    {consultandoSLA ? 'Buscando...' : 'Verificar Protocolo'}
-                  </Button>
-                </form>
-
-                {/* RESULTADO DA CONSULTA */}
-                {resultadoConsulta && resultadoConsulta.buscado && (
-                  <div className="animate-fade-in pt-2">
-                    {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
-                      <div className="p-4 bg-white border border-slate-200 rounded-lg text-slate-800 space-y-3 shadow-xs">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="font-bold text-sm flex items-center gap-1.5 text-[#0a2540]">
-                            <CheckCircle2 className="h-4 w-4 text-[#0284c7]" />
-                            Protocolo: {resultadoConsulta.dados.protocolo}
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                            SLA Restante: {resultadoConsulta.dados.sla_dias} Dias Úteis
-                          </span>
-                        </div>
-
-                        <div className="text-xs space-y-1.5 text-emerald-900/90 pt-1 border-t border-emerald-200">
-                          <div>
-                            <strong>Modalidade:</strong> {resultadoConsulta.dados.modalidade}
-                          </div>
-                          <div>
-                            <strong>Pontos Regulatórios:</strong>{' '}
-                            {resultadoConsulta.dados.ponto_recebimento || 'Paso de Los Libres'}{' '}
-                            &rarr;{' '}
-                            {resultadoConsulta.dados.ponto_entrega || 'Triunfo (Polo Petroquímico)'}
-                          </div>
-                          <div>
-                            <strong>Instalação / Trecho:</strong> {resultadoConsulta.dados.trecho}
-                          </div>
-                          <div>
-                            <strong>Capacidade Solicitada:</strong>{' '}
-                            {resultadoConsulta.dados.capacidade.toLocaleString('pt-BR')} m³/dia
-                          </div>
-                          {resultadoConsulta.dados.periodo && (
-                            <div>
-                              <strong>Período Requisitado:</strong>{' '}
-                              {resultadoConsulta.dados.periodo}
-                            </div>
-                          )}
-                          <div>
-                            <strong>Status Regulatório:</strong>{' '}
-                            <span className="font-semibold text-slate-900">
-                              {resultadoConsulta.dados.status}
-                            </span>
-                          </div>
-
-                          {resultadoConsulta.dados.garantias_seguranca_swap && (
-                            <div className="text-slate-700">
-                              <strong>Garantias de Segurança (Swap):</strong>{' '}
-                              {resultadoConsulta.dados.garantias_seguranca_swap}
-                            </div>
-                          )}
-
-                          {/* PARECER FUNDAMENTADO E DETALHAMENTO DO DESFECHO (SEM DADOS PESSOAIS) */}
-                          {resultadoConsulta.dados.parecer_fundamentado && (
-                            <div className="mt-3 p-3.5 bg-slate-50 rounded border border-slate-200 space-y-2">
-                              <div className="flex items-center justify-between flex-wrap gap-1">
-                                <span className="font-bold text-[#0a2540] block">
-                                  Parecer Técnico-Regulatório Fundamentado (Art. 10, Res. 11/2016):
-                                </span>
-                                {resultadoConsulta.dados.desfecho_tipo && (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#0a2540] text-white">
-                                    {resultadoConsulta.dados.desfecho_tipo === 'CONFIRMACAO' &&
-                                      'Desfecho I - Confirmação'}
-                                    {resultadoConsulta.dados.desfecho_tipo === 'APROFUNDAMENTO' &&
-                                      'Desfecho II - Aprofundamento'}
-                                    {resultadoConsulta.dados.desfecho_tipo === 'NEGATIVA' &&
-                                      'Desfecho III - Negativa'}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-slate-700 leading-relaxed italic">
-                                &quot;{resultadoConsulta.dados.parecer_fundamentado}&quot;
-                              </p>
-
-                              {/* Termos e condições do Desfecho I */}
-                              {resultadoConsulta.dados.termos_condicoes && (
-                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700">
-                                  <strong>Termos e Condições do Atendimento:</strong>{' '}
-                                  {resultadoConsulta.dados.termos_condicoes}
-                                </div>
-                              )}
-
-                              {/* Condições, escopo, cronograma e custos do Desfecho II */}
-                              {(resultadoConsulta.dados.aprofundamento_condicoes ||
-                                resultadoConsulta.dados.aprofundamento_cronograma) && (
-                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700 space-y-1">
-                                  <strong>
-                                    Detalhamento do Aprofundamento da Análise (Art. 10, §2º, II):
-                                  </strong>
-                                  {resultadoConsulta.dados.aprofundamento_condicoes && (
-                                    <div>
-                                      • <strong>Condições:</strong>{' '}
-                                      {resultadoConsulta.dados.aprofundamento_condicoes}
-                                    </div>
-                                  )}
-                                  {resultadoConsulta.dados.aprofundamento_escopo && (
-                                    <div>
-                                      • <strong>Escopo:</strong>{' '}
-                                      {resultadoConsulta.dados.aprofundamento_escopo}
-                                    </div>
-                                  )}
-                                  {resultadoConsulta.dados.aprofundamento_cronograma && (
-                                    <div>
-                                      • <strong>Cronograma:</strong>{' '}
-                                      {resultadoConsulta.dados.aprofundamento_cronograma}
-                                    </div>
-                                  )}
-                                  {resultadoConsulta.dados.aprofundamento_custos && (
-                                    <div>
-                                      • <strong>Custos:</strong>{' '}
-                                      {resultadoConsulta.dados.aprofundamento_custos}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Previsão de disponibilidade do Desfecho III */}
-                              {resultadoConsulta.dados.previsao_disponibilidade && (
-                                <div className="p-2.5 bg-white rounded border border-slate-200 text-[11px] text-slate-700">
-                                  <strong>
-                                    Previsão de Disponibilidade do Serviço (Art. 10, §2º, III):
-                                  </strong>{' '}
-                                  {resultadoConsulta.dados.previsao_disponibilidade}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 space-y-1 flex items-start gap-2">
-                        <Info className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
-                        <div className="text-xs">
-                          <strong className="block font-semibold text-slate-900">
-                            Protocolo não localizado no sistema TSB.
-                          </strong>
-                          <span className="text-slate-600">
-                            Verifique o número informado. A solicitação é formalizada pelo
-                            formulário-padrão TSB (PDF) enviado ao canal oficial
-                            regulacao@tsb.com.br.
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* =====================================================================
