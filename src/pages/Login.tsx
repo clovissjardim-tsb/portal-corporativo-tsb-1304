@@ -24,7 +24,10 @@ export default function Login() {
   const location = useLocation()
   const { toast } = useToast()
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/poc'
+  const locationState = location.state as { from?: { pathname: string; hash?: string } } | null
+  const fromPath = locationState?.from?.pathname || '/poc'
+  const fromHash = locationState?.from?.hash || ''
+  const from = `${fromPath}${fromHash}`
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

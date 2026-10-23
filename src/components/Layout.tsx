@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Menu, X, LogIn, LogOut, User, ShieldCheck } from 'lucide-react'
+import { Menu, X, LogIn, LogOut, ShieldCheck } from 'lucide-react'
 import logoTsb from '@/assets/image-ee90b.png'
 
 interface LayoutProps {
@@ -11,22 +11,13 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
-  const navigate = useNavigate()
 
   const navLinks = [
     { label: 'Institucional', to: '/' },
     { label: 'Transparência (ANP)', to: '/transparencia' },
-    { label: 'Oferta de Capacidade (POC)', to: '/poc' },
+    { label: 'POC', subtitle: 'Oferta de Capacidade', to: '/poc' },
     { label: 'Gestão Interna', to: '/gestao' },
   ]
-
-  const handleAreaCarregadorClick = () => {
-    if (isAuthenticated) {
-      navigate('/poc')
-    } else {
-      navigate('/login')
-    }
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#1e293b] font-sans antialiased">
@@ -89,15 +80,21 @@ export default function Layout({ children }: LayoutProps) {
                 key={item.to}
                 to={item.to}
                 end={item.to === '/'}
+                title={item.subtitle ? `${item.label} — ${item.subtitle}` : undefined}
                 className={({ isActive }) =>
-                  `px-3.5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  `px-3.5 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-baseline gap-1.5 ${
                     isActive
                       ? 'bg-white/15 text-white shadow-inner font-semibold'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`
                 }
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.subtitle && (
+                  <span className="text-[10px] font-normal text-slate-400 group-hover:text-slate-300 hidden xl:inline">
+                    ({item.subtitle})
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -117,30 +114,21 @@ export default function Layout({ children }: LayoutProps) {
                   type="button"
                   onClick={logout}
                   title="Sair da sessão"
-                  className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
               </div>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={handleAreaCarregadorClick}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm"
-            >
-              {isAuthenticated ? (
-                <>
-                  <User className="h-3.5 w-3.5" />
-                  Área do Carregador
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-3.5 w-3.5" />
-                  Área do Carregador
-                </>
-              )}
-            </button>
+            ) : (
+              <Link
+                to="/login"
+                state={{ from: { pathname: '/poc' } }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Entrar</span>
+              </Link>
+            )}
           </div>
 
           {/* MOBILE MENU TOGGLE */}
@@ -187,7 +175,7 @@ export default function Layout({ children }: LayoutProps) {
                       logout()
                       setMobileMenuOpen(false)
                     }}
-                    className="text-red-400 font-semibold hover:underline"
+                    className="text-red-400 font-semibold hover:underline cursor-pointer"
                   >
                     Sair
                   </button>
@@ -195,10 +183,11 @@ export default function Layout({ children }: LayoutProps) {
               ) : (
                 <Link
                   to="/login"
+                  state={{ from: { pathname: '/poc' } }}
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center py-2 px-3 text-sm font-semibold rounded bg-[#0284c7] text-white hover:bg-[#0369a1]"
                 >
-                  Entrar / Área do Carregador
+                  Entrar no Portal
                 </Link>
               )}
             </div>
