@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   FileText,
@@ -40,6 +40,7 @@ import {
   Check,
   Calendar,
   UploadCloud,
+  FileDown,
 } from 'lucide-react'
 
 // 5 etapas literais do Art. 37-A, §5º da Resolução ANP nº 11/2016 (com redação da Res. 961/2023)
@@ -138,15 +139,19 @@ export function POC() {
     dados?: SolicitacaoIncisoVII
   } | null>(null)
 
-  // Modal Manifestação de Interesse (Etapa I, não vinculante) — Fluxo Híbrido
-  const [modalManifestacaoAberto, setModalManifestacaoAberto] = useState(false)
-  const [etapaFluxoManif, setEtapaFluxoManif] = useState<'formulario' | 'upload_assinatura'>(
-    'formulario',
-  )
-  const [gerandoPdf, setGerandoPdf] = useState(false)
-  const [enviandoForm, setEnviandoForm] = useState(false)
+  // Módulos Separados de Manifestação de Interesse (Etapa I, Art. 37-A, §5º, I)
+  // Módulo 1: Gerar e Persistir Rascunho / Módulo 2: Anexar Documento Assinado
+  const [modalModulo1Aberto, setModalModulo1Aberto] = useState(false)
+  const [modalModulo2Aberto, setModalModulo2Aberto] = useState(false)
+  const [salvandoRascunhoManif, setSalvandoRascunhoManif] = useState(false)
+  const [enviandoAssinadoManif, setEnviandoAssinadoManif] = useState(false)
+  const [rascunhoSelecionadoId, setRascunhoSelecionadoId] = useState<string>('')
   const [arquivoAssinadoManif, setArquivoAssinadoManif] = useState<File | null>(null)
   const [protocoloGeradoPOCC, setProtocoloGeradoPOCC] = useState<{
+    protocolo: string
+    registro: ManifestacaoInteressePOC
+  } | null>(null)
+  const [rascunhoGeradoSucesso, setRascunhoGeradoSucesso] = useState<{
     protocolo: string
     registro: ManifestacaoInteressePOC
   } | null>(null)
@@ -329,8 +334,43 @@ export function POC() {
   const emailUsuario = user?.email || 'contato@carregador.com.br'
   const telefoneUsuario = (user as unknown as { telefone?: string })?.telefone || ''
 
-  // Etapa 1 do Fluxo Híbrido: Concluir formulário e Baixar PDF oficial no modelo TSB
-  const handleBaixarPdfManifestacao = async () => {
+  // Helper para baixar novamente o PDF a partir de um registro existente
+  const handleBaixarNovamentePdf = async (m: ManifestacaoInteressePOC) => {
+    try {
+      await gerarManifestacaoPocPdf({
+        emailDestino: m.email || emailUsuario,
+        dadosPreenchidos: {
+          razaoSocial: m.razao_social || razaoSocialUsuario,
+          cnpj: m.cnpj || cnpjUsuario,
+          representanteLegal: m.responsavel_nome || representanteLegalUsuario,
+          emailCorporativo: m.email || emailUsuario,
+          telefoneCorporativo: m.telefone || telefoneUsuario,
+          capacidade: m.capacidade_solicitada,
+          modalidade: m.modalidade,
+          trecho: m.trecho,
+          pontoRecebimento: m.ponto_recebimento,
+          pontoEntrega: m.ponto_entrega,
+          periodoTexto: m.periodo_vigencia || 'Ciclo 2026/2027',
+          observacoes: m.observacoes_internas,
+          ciclo: m.ciclo || 'Ciclo POCC 2026/2027',
+        },
+      })
+      toast({
+        title: 'Download do PDF iniciado',
+        description: `Documento para assinatura referente ao protocolo ${m.protocolo} baixado com sucesso.`,
+      })
+    } catch (err) {
+      console.error('Erro ao rebaixar PDF de manifestação:', err)
+      toast({
+        title: 'Falha no download',
+        description: 'Não foi possível recompor o PDF. Tente novamente.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // MÓDULO 1: Gerar Documento de Manifestação de Interesse e Persistir Rascunho
+  const handleGerarEPersistirDocumento = async () => {
     if (!isAuthenticated) {
       toast({
         title: 'Autenticação necessária',
@@ -367,8 +407,29 @@ export function POC() {
       return
     }
 
-    setGerandoPdf(true)
+    setSalvandoRascunhoManif(true)
     try {
+      // 1. Persiste o rascunho no banco com status aguardando assinatura
+      const nova = await pocService.criarManifestacao({
+        ciclo: '2026/2027',
+        razao_social: razaoSocialUsuario,
+        cnpj: cnpjUsuario,
+        email: emailUsuario,
+        telefone: telefoneUsuario,
+        responsavel_nome: representanteLegalUsuario,
+        autorizacao_anp: (user as unknown as { autorizacao_anp?: string })?.autorizacao_anp || '',
+        capacidade_solicitada: Number(formManif.capacidade_solicitada),
+        modalidade: formManif.modalidade,
+        trecho: formManif.trecho,
+        ponto_recebimento: formManif.ponto_recebimento,
+        ponto_entrega: formManif.ponto_entrega,
+        periodo_vigencia: `${formManif.data_inicio} a ${formManif.data_fim}`,
+        declaracao_anp_aceita: formManif.declaracao_nao_vinculante,
+        origem: 'area_carregador',
+        status: 'Documento gerado — aguardando assinatura do representante legal',
+      })
+
+      // 2. Gera e baixa o PDF oficial
       await gerarManifestacaoPocPdf({
         emailDestino: emailUsuario,
         dadosPreenchidos: {
@@ -390,22 +451,28 @@ export function POC() {
         },
       })
 
-      // Avança para a etapa de reanexo do documento assinado
-      setEtapaFluxoManif('upload_assinatura')
+      setMinhasManifestacoes((prev) => [nova, ...prev])
+      setRascunhoSelecionadoId(nova.id)
+      setRascunhoGeradoSucesso({
+        protocolo: nova.protocolo,
+        registro: nova,
+      })
+      setModalModulo1Aberto(false)
+
       toast({
-        title: 'PDF gerado com sucesso!',
-        description:
-          'Documento oficial baixado. Colete a assinatura do representante legal e faça o upload abaixo para emissão do protocolo definitivo.',
+        title: 'Documento Gerado e Rascunho Salvo!',
+        description: `Rascunho registrado (${nova.protocolo}). O PDF oficial foi baixado. Colete a assinatura e retorne quando quiser para enviar no Módulo 2.`,
       })
     } catch (err: unknown) {
-      console.error('Erro ao gerar PDF da Manifestação:', err)
+      console.error('Erro ao gerar documento e persistir rascunho:', err)
+      const msg = err instanceof Error ? err.message : 'Falha ao processar rascunho.'
       toast({
-        title: 'Falha na geração do PDF',
-        description: 'Não foi possível compor o documento oficial. Tente novamente.',
+        title: 'Falha na operação',
+        description: msg,
         variant: 'destructive',
       })
     } finally {
-      setGerandoPdf(false)
+      setSalvandoRascunhoManif(false)
     }
   }
 
@@ -439,7 +506,7 @@ export function POC() {
     setArquivoAssinadoManif(file)
   }
 
-  // Etapa 2 do Fluxo Híbrido: Reanexo do PDF assinado e emissão do protocolo TSB-AAAA-XXXX
+  // MÓDULO 2: Anexar Documento Assinado e Concluir Protocolo Regulatória
   const handleConfirmarUploadAssinado = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isAuthenticated) {
@@ -451,7 +518,16 @@ export function POC() {
       return
     }
 
-    // VALIDAÇÃO CRÍTICA: O protocolo final NÃO nasce sem o arquivo assinado anexado
+    if (!rascunhoSelecionadoId) {
+      toast({
+        title: 'Selecione uma manifestação pendente',
+        description: 'Escolha qual rascunho em preparação receberá o documento assinado.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // VALIDAÇÃO CRÍTICA: O protocolo regulatório ativo NÃO nasce sem o arquivo assinado anexado
     if (!arquivoAssinadoManif) {
       toast({
         title: 'Documento assinado obrigatório',
@@ -462,40 +538,24 @@ export function POC() {
       return
     }
 
-    setEnviandoForm(true)
+    setEnviandoAssinadoManif(true)
     try {
-      const nova = await pocService.criarManifestacao({
-        ciclo: '2026/2027',
-        razao_social: razaoSocialUsuario,
-        cnpj: cnpjUsuario,
-        email: emailUsuario,
-        telefone: telefoneUsuario,
-        responsavel_nome: representanteLegalUsuario,
-        autorizacao_anp: (user as unknown as { autorizacao_anp?: string })?.autorizacao_anp || '',
-        capacidade_solicitada: Number(formManif.capacidade_solicitada),
-        modalidade: formManif.modalidade,
-        trecho: formManif.trecho,
-        ponto_recebimento: formManif.ponto_recebimento,
-        ponto_entrega: formManif.ponto_entrega,
-        periodo_vigencia: `${formManif.data_inicio} a ${formManif.data_fim}`,
-        declaracao_anp_aceita: formManif.declaracao_nao_vinculante,
-        arquivo_formulario: arquivoAssinadoManif,
-        origem: 'area_carregador',
-        status: 'Manifestação registrada — aguardando conferência da assinatura',
-      })
+      const atualizada = await pocService.anexarDocumentoAssinado(
+        rascunhoSelecionadoId,
+        arquivoAssinadoManif,
+      )
 
-      setMinhasManifestacoes((prev) => [nova, ...prev])
+      setMinhasManifestacoes((prev) => prev.map((m) => (m.id === atualizada.id ? atualizada : m)))
       setProtocoloGeradoPOCC({
-        protocolo: nova.protocolo,
-        registro: nova,
+        protocolo: atualizada.protocolo,
+        registro: atualizada,
       })
-      setModalManifestacaoAberto(false)
-      setEtapaFluxoManif('formulario')
+      setModalModulo2Aberto(false)
       setArquivoAssinadoManif(null)
 
       toast({
         title: 'Manifestação de Interesse Protocolada!',
-        description: `Protocolo único gerado: ${nova.protocolo}. Status: Manifestação registrada — aguardando conferência da assinatura.`,
+        description: `Protocolo confirmado: ${atualizada.protocolo}. O documento assinado foi anexado e a solicitação agora segue para conferência da assinatura.`,
       })
     } catch (err: unknown) {
       const msg =
@@ -506,7 +566,7 @@ export function POC() {
         variant: 'destructive',
       })
     } finally {
-      setEnviandoForm(false)
+      setEnviandoAssinadoManif(false)
     }
   }
 
@@ -2587,47 +2647,171 @@ export function POC() {
                 </p>
               </div>
 
-              {/* CARD DE AÇÃO DO POCC COM HISTÓRICO */}
-              <Card className="border border-slate-200 bg-white shadow-none overflow-hidden">
-                <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-gradient-to-r from-slate-50 via-white to-sky-50/40">
-                  <div className="space-y-2 max-w-2xl">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-sky-100 text-[#0a2540]">
-                      <Sparkles className="h-3 w-3 text-[#0284c7]" />
-                      Etapa I do Art. 37-A, §5º — Manifestação de Interesse Não Vinculante
-                    </div>
-                    <h4 className="text-base sm:text-lg font-bold text-[#0a2540]">
-                      Manifestação de Interesse no POCC (Art. 37-A, §5º, I — não vinculante)
-                    </h4>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      Manifeste o interesse da sua empresa no Processo de Oferta e Contratação de
-                      Capacidade (POCC) — Ciclo 2026/2027. O registro é{' '}
-                      <strong>não vinculante</strong>, destina-se ao levantamento de demanda para
-                      aprovação das Tarifas de Referência pela ANP e habilita o carregador para a
-                      posterior apresentação de Propostas Vinculantes na Etapa III.
-                    </p>
-                  </div>
+              {/* =========================================================================
+                  DOIS MÓDULOS DISTINTOS COM ESTADO PERSISTIDO:
+                  MÓDULO 1: GERAR DOCUMENTO DE MANIFESTAÇÃO DE INTERESSE
+                  MÓDULO 2: ANEXAR DOCUMENTO ASSINADO
+                  ========================================================================= */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* MÓDULO 1: GERAR DOCUMENTO E PERSISTIR RASCUNHO */}
+                  <Card className="border border-slate-200 bg-white shadow-none flex flex-col justify-between">
+                    <CardHeader className="p-5 pb-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white">
+                          Módulo 1
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          Etapa I • Não Vinculante
+                        </span>
+                      </div>
+                      <CardTitle className="text-base font-bold text-[#0a2540] flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-[#0284c7]" />
+                        1. Gerar Documento de Manifestação
+                      </CardTitle>
+                      <CardDescription className="text-xs text-slate-600 leading-relaxed">
+                        Preencha as especificações da demanda pretendida (capacidade, modalidade,
+                        trecho, período). Ao gerar o PDF, o rascunho oficial é{' '}
+                        <strong>automaticamente persistido</strong> no sistema. Você pode fechar o
+                        navegador, levar dias para colher a assinatura e retornar quando quiser.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-0 space-y-3">
+                      <div className="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                        <div>
+                          <strong>Signatário:</strong> {representanteLegalUsuario} ({cnpjUsuario})
+                        </div>
+                        <div>
+                          <strong>Capacidade sugerida:</strong> 150.000 m³/dia &bull; Trechos 1 e 3
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setModalModulo1Aberto(true)
+                        }}
+                        className="w-full h-9.5 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
+                      >
+                        <FileDown className="h-4 w-4 mr-1.5 text-sky-400" />
+                        Preencher &amp; Gerar Documento para Assinatura
+                      </Button>
+                    </CardContent>
+                  </Card>
 
-                  <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
-                    <Button
-                      onClick={() => {
-                        setEtapaFluxoManif('formulario')
-                        setArquivoAssinadoManif(null)
-                        setModalManifestacaoAberto(true)
-                      }}
-                      className="h-10 px-5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
-                    >
-                      <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
-                      Registrar Manifestação de Interesse
-                    </Button>
-                    <span className="text-[11px] text-slate-500 text-center sm:text-right">
-                      Capacidade Firme Ofertada no Ciclo: <strong>150.000 m³/dia</strong>
-                    </span>
-                  </div>
+                  {/* MÓDULO 2: ANEXAR DOCUMENTO ASSINADO */}
+                  <Card className="border border-slate-200 bg-white shadow-none flex flex-col justify-between">
+                    <CardHeader className="p-5 pb-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#0284c7] text-white">
+                          Módulo 2
+                        </span>
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          {
+                            minhasManifestacoes.filter(
+                              (m) =>
+                                m.status ===
+                                'Documento gerado — aguardando assinatura do representante legal',
+                            ).length
+                          }{' '}
+                          pendente(s) de envio
+                        </span>
+                      </div>
+                      <CardTitle className="text-base font-bold text-[#0a2540] flex items-center gap-2">
+                        <UploadCloud className="h-4 w-4 text-[#0284c7]" />
+                        2. Anexar Documento Assinado
+                      </CardTitle>
+                      <CardDescription className="text-xs text-slate-600 leading-relaxed">
+                        Já colheu a assinatura digital (ICP-Brasil/Gov.br) ou física do
+                        representante legal? Selecione o rascunho correspondente, faça o upload
+                        exclusivo do PDF assinado e confirme.{' '}
+                        <strong>Aí sim nasce o protocolo definitivo</strong> e a solicitação entra
+                        na fila ativa da TSB.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-0 space-y-3">
+                      <div className="p-2.5 bg-sky-50/60 rounded border border-sky-200 text-[11px] text-sky-950 space-y-1">
+                        <div>
+                          <strong>Formato obrigatório:</strong> Arquivo PDF assinado (.pdf) até 50
+                          MB
+                        </div>
+                        <div>
+                          <strong>Efeito regulatório:</strong> Autuação imediata do protocolo
+                          definitivo
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          const pendentes = minhasManifestacoes.filter(
+                            (m) =>
+                              m.status ===
+                              'Documento gerado — aguardando assinatura do representante legal',
+                          )
+                          if (pendentes.length > 0 && !rascunhoSelecionadoId) {
+                            setRascunhoSelecionadoId(pendentes[0].id)
+                          }
+                          setModalModulo2Aberto(true)
+                        }}
+                        className="w-full h-9.5 bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors"
+                      >
+                        <UploadCloud className="h-4 w-4 mr-1.5 text-white" />
+                        Anexar Documento Assinado &amp; Protocolar
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* BANNER DE CONFIRMAÇÃO DO PROTOCOLO POCC */}
+                {/* BANNER DE SUCESSO DO RASCUNHO GERADO */}
+                {rascunhoGeradoSucesso && (
+                  <div className="p-4 sm:p-5 bg-sky-50 border border-sky-300 rounded-lg space-y-2 animate-fade-in">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-[#0284c7] text-white flex items-center justify-center shrink-0">
+                          <Check className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">
+                            Rascunho Gerado e Salvo com Sucesso
+                          </span>
+                          <span className="font-mono text-sm sm:text-base font-bold text-[#0a2540]">
+                            Identificador: {rascunhoGeradoSucesso.protocolo}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleBaixarNovamentePdf(rascunhoGeradoSucesso.registro)}
+                          className="text-xs h-7.5 border-sky-300 text-sky-900 bg-white hover:bg-sky-50"
+                        >
+                          <Download className="h-3 w-3 mr-1 text-[#0284c7]" />
+                          Baixar PDF Novamente
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => setRascunhoGeradoSucesso(null)}
+                          className="text-slate-400 hover:text-slate-600 p-1"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed">
+                      O documento oficial foi baixado no seu computador e seu rascunho foi
+                      registrado no status{' '}
+                      <span className="font-semibold text-slate-900">
+                        &ldquo;Documento gerado — aguardando assinatura do representante
+                        legal&rdquo;
+                      </span>
+                      . Colete a assinatura com tranquilidade: quando estiver assinado, acesse o{' '}
+                      <strong>Módulo 2 (Anexar Documento Assinado)</strong> para concluir o
+                      protocolo.
+                    </p>
+                  </div>
+                )}
+
+                {/* BANNER DE CONFIRMAÇÃO DO PROTOCOLO DEFINITIVO POCC */}
                 {protocoloGeradoPOCC && (
-                  <div className="p-4 sm:p-5 bg-emerald-50 border-t border-b border-emerald-300 space-y-3 animate-fade-in">
+                  <div className="p-4 sm:p-5 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3 animate-fade-in">
                     <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
@@ -2635,7 +2819,7 @@ export function POC() {
                         </div>
                         <div>
                           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
-                            Manifestação de Interesse Protocolada
+                            Manifestação de Interesse Protocolada Definitivamente
                           </span>
                           <span className="font-mono text-lg sm:text-xl font-bold text-emerald-950">
                             {protocoloGeradoPOCC.protocolo}
@@ -2649,20 +2833,20 @@ export function POC() {
                     </div>
 
                     <p className="text-xs text-emerald-900 leading-relaxed">
-                      Sua manifestação de interesse foi protocolada sob o número{' '}
+                      Sua manifestação de interesse foi formalmente autuada sob o protocolo
+                      definitivo{' '}
                       <strong className="font-mono">{protocoloGeradoPOCC.protocolo}</strong> com o
-                      documento oficial assinado devidamente anexado. O registro encontra-se no
-                      status{' '}
+                      documento assinado anexado. O registro encontra-se no status{' '}
                       <strong>
                         &ldquo;Manifestação registrada — aguardando conferência da assinatura&rdquo;
                       </strong>{' '}
-                      e foi encaminhado para a fila de Gestão Interna da TSB para conferência
-                      cadastral e habilitação para a Etapa II do POCC (Art. 37-A, §5º, II).
+                      e passou a compor a fila ativa de Gestão Interna da TSB para habilitação na
+                      Etapa II do POCC (Art. 37-A, §5º, II).
                     </p>
 
                     <div className="flex items-center justify-between pt-1 text-xs">
                       <span className="text-emerald-700 text-[11px]">
-                        Comprovante oficial arquivado no sistema regulatório da TSB.
+                        Comprovante e arquivo assinado arquivados no sistema regulatório da TSB.
                       </span>
                       <button
                         type="button"
@@ -2675,48 +2859,88 @@ export function POC() {
                   </div>
                 )}
 
-                {/* HISTÓRICO DE MANIFESTAÇÕES DO PRÓPRIO CARREGADOR */}
-                {temManifestacao ? (
-                  <div className="border-t border-slate-200 bg-slate-50/70 p-4 sm:p-5 space-y-2">
+                {/* HISTÓRICO DE MANIFESTAÇÕES DO PRÓPRIO CARREGADOR (RASCUNHOS E PROTOCOLADAS) */}
+                <Card className="border border-slate-200 bg-white shadow-none overflow-hidden">
+                  <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="text-xs font-bold text-[#0a2540] uppercase tracking-wider flex items-center gap-1.5">
                       <FileCheck2 className="h-3.5 w-3.5 text-[#0284c7]" />
-                      Sua Manifestação Registrada para o Ciclo Vigente do POCC:
+                      Histórico de Manifestações do Carregador (Ciclo POCC Vigente)
                     </div>
+                    <span className="text-[11px] text-slate-500">
+                      Total: {minhasManifestacoes.length} registro(s) (
+                      {
+                        minhasManifestacoes.filter(
+                          (m) =>
+                            m.status ===
+                            'Documento gerado — aguardando assinatura do representante legal',
+                        ).length
+                      }{' '}
+                      em preparação /{' '}
+                      {
+                        minhasManifestacoes.filter(
+                          (m) =>
+                            m.status !==
+                            'Documento gerado — aguardando assinatura do representante legal',
+                        ).length
+                      }{' '}
+                      protocolada(s))
+                    </span>
+                  </div>
+
+                  {temManifestacao ? (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-xs text-left bg-white border border-slate-200 rounded">
+                      <table className="w-full text-xs text-left bg-white border-collapse">
                         <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
                           <tr>
-                            <th className="p-2.5">Protocolo</th>
-                            <th className="p-2.5">Capacidade</th>
-                            <th className="p-2.5">Modalidade</th>
-                            <th className="p-2.5">Trecho</th>
-                            <th className="p-2.5">Status</th>
-                            <th className="p-2.5">Doc. Assinado</th>
-                            <th className="p-2.5">Data</th>
+                            <th className="p-3">Protocolo</th>
+                            <th className="p-3">Capacidade</th>
+                            <th className="p-3">Modalidade</th>
+                            <th className="p-3">Trecho</th>
+                            <th className="p-3">Status Atual</th>
+                            <th className="p-3">Documento</th>
+                            <th className="p-3">Data</th>
+                            <th className="p-3 text-right">Ação</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {minhasManifestacoes.map((m) => {
                             const urlArquivo = pocService.obterUrlArquivoManifestacao(m)
+                            const isRascunho =
+                              m.status ===
+                              'Documento gerado — aguardando assinatura do representante legal'
+
                             return (
-                              <tr key={m.id} className="hover:bg-slate-50">
-                                <td className="p-2.5 font-mono font-bold text-[#0284c7]">
+                              <tr
+                                key={m.id}
+                                className={
+                                  isRascunho
+                                    ? 'bg-amber-50/30 hover:bg-amber-50/60'
+                                    : 'hover:bg-slate-50'
+                                }
+                              >
+                                <td className="p-3 font-mono font-bold text-[#0284c7]">
                                   {m.protocolo}
                                 </td>
-                                <td className="p-2.5 font-bold text-slate-800">
+                                <td className="p-3 font-bold text-slate-800">
                                   {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
                                 </td>
-                                <td className="p-2.5 text-slate-700">{m.modalidade}</td>
-                                <td className="p-2.5 text-slate-600">
+                                <td className="p-3 text-slate-700">{m.modalidade}</td>
+                                <td className="p-3 text-slate-600">
                                   {m.ponto_recebimento} &rarr; {m.ponto_entrega}
                                 </td>
-                                <td className="p-2.5">
-                                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                    {m.status ||
-                                      'Manifestação registrada — aguardando conferência da assinatura'}
-                                  </span>
+                                <td className="p-3">
+                                  {isRascunho ? (
+                                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                                      Aguardando Assinatura (Em Preparação)
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                      {m.status ||
+                                        'Manifestação registrada — aguardando conferência da assinatura'}
+                                    </span>
+                                  )}
                                 </td>
-                                <td className="p-2.5">
+                                <td className="p-3">
                                   {urlArquivo ? (
                                     <a
                                       href={urlArquivo}
@@ -2728,11 +2952,38 @@ export function POC() {
                                       PDF Assinado
                                     </a>
                                   ) : (
-                                    <span className="text-slate-400 text-[11px]">N/D</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleBaixarNovamentePdf(m)}
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 hover:text-[#0284c7] underline cursor-pointer"
+                                      title="Baixar novamente o documento oficial para colher assinatura"
+                                    >
+                                      <Download className="h-3 w-3 text-sky-600" />
+                                      Baixar Modelo
+                                    </button>
                                   )}
                                 </td>
-                                <td className="p-2.5 text-slate-500 font-mono">
+                                <td className="p-3 text-slate-500 font-mono">
                                   {new Date(m.created).toLocaleDateString('pt-BR')}
+                                </td>
+                                <td className="p-3 text-right">
+                                  {isRascunho ? (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        setRascunhoSelecionadoId(m.id)
+                                        setModalModulo2Aberto(true)
+                                      }}
+                                      className="h-7 px-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-semibold cursor-pointer"
+                                    >
+                                      <UploadCloud className="h-3 w-3 mr-1" />
+                                      Anexar Assinado
+                                    </Button>
+                                  ) : (
+                                    <span className="text-[11px] text-slate-400 font-mono">
+                                      Protocolado
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
                             )
@@ -2740,34 +2991,334 @@ export function POC() {
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                ) : (
-                  <div className="border-t border-slate-200 p-4 text-xs text-slate-500 bg-slate-50/40 text-center">
-                    Nenhuma manifestação de interesse submetida por este Carregador no ciclo
-                    vigente.
-                  </div>
-                )}
-              </Card>
+                  ) : (
+                    <div className="p-6 text-xs text-slate-500 text-center">
+                      Nenhuma manifestação de interesse submetida ou gerada por este Carregador no
+                      ciclo vigente. Use o <strong>Módulo 1</strong> acima para iniciar.
+                    </div>
+                  )}
+                </Card>
+              </div>
             </div>
           </div>
         )}
       </section>
 
       {/* =========================================================================
-          MODAL: FLUXO HÍBRIDO DE MANIFESTAÇÃO DE INTERESSE NO POCC (ART. 37-A §5º, I)
-          1. Formulário no portal com identificação pré-preenchida não editável;
-          2. Geração e download do PDF no modelo oficial institucional TSB;
-          3. Reanexo do documento assinado (upload obrigatório);
-          4. Protocolo TSB-AAAA-XXXX emitido após conferência.
+          MODAL DO MÓDULO 1: GERAR DOCUMENTO E PERSISTIR RASCUNHO
+          Preenchimento dos dados regulatórios + download do PDF oficial + persistência
+          imediata como rascunho oficial (aguardando assinatura).
           ========================================================================= */}
-      {modalManifestacaoAberto && (
+      {modalModulo1Aberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[92vh] overflow-y-auto relative">
             <button
               type="button"
+              onClick={() => setModalModulo1Aberto(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 text-[#0a2540] border-b border-slate-200 pb-3">
+              <div className="p-2 bg-slate-100 rounded-full text-[#0a2540]">
+                <FileText className="h-5 w-5 text-[#0284c7]" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-[#0a2540] text-white">
+                    MÓDULO 1
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                    Gerar Documento de Manifestação de Interesse (POCC)
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Art. 37-A, §5º, I (Resolução ANP nº 961/2023) &bull; Rascunho persistido para
+                  assinatura
+                </p>
+              </div>
+            </div>
+
+            {/* TERMO DE NÃO VINCULAÇÃO VISÍVEL */}
+            <div className="p-3 bg-sky-50/70 border border-sky-200 rounded text-xs text-sky-950 leading-relaxed">
+              <strong>Termo de Não Vinculação (Art. 37-A, §5º, I):</strong> Esta Manifestação de
+              Interesse possui caráter <strong>não vinculante</strong> e destina-se exclusivamente
+              ao levantamento preliminar de demanda para embasamento das Tarifas de Referência pela
+              ANP (§5º, II). A geração do documento <strong>salva o rascunho no banco</strong> para
+              que você possa assinar fora do portal e reanexar no Módulo 2.
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* BLOCO DE IDENTIFICAÇÃO PREENCHIDO AUTOMATICAMENTE E NÃO EDITÁVEL */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                    <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Identificação do Carregador Interessado (Autenticado)
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    Preenchido automaticamente a partir da conta (não editável)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 pt-1">
+                  <div className="p-2 bg-white border border-slate-200 rounded">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                      Razão Social
+                    </span>
+                    <span className="font-bold text-slate-900 truncate block">
+                      {razaoSocialUsuario}
+                    </span>
+                  </div>
+
+                  <div className="p-2 bg-white border border-slate-200 rounded">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                      CNPJ
+                    </span>
+                    <span className="font-mono font-semibold text-slate-900 block">
+                      {cnpjUsuario}
+                    </span>
+                  </div>
+
+                  <div className="p-2 bg-white border border-slate-200 rounded">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                      Representante Legal
+                    </span>
+                    <span className="font-medium text-slate-900 truncate block">
+                      {representanteLegalUsuario}
+                    </span>
+                  </div>
+
+                  <div className="p-2 bg-white border border-slate-200 rounded">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase block">
+                      E-mail Corporativo
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-900 truncate block">
+                      {emailUsuario}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CAMPOS DO RITO PREENCHIDOS PELO CARREGADOR */}
+              <div className="space-y-3">
+                <span className="font-bold text-[#0a2540] block text-xs uppercase tracking-wide">
+                  Especificações da Demanda Pretendida no POCC
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* CAPACIDADE PRETENDIDA */}
+                  <div className="space-y-1">
+                    <Label htmlFor="m1_cap" className="text-xs font-semibold text-slate-700">
+                      Capacidade Pretendida (m³/dia) *
+                    </Label>
+                    <Input
+                      id="m1_cap"
+                      type="number"
+                      required
+                      min={1}
+                      value={formManif.capacidade_solicitada}
+                      onChange={(e) =>
+                        setFormManif({
+                          ...formManif,
+                          capacidade_solicitada: Number(e.target.value),
+                        })
+                      }
+                      className="h-8.5 text-xs font-mono font-bold bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500 block">
+                      Mínimo 1 m³/dia • Volume diário médio contratado
+                    </span>
+                  </div>
+
+                  {/* MODALIDADE */}
+                  <div className="space-y-1">
+                    <Label htmlFor="m1_mod" className="text-xs font-semibold text-slate-700">
+                      Modalidade de Contratação *
+                    </Label>
+                    <select
+                      id="m1_mod"
+                      value={formManif.modalidade}
+                      onChange={(e) =>
+                        setFormManif({
+                          ...formManif,
+                          modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
+                        })
+                      }
+                      className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                    >
+                      <option value="Firme Ordinário">Firme Ordinário (POCC Anual)</option>
+                      <option value="Interruptível">Interruptível</option>
+                    </select>
+                    <span className="text-[10px] text-slate-500 block">
+                      Art. 37-A, §5º, I da Resolução ANP nº 961/2023
+                    </span>
+                  </div>
+
+                  {/* SELEÇÃO DO TRECHO E PONTOS RELEVANTES */}
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label htmlFor="m1_trecho_sel" className="text-xs font-semibold text-slate-700">
+                      Trecho e Pontos da Malha TSB (Pontos Homologados) *
+                    </Label>
+                    <select
+                      id="m1_trecho_sel"
+                      value={formManif.trecho_opcao_id}
+                      onChange={(e) => {
+                        const op =
+                          opcoesTrechosManif.find((o) => o.id === e.target.value) ||
+                          opcoesTrechosManif[0]
+                        setFormManif({
+                          ...formManif,
+                          trecho_opcao_id: op.id,
+                          trecho: op.trecho,
+                          ponto_recebimento: op.ponto_recebimento,
+                          ponto_entrega: op.ponto_entrega,
+                        })
+                      }}
+                      className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
+                    >
+                      {opcoesTrechosManif.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* DETALHAMENTO DOS PONTOS DE ENTRADA E SAÍDA SELECIONADOS */}
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded sm:col-span-2 text-[11px] text-slate-600 space-y-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <div>
+                        <span className="font-semibold text-slate-700">Ponto de Entrada (PE):</span>{' '}
+                        <strong className="text-[#0a2540]">{formManif.ponto_recebimento}</strong>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-slate-700">Ponto de Saída (ZS):</span>{' '}
+                        <strong className="text-[#0a2540]">{formManif.ponto_entrega}</strong>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      Trecho vinculado: <strong>{formManif.trecho}</strong>
+                    </div>
+                  </div>
+
+                  {/* PERÍODO DE INTERESSE: DATA INÍCIO */}
+                  <div className="space-y-1">
+                    <Label htmlFor="m1_dt_ini" className="text-xs font-semibold text-slate-700">
+                      Período de Interesse: Data Início *
+                    </Label>
+                    <Input
+                      id="m1_dt_ini"
+                      type="date"
+                      required
+                      value={formManif.data_inicio}
+                      onChange={(e) => setFormManif({ ...formManif, data_inicio: e.target.value })}
+                      className="h-8.5 text-xs bg-white"
+                    />
+                  </div>
+
+                  {/* PERÍODO DE INTERESSE: DATA FIM */}
+                  <div className="space-y-1">
+                    <Label htmlFor="m1_dt_fim" className="text-xs font-semibold text-slate-700">
+                      Período de Interesse: Data Fim *
+                    </Label>
+                    <Input
+                      id="m1_dt_fim"
+                      type="date"
+                      required
+                      value={formManif.data_fim}
+                      onChange={(e) => setFormManif({ ...formManif, data_fim: e.target.value })}
+                      className="h-8.5 text-xs bg-white"
+                    />
+                  </div>
+
+                  {/* OBSERVAÇÕES OPCIONAIS */}
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label htmlFor="m1_obs" className="text-xs font-semibold text-slate-700">
+                      Observações Opcionais / Condicionantes Técnicas
+                    </Label>
+                    <Input
+                      id="m1_obs"
+                      placeholder="Ex: perfil operacional pretendido, sazonalidade, pontos de conexão..."
+                      value={formManif.observacoes}
+                      onChange={(e) => setFormManif({ ...formManif, observacoes: e.target.value })}
+                      className="h-8.5 text-xs bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CHECKBOX DO TERMO DE NÃO VINCULAÇÃO */}
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="m1_decl"
+                  checked={formManif.declaracao_nao_vinculante}
+                  onChange={(e) =>
+                    setFormManif({ ...formManif, declaracao_nao_vinculante: e.target.checked })
+                  }
+                  className="mt-0.5 rounded text-[#0a2540] focus:ring-[#0a2540]"
+                />
+                <label htmlFor="m1_decl" className="cursor-pointer leading-snug">
+                  Declaro estar ciente de que esta manifestação é <strong>NÃO VINCULANTE</strong>,
+                  destinada ao levantamento de demanda preliminar para instrução das Tarifas de
+                  Referência pela ANP no POCC (Art. 37-A, §5º, I).
+                </label>
+              </div>
+
+              {/* BOTÕES DO MÓDULO 1 */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
+                <span className="text-[11px] text-slate-500">
+                  O rascunho ficará salvo no sistema com status &ldquo;Aguardando assinatura&rdquo;.
+                </span>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setModalModulo1Aberto(false)}
+                    className="text-xs h-9 cursor-pointer"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGerarEPersistirDocumento}
+                    disabled={salvandoRascunhoManif || !formManif.declaracao_nao_vinculante}
+                    className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold h-9 px-4 cursor-pointer shadow-xs"
+                  >
+                    {salvandoRascunhoManif ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                        Persistindo Rascunho &amp; Gerando PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
+                        Baixar Documento e Salvar Rascunho
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL DO MÓDULO 2: ANEXAR DOCUMENTO ASSINADO & CONCLUIR PROTOCOLO DEFINITIVO
+          Carregador seleciona o rascunho pendente de assinatura, faz o upload exclusivo
+          do PDF assinado e confirma a autuação regulatória oficial.
+          ========================================================================= */}
+      {modalModulo2Aberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-5 sm:p-6 space-y-4 border border-slate-200 max-h-[92vh] overflow-y-auto relative">
+            <button
+              type="button"
               onClick={() => {
-                setModalManifestacaoAberto(false)
-                setEtapaFluxoManif('formulario')
+                setModalModulo2Aberto(false)
                 setArquivoAssinadoManif(null)
               }}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
@@ -2775,463 +3326,201 @@ export function POC() {
               <X className="h-5 w-5" />
             </button>
 
-            {/* Cabeçalho do Modal com identificação das 2 etapas do rito híbrido */}
             <div className="flex items-center gap-3 text-[#0a2540] border-b border-slate-200 pb-3">
               <div className="p-2 bg-sky-50 rounded-full text-[#0284c7]">
-                <Send className="h-5 w-5" />
+                <UploadCloud className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="text-base sm:text-lg font-bold text-[#0a2540]">
-                  Manifestação de Interesse no POCC (Art. 37-A, §5º, I — não vinculante)
-                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-[#0284c7] text-white">
+                    MÓDULO 2
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold text-[#0a2540]">
+                    Anexar Documento Assinado
+                  </h3>
+                </div>
                 <p className="text-xs text-slate-500">
-                  Rito Híbrido: Preenchimento &bull; Download do Modelo Oficial &bull; Assinatura
-                  &bull; Reanexo
+                  Emissão de Protocolo Definitivo &bull; Entrada na Fila Ativa da TSB
                 </p>
               </div>
             </div>
 
-            {/* Stepper explicativo das duas etapas */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div
-                className={`p-2.5 rounded border transition-colors ${
-                  etapaFluxoManif === 'formulario'
-                    ? 'bg-sky-50 border-sky-300 text-[#0a2540] font-semibold'
-                    : 'bg-slate-50 border-slate-200 text-slate-500'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
-                      etapaFluxoManif === 'formulario'
-                        ? 'bg-[#0284c7] text-white'
-                        : 'bg-slate-300 text-slate-700'
-                    }`}
-                  >
-                    1
-                  </span>
-                  <span>1. Preenchimento &amp; Download</span>
+            <form onSubmit={handleConfirmarUploadAssinado} className="space-y-4 text-xs">
+              {/* SELEÇÃO DO RASCUNHO PENDENTE */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="sel_rascunho" className="text-xs font-semibold text-slate-700">
+                    Selecione a Manifestação em Preparação *
+                  </Label>
+                  {rascunhoSelecionadoId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rec = minhasManifestacoes.find((m) => m.id === rascunhoSelecionadoId)
+                        if (rec) handleBaixarNovamentePdf(rec)
+                      }}
+                      className="text-[11px] font-semibold text-[#0284c7] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Download className="h-3 w-3" />
+                      Baixar PDF gerado deste rascunho
+                    </button>
+                  )}
                 </div>
+
+                {minhasManifestacoes.filter(
+                  (m) =>
+                    m.status === 'Documento gerado — aguardando assinatura do representante legal',
+                ).length > 0 ? (
+                  <select
+                    id="sel_rascunho"
+                    value={rascunhoSelecionadoId}
+                    onChange={(e) => setRascunhoSelecionadoId(e.target.value)}
+                    required
+                    className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 font-medium focus:ring-1 focus:ring-[#0a2540]"
+                  >
+                    <option value="">-- Selecione uma manifestação pendente --</option>
+                    {minhasManifestacoes
+                      .filter(
+                        (m) =>
+                          m.status ===
+                          'Documento gerado — aguardando assinatura do representante legal',
+                      )
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.protocolo} — {Number(m.capacidade_solicitada).toLocaleString('pt-BR')}{' '}
+                          m³/dia ({m.modalidade} • {m.trecho})
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-900 text-xs space-y-1">
+                    <strong>Nenhum rascunho aguardando assinatura localizado.</strong>
+                    <p className="text-[11px]">
+                      Você ainda não gerou um documento no Módulo 1 ou todas as suas manifestações
+                      já foram protocoladas. Utilize o <strong>Módulo 1</strong> para gerar um novo
+                      documento.
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div
-                className={`p-2.5 rounded border transition-colors ${
-                  etapaFluxoManif === 'upload_assinatura'
-                    ? 'bg-sky-50 border-sky-300 text-[#0a2540] font-semibold'
-                    : 'bg-slate-50 border-slate-200 text-slate-500'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
-                      etapaFluxoManif === 'upload_assinatura'
-                        ? 'bg-[#0284c7] text-white'
-                        : 'bg-slate-300 text-slate-700'
-                    }`}
-                  >
-                    2
-                  </span>
-                  <span>2. Reanexo do PDF Assinado</span>
-                </div>
-              </div>
-            </div>
-
-            {/* TERMO DE NÃO VINCULAÇÃO VISÍVEL NO FORMULÁRIO */}
-            <div className="p-3 bg-sky-50/70 border border-sky-200 rounded text-xs text-sky-950 leading-relaxed">
-              <strong>Termo de Não Vinculação (Art. 37-A, §5º, I):</strong> Esta Manifestação de
-              Interesse possui caráter <strong>não vinculante</strong> e destina-se exclusivamente
-              ao levantamento preliminar de demanda para embasamento das Tarifas de Referência pela
-              ANP (§5º, II). A submissão habilita o Carregador para apresentação posterior de
-              Propostas Garantidas Vinculantes na Etapa III (§5º, III).
-            </div>
-
-            {/* ETAPA 1: PREENCHIMENTO DO FORMULÁRIO & BAIXAR PDF */}
-            {etapaFluxoManif === 'formulario' && (
-              <div className="space-y-4 text-xs">
-                {/* BLOCO DE IDENTIFICAÇÃO PREENCHIDO AUTOMATICAMENTE E NÃO EDITÁVEL */}
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
-                      <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
-                      Identificação do Carregador Interessado (Autenticado)
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-medium">
-                      Preenchido automaticamente a partir da conta (não editável)
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 pt-1">
-                    <div className="p-2 bg-white border border-slate-200 rounded">
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                        Razão Social
-                      </span>
-                      <span className="font-bold text-slate-900 truncate block">
-                        {razaoSocialUsuario}
-                      </span>
-                    </div>
-
-                    <div className="p-2 bg-white border border-slate-200 rounded">
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                        CNPJ
-                      </span>
-                      <span className="font-mono font-semibold text-slate-900 block">
-                        {cnpjUsuario}
-                      </span>
-                    </div>
-
-                    <div className="p-2 bg-white border border-slate-200 rounded">
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                        Representante Legal
-                      </span>
-                      <span className="font-medium text-slate-900 truncate block">
-                        {representanteLegalUsuario}
-                      </span>
-                    </div>
-
-                    <div className="p-2 bg-white border border-slate-200 rounded">
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                        E-mail Corporativo
-                      </span>
-                      <span className="font-mono text-[11px] text-slate-900 truncate block">
-                        {emailUsuario}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CAMPOS DO RITO PREENCHIDOS PELO CARREGADOR */}
-                <div className="space-y-3">
-                  <span className="font-bold text-[#0a2540] block text-xs uppercase tracking-wide">
-                    Especificações da Demanda Pretendida no POCC
-                  </span>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* CAPACIDADE PRETENDIDA */}
-                    <div className="space-y-1">
-                      <Label htmlFor="m_cap" className="text-xs font-semibold text-slate-700">
-                        Capacidade Pretendida (m³/dia) *
-                      </Label>
-                      <Input
-                        id="m_cap"
-                        type="number"
-                        required
-                        min={1}
-                        value={formManif.capacidade_solicitada}
-                        onChange={(e) =>
-                          setFormManif({
-                            ...formManif,
-                            capacidade_solicitada: Number(e.target.value),
-                          })
-                        }
-                        className="h-8.5 text-xs font-mono font-bold bg-white"
-                      />
-                      <span className="text-[10px] text-slate-500 block">
-                        Mínimo 1 m³/dia • Volume diário médio contratado
-                      </span>
-                    </div>
-
-                    {/* MODALIDADE */}
-                    <div className="space-y-1">
-                      <Label htmlFor="m_mod" className="text-xs font-semibold text-slate-700">
-                        Modalidade de Contratação *
-                      </Label>
-                      <select
-                        id="m_mod"
-                        value={formManif.modalidade}
-                        onChange={(e) =>
-                          setFormManif({
-                            ...formManif,
-                            modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
-                          })
-                        }
-                        className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                      >
-                        <option value="Firme Ordinário">Firme Ordinário (POCC Anual)</option>
-                        <option value="Interruptível">Interruptível</option>
-                      </select>
-                      <span className="text-[10px] text-slate-500 block">
-                        Art. 37-A, §5º, I da Resolução ANP nº 961/2023
-                      </span>
-                    </div>
-
-                    {/* SELEÇÃO DO TRECHO E PONTOS RELEVANTES */}
-                    <div className="space-y-1 sm:col-span-2">
-                      <Label
-                        htmlFor="m_trecho_sel"
-                        className="text-xs font-semibold text-slate-700"
-                      >
-                        Trecho e Pontos da Malha TSB (Pontos Homologados) *
-                      </Label>
-                      <select
-                        id="m_trecho_sel"
-                        value={formManif.trecho_opcao_id}
-                        onChange={(e) => {
-                          const op =
-                            opcoesTrechosManif.find((o) => o.id === e.target.value) ||
-                            opcoesTrechosManif[0]
-                          setFormManif({
-                            ...formManif,
-                            trecho_opcao_id: op.id,
-                            trecho: op.trecho,
-                            ponto_recebimento: op.ponto_recebimento,
-                            ponto_entrega: op.ponto_entrega,
-                          })
-                        }}
-                        className="w-full h-8.5 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                      >
-                        {opcoesTrechosManif.map((o) => (
-                          <option key={o.id} value={o.id}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* DETALHAMENTO DOS PONTOS DE ENTRADA E SAÍDA SELECIONADOS */}
-                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded sm:col-span-2 text-[11px] text-slate-600 space-y-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              {/* DETALHES DO RASCUNHO SELECIONADO */}
+              {rascunhoSelecionadoId &&
+                (() => {
+                  const sel = minhasManifestacoes.find((m) => m.id === rascunhoSelecionadoId)
+                  if (!sel) return null
+                  return (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[11px] space-y-1 text-slate-700">
+                      <div className="font-semibold text-slate-900 flex items-center justify-between">
+                        <span>Dados do Rascunho Selecionado:</span>
+                        <span className="font-mono text-[#0284c7]">{sel.protocolo}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
                         <div>
-                          <span className="font-semibold text-slate-700">
-                            Ponto de Entrada (PE):
-                          </span>{' '}
-                          <strong className="text-[#0a2540]">{formManif.ponto_recebimento}</strong>
+                          <strong>Capacidade:</strong>{' '}
+                          {Number(sel.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
                         </div>
                         <div>
-                          <span className="font-semibold text-slate-700">Ponto de Saída (ZS):</span>{' '}
-                          <strong className="text-[#0a2540]">{formManif.ponto_entrega}</strong>
+                          <strong>Modalidade:</strong> {sel.modalidade}
+                        </div>
+                        <div className="col-span-2">
+                          <strong>Trecho:</strong> {sel.trecho} ({sel.ponto_recebimento} &rarr;{' '}
+                          {sel.ponto_entrega})
                         </div>
                       </div>
-                      <div className="text-[10px] text-slate-500">
-                        Trecho vinculado: <strong>{formManif.trecho}</strong>
-                      </div>
                     </div>
+                  )
+                })()}
 
-                    {/* PERÍODO DE INTERESSE: DATA INÍCIO */}
-                    <div className="space-y-1">
-                      <Label htmlFor="m_dt_ini" className="text-xs font-semibold text-slate-700">
-                        Período de Interesse: Data Início *
-                      </Label>
-                      <Input
-                        id="m_dt_ini"
-                        type="date"
-                        required
-                        value={formManif.data_inicio}
-                        onChange={(e) =>
-                          setFormManif({ ...formManif, data_inicio: e.target.value })
-                        }
-                        className="h-8.5 text-xs bg-white"
-                      />
-                    </div>
+              {/* CAMPO DE UPLOAD EXCLUSIVO DE PDF */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="m2_pdf_assinado"
+                  className="text-xs font-semibold text-slate-700 block"
+                >
+                  Upload do Documento Assinado (Exclusivo PDF) *
+                </Label>
 
-                    {/* PERÍODO DE INTERESSE: DATA FIM */}
-                    <div className="space-y-1">
-                      <Label htmlFor="m_dt_fim" className="text-xs font-semibold text-slate-700">
-                        Período de Interesse: Data Fim *
-                      </Label>
-                      <Input
-                        id="m_dt_fim"
-                        type="date"
-                        required
-                        value={formManif.data_fim}
-                        onChange={(e) => setFormManif({ ...formManif, data_fim: e.target.value })}
-                        className="h-8.5 text-xs bg-white"
-                      />
-                    </div>
-
-                    {/* OBSERVAÇÕES OPCIONAIS */}
-                    <div className="space-y-1 sm:col-span-2">
-                      <Label htmlFor="m_obs" className="text-xs font-semibold text-slate-700">
-                        Observações Opcionais / Condicionantes Técnicas
-                      </Label>
-                      <Input
-                        id="m_obs"
-                        placeholder="Ex: perfil operacional pretendido, sazonalidade, pontos de conexão..."
-                        value={formManif.observacoes}
-                        onChange={(e) =>
-                          setFormManif({ ...formManif, observacoes: e.target.value })
-                        }
-                        className="h-8.5 text-xs bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* CHECKBOX DO TERMO DE NÃO VINCULAÇÃO */}
-                <div className="p-3 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-5 bg-slate-50/60 hover:bg-slate-50 text-center transition-colors">
                   <input
-                    type="checkbox"
-                    id="m_decl_hibrido"
-                    checked={formManif.declaracao_nao_vinculante}
-                    onChange={(e) =>
-                      setFormManif({ ...formManif, declaracao_nao_vinculante: e.target.checked })
-                    }
-                    className="mt-0.5 rounded text-[#0a2540] focus:ring-[#0a2540]"
+                    type="file"
+                    id="m2_pdf_assinado"
+                    accept="application/pdf"
+                    required
+                    onChange={handleSelecionarArquivoAssinado}
+                    className="hidden"
                   />
-                  <label htmlFor="m_decl_hibrido" className="cursor-pointer leading-snug">
-                    Declaro estar ciente de que esta manifestação é <strong>NÃO VINCULANTE</strong>,
-                    destinada ao levantamento de demanda preliminar para instrução das Tarifas de
-                    Referência pela ANP no POCC (Art. 37-A, §5º, I).
+                  <label
+                    htmlFor="m2_pdf_assinado"
+                    className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                  >
+                    <UploadCloud className="h-8 w-8 text-[#0284c7]" />
+                    <span className="text-xs font-semibold text-slate-800">
+                      {arquivoAssinadoManif ? (
+                        <span className="text-emerald-700 font-bold flex items-center gap-1">
+                          <Check className="h-4 w-4" /> Arquivo selecionado:{' '}
+                          {arquivoAssinadoManif.name} (
+                          {(arquivoAssinadoManif.size / 1024).toFixed(1)} KB)
+                        </span>
+                      ) : (
+                        'Clique aqui para selecionar o PDF assinado pelo representante legal'
+                      )}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Aceito exclusivamente: arquivo .pdf (ICP-Brasil, Gov.br ou físico carimbado)
+                      até 50 MB
+                    </span>
                   </label>
                 </div>
 
-                {/* BOTÕES DA ETAPA 1 */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
-                  <span className="text-[11px] text-slate-500">
-                    Ao clicar em gerar, o documento oficial do POCC será baixado para coleta da
-                    assinatura.
+                <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                  <span>
+                    <strong>Validação Regulatória:</strong> A solicitação só entra na fila de
+                    análise da TSB com o PDF assinado anexado. O status mudará para{' '}
+                    <em>
+                      &ldquo;Manifestação registrada — aguardando conferência da assinatura&rdquo;
+                    </em>
+                    .
                   </span>
-
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setModalManifestacaoAberto(false)}
-                      className="text-xs h-9 cursor-pointer"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleBaixarPdfManifestacao}
-                      disabled={gerandoPdf || !formManif.declaracao_nao_vinculante}
-                      className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold h-9 px-4 cursor-pointer shadow-xs"
-                    >
-                      {gerandoPdf ? (
-                        <>
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                          Gerando Documento Oficial...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
-                          Baixar Documento para Assinatura &rarr;
-                        </>
-                      )}
-                    </Button>
-                  </div>
                 </div>
               </div>
-            )}
 
-            {/* ETAPA 2: REANEXAR DOCUMENTO ASSINADO & EMITIR PROTOCOLO */}
-            {etapaFluxoManif === 'upload_assinatura' && (
-              <form onSubmit={handleConfirmarUploadAssinado} className="space-y-4 text-xs">
-                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-950 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-900">
-                    <FileCheck className="h-4 w-4 text-emerald-600" />
-                    Etapa de Reanexo do Documento Assinado
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-emerald-900">
-                    O documento oficial da Manifestação de Interesse foi gerado e baixado no seu
-                    dispositivo. Agora, colete a assinatura do representante legal da sociedade
-                    (assinatura digital padrão ICP-Brasil / Gov.br ou física com carimbo) e faça o
-                    upload abaixo para concluir a autuação regulatória.
-                  </p>
-                </div>
+              {/* BOTÕES DO MÓDULO 2 */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setModalModulo2Aberto(false)
+                    setArquivoAssinadoManif(null)
+                  }}
+                  className="text-xs h-9 cursor-pointer"
+                >
+                  Cancelar
+                </Button>
 
-                {/* RESUMO DOS DADOS PREENCHIDOS */}
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[11px] space-y-1 text-slate-700">
-                  <div className="font-semibold text-slate-800">Resumo da Manifestação Pronta:</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5">
-                    <div>
-                      <span className="text-slate-500">Capacidade:</span>{' '}
-                      <strong>
-                        {Number(formManif.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Modalidade:</span>{' '}
-                      <strong>{formManif.modalidade}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Trecho:</span>{' '}
-                      <strong>{formManif.trecho}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CAMPO DE UPLOAD DO PDF ASSINADO */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="pdf_assinado"
-                    className="text-xs font-semibold text-slate-700 block"
-                  >
-                    Upload da Manifestação de Interesse Assinada (Apenas PDF) *
-                  </Label>
-
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-5 bg-slate-50/60 hover:bg-slate-50 text-center transition-colors">
-                    <input
-                      type="file"
-                      id="pdf_assinado"
-                      accept="application/pdf"
-                      required
-                      onChange={handleSelecionarArquivoAssinado}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="pdf_assinado"
-                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
-                    >
-                      <UploadCloud className="h-8 w-8 text-[#0284c7]" />
-                      <span className="text-xs font-semibold text-slate-800">
-                        {arquivoAssinadoManif ? (
-                          <span className="text-emerald-700 font-bold flex items-center gap-1">
-                            <Check className="h-4 w-4" /> Arquivo selecionado:{' '}
-                            {arquivoAssinadoManif.name} (
-                            {(arquivoAssinadoManif.size / 1024).toFixed(1)} KB)
-                          </span>
-                        ) : (
-                          'Clique aqui para selecionar o arquivo PDF assinado'
-                        )}
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        Formato aceito: exclusivamente PDF (.pdf) até 50 MB
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* VALIDAÇÃO VISÍVEL */}
-                  <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                    <span>
-                      <strong>Validação Regulatória:</strong> O protocolo oficial{' '}
-                      <span className="font-mono">TSB-AAAA-XXXX</span> não nasce sem o anexo do PDF
-                      assinado.
-                    </span>
-                  </div>
-                </div>
-
-                {/* BOTÕES DA ETAPA 2 */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEtapaFluxoManif('formulario')}
-                    className="text-xs h-9 cursor-pointer"
-                  >
-                    &larr; Voltar ao Formulário
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    disabled={enviandoForm || !arquivoAssinadoManif}
-                    className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-semibold h-9 px-5 cursor-pointer shadow-xs"
-                  >
-                    {enviandoForm ? (
-                      <>
-                        <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                        Autuando Protocolo Oficial...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
-                        Protocolar Manifestação Assinada
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            )}
+                <Button
+                  type="submit"
+                  disabled={
+                    enviandoAssinadoManif || !arquivoAssinadoManif || !rascunhoSelecionadoId
+                  }
+                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold h-9 px-5 cursor-pointer shadow-xs"
+                >
+                  {enviandoAssinadoManif ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Autuando Protocolo Oficial...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3.5 w-3.5 mr-1.5 text-white" />
+                      Confirmar Envio e Protocolar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

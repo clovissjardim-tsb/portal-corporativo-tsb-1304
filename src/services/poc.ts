@@ -70,6 +70,7 @@ export interface ManifestacaoInteressePOC extends RecordModel {
   ponto_entrega?: string
   periodo_vigencia?: string
   status:
+    | 'Documento gerado — aguardando assinatura do representante legal'
     | 'Manifestação registrada — aguardando conferência da assinatura'
     | 'Recebida - Em Análise'
     | 'Habilitada para Etapa II'
@@ -377,6 +378,17 @@ export const pocService = {
     return await pb.collection<ManifestacaoInteressePOC>('poc_manifestacoes').update(id, {
       status,
       ...(observacoesInternas !== undefined ? { observacoes_internas: observacoesInternas } : {}),
+    })
+  },
+
+  async anexarDocumentoAssinado(id: string, arquivo: File): Promise<ManifestacaoInteressePOC> {
+    const formData = new FormData()
+    formData.append('arquivo_formulario', arquivo)
+    formData.append('status', 'Manifestação registrada — aguardando conferência da assinatura')
+    formData.append('origem', 'area_carregador')
+
+    return await pb.collection<ManifestacaoInteressePOC>('poc_manifestacoes').update(id, formData, {
+      requestKey: null,
     })
   },
 

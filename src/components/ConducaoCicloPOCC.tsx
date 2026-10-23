@@ -297,7 +297,12 @@ export function ConducaoCicloPOCC() {
           <Send className="h-3.5 w-3.5 text-emerald-400" />
           3. Manifestações de Interesse
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-200 text-[#0a2540] font-bold">
-            {manifestacoes.length}
+            {
+              manifestacoes.filter(
+                (m) =>
+                  m.status !== 'Documento gerado — aguardando assinatura do representante legal',
+              ).length
+            }
           </span>
         </button>
 
@@ -483,107 +488,219 @@ export function ConducaoCicloPOCC() {
 
       {/* SUB-ABA 3: MANIFESTAÇÕES DE INTERESSE */}
       {subAba === 'manifestacoes' && (
-        <div className="space-y-4">
-          <div className="text-xs text-slate-600">
-            Fila de manifestações de interesse não vinculantes recebidas no âmbito da Etapa I do
-            POCC.
-          </div>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="text-xs text-slate-600">
+                Fila de manifestações de interesse não vinculantes recebidas no âmbito da Etapa I do
+                POCC (Art. 37-A, §5º, I). Apenas manifestações com termo assinado anexado exigem
+                ação da Comissão.
+              </div>
+              <div className="text-[11px] font-semibold text-[#0a2540]">
+                {
+                  manifestacoes.filter(
+                    (m) =>
+                      m.status !==
+                      'Documento gerado — aguardando assinatura do representante legal',
+                  ).length
+                }{' '}
+                solicitação(ões) ativa(s) na fila
+              </div>
+            </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-lg">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
-                <tr>
-                  <th className="p-3">Protocolo</th>
-                  <th className="p-3">Origem</th>
-                  <th className="p-3">Carregador (Razão / CNPJ)</th>
-                  <th className="p-3">Capacidade</th>
-                  <th className="p-3">Modalidade</th>
-                  <th className="p-3">Doc. Assinado</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Data</th>
-                  <th className="p-3 text-right">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {manifestacoes.length > 0 ? (
-                  manifestacoes.map((m) => {
-                    const urlArquivo = pocService.obterUrlArquivoManifestacao(m)
-                    const isAreaCarregador = m.origem === 'area_carregador' || !m.origem
-
-                    return (
-                      <tr key={m.id} className="hover:bg-slate-50">
-                        <td className="p-3 font-mono font-bold text-[#0284c7]">{m.protocolo}</td>
-                        <td className="p-3">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${
-                              isAreaCarregador
-                                ? 'bg-sky-100 text-sky-800 border border-sky-300'
-                                : 'bg-slate-100 text-slate-700 border border-slate-300'
-                            }`}
-                          >
-                            {isAreaCarregador
-                              ? 'Área do Carregador (autenticado)'
-                              : m.origem || 'Interno'}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-semibold text-slate-800">{m.razao_social}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">CNPJ: {m.cnpj}</div>
-                        </td>
-                        <td className="p-3 font-bold text-slate-800">
-                          {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
-                        </td>
-                        <td className="p-3">{m.modalidade}</td>
-                        <td className="p-3">
-                          {urlArquivo ? (
-                            <a
-                              href={urlArquivo}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:underline"
-                            >
-                              <Download className="h-3 w-3" />
-                              Baixar PDF
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-[10px]">Sem anexo</span>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
-                            {m.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-500 font-mono">
-                          {new Date(m.created).toLocaleDateString('pt-BR')}
-                        </td>
-                        <td className="p-3 text-right">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setManifSelecionada(m)
-                              setStatusManifForm(m.status)
-                              setObsManifForm(m.observacoes_internas || '')
-                              setModalManifAberto(true)
-                            }}
-                            className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-2.5"
-                          >
-                            Analisar
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                ) : (
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-100 text-[#0a2540] font-bold border-b border-slate-200">
                   <tr>
-                    <td colSpan={9} className="p-6 text-center text-slate-500">
-                      Nenhuma manifestação de interesse registrada no momento.
-                    </td>
+                    <th className="p-3">Protocolo</th>
+                    <th className="p-3">Origem</th>
+                    <th className="p-3">Carregador (Razão / CNPJ)</th>
+                    <th className="p-3">Capacidade</th>
+                    <th className="p-3">Modalidade</th>
+                    <th className="p-3">Doc. Assinado</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Data</th>
+                    <th className="p-3 text-right">Ação</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {manifestacoes.filter(
+                    (m) =>
+                      m.status !==
+                      'Documento gerado — aguardando assinatura do representante legal',
+                  ).length > 0 ? (
+                    manifestacoes
+                      .filter(
+                        (m) =>
+                          m.status !==
+                          'Documento gerado — aguardando assinatura do representante legal',
+                      )
+                      .map((m) => {
+                        const urlArquivo = pocService.obterUrlArquivoManifestacao(m)
+                        const isAreaCarregador = m.origem === 'area_carregador' || !m.origem
+
+                        return (
+                          <tr key={m.id} className="hover:bg-slate-50">
+                            <td className="p-3 font-mono font-bold text-[#0284c7]">
+                              {m.protocolo}
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                  isAreaCarregador
+                                    ? 'bg-sky-100 text-sky-800 border border-sky-300'
+                                    : 'bg-slate-100 text-slate-700 border border-slate-300'
+                                }`}
+                              >
+                                {isAreaCarregador
+                                  ? 'Área do Carregador (autenticado)'
+                                  : m.origem || 'Interno'}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <div className="font-semibold text-slate-800">{m.razao_social}</div>
+                              <div className="text-[10px] text-slate-500 font-mono">
+                                CNPJ: {m.cnpj}
+                              </div>
+                            </td>
+                            <td className="p-3 font-bold text-slate-800">
+                              {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                            </td>
+                            <td className="p-3">{m.modalidade}</td>
+                            <td className="p-3">
+                              {urlArquivo ? (
+                                <a
+                                  href={urlArquivo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:underline"
+                                >
+                                  <Download className="h-3 w-3" />
+                                  Baixar PDF
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 text-[10px]">Sem anexo</span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                                {m.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-500 font-mono">
+                              {new Date(m.created).toLocaleDateString('pt-BR')}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setManifSelecionada(m)
+                                  setStatusManifForm(m.status)
+                                  setObsManifForm(m.observacoes_internas || '')
+                                  setModalManifAberto(true)
+                                }}
+                                className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] h-7 px-2.5"
+                              >
+                                Analisar
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="p-6 text-center text-slate-500">
+                        Nenhuma manifestação de interesse registrada na fila ativa no momento.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* TABELA SECUNDÁRIA: DOCUMENTOS GERADOS EM PREPARAÇÃO PELO CARREGADOR (SEM AÇÃO PENDENTE DA TSB) */}
+          {manifestacoes.filter(
+            (m) => m.status === 'Documento gerado — aguardando assinatura do representante legal',
+          ).length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  Manifestações em Preparação pelo Carregador (Aguardando Assinatura — Não
+                  Protocoladas)
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {
+                    manifestacoes.filter(
+                      (m) =>
+                        m.status ===
+                        'Documento gerado — aguardando assinatura do representante legal',
+                    ).length
+                  }{' '}
+                  rascunho(s)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Estes registros representam documentos baixados pelos carregadores que ainda não
+                foram assinados e reenviados.{' '}
+                <strong>Não compõem a fila ativa de deliberação da TSB</strong> até que o carregador
+                conclua a etapa 2 de reanexo.
+              </p>
+
+              <div className="overflow-x-auto border border-amber-200 bg-amber-50/20 rounded-lg">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead className="bg-amber-100/60 text-slate-700 font-semibold border-b border-amber-200">
+                    <tr>
+                      <th className="p-2.5">Protocolo Preliminar</th>
+                      <th className="p-2.5">Carregador</th>
+                      <th className="p-2.5">Capacidade</th>
+                      <th className="p-2.5">Modalidade</th>
+                      <th className="p-2.5">Trecho</th>
+                      <th className="p-2.5">Status</th>
+                      <th className="p-2.5">Data Geração</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-100 bg-white">
+                    {manifestacoes
+                      .filter(
+                        (m) =>
+                          m.status ===
+                          'Documento gerado — aguardando assinatura do representante legal',
+                      )
+                      .map((m) => (
+                        <tr key={m.id} className="hover:bg-amber-50/40 text-slate-600">
+                          <td className="p-2.5 font-mono text-slate-700 font-bold">
+                            {m.protocolo}
+                          </td>
+                          <td className="p-2.5">
+                            <div className="font-semibold text-slate-800">{m.razao_social}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">
+                              CNPJ: {m.cnpj}
+                            </div>
+                          </td>
+                          <td className="p-2.5 font-semibold text-slate-700">
+                            {Number(m.capacidade_solicitada).toLocaleString('pt-BR')} m³/dia
+                          </td>
+                          <td className="p-2.5">{m.modalidade}</td>
+                          <td className="p-2.5 text-[11px] text-slate-500">
+                            {m.ponto_recebimento} &rarr; {m.ponto_entrega}
+                          </td>
+                          <td className="p-2.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+                              Em preparação pelo Carregador
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-slate-500 font-mono">
+                            {new Date(m.created).toLocaleDateString('pt-BR')}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -884,6 +1001,9 @@ export function ConducaoCicloPOCC() {
                   }
                   className="w-full h-8 px-2 rounded border border-slate-300 text-xs bg-white"
                 >
+                  <option value="Documento gerado — aguardando assinatura do representante legal">
+                    Documento gerado — aguardando assinatura do representante legal
+                  </option>
                   <option value="Manifestação registrada — aguardando conferência da assinatura">
                     Manifestação registrada — aguardando conferência da assinatura
                   </option>

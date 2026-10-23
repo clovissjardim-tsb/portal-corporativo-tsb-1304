@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T19:24:54.217Z",
+  "generatedAt": "2026-10-23T19:35:44.806Z",
   "collections": [
     {
       "name": "users",
@@ -1000,7 +1000,8 @@
             "Habilitada para Etapa II",
             "Em Ajuste Cadastral",
             "Indeferida",
-            "Manifestação registrada — aguardando conferência da assinatura"
+            "Manifestação registrada — aguardando conferência da assinatura",
+            "Documento gerado — aguardando assinatura do representante legal"
           ]
         },
         {
