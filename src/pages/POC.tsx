@@ -18,6 +18,7 @@ import {
   type PropostaVinculantePOC,
   type GarantiaTipo,
 } from '@/services/poc'
+import { solicitacoesService, type SolicitacaoIncisoVII } from '@/services/solicitacoes'
 import {
   FileText,
   ShieldAlert,
@@ -59,8 +60,59 @@ export default function POC() {
 
   // Sub-abas na Área do Carregador (quando autenticado)
   const [abaAutenticada, setAbaAutenticada] = useState<
-    'manifestacao' | 'proposta' | 'assinatura' | 'historico'
+    'manifestacao' | 'proposta' | 'assinatura' | 'historico' | 'solicitacoes_vii'
   >('manifestacao')
+
+  // Estado da Consulta de Protocolo do Inciso VII (Solicitação de Acesso)
+  const [consultaProtocolo, setConsultaProtocolo] = useState('')
+  const [consultandoProtocolo, setConsultandoProtocolo] = useState(false)
+  const [resultadoConsulta, setResultadoConsulta] = useState<{
+    buscado: boolean
+    encontrado: boolean
+    protocoloPesquisado: string
+    dados?: SolicitacaoIncisoVII
+  } | null>(null)
+
+  const handleConsultarProtocolo = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const protoLimpo = consultaProtocolo.trim()
+    if (!protoLimpo) {
+      toast({
+        title: 'Informe o protocolo',
+        description: 'Digite o número do protocolo regulatório no formato TSB-AAAA-XXXX.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setConsultandoProtocolo(true)
+    try {
+      const res = await solicitacoesService.buscarPorProtocolo(protoLimpo)
+      if (res) {
+        setResultadoConsulta({
+          buscado: true,
+          encontrado: true,
+          protocoloPesquisado: protoLimpo,
+          dados: res,
+        })
+      } else {
+        setResultadoConsulta({
+          buscado: true,
+          encontrado: false,
+          protocoloPesquisado: protoLimpo,
+        })
+      }
+    } catch (err) {
+      console.error('Erro ao consultar protocolo:', err)
+      setResultadoConsulta({
+        buscado: true,
+        encontrado: false,
+        protocoloPesquisado: protoLimpo,
+      })
+    } finally {
+      setConsultandoProtocolo(false)
+    }
+  }
 
   // Modais de submissão
   const [modalManifestacaoAberto, setModalManifestacaoAberto] = useState(false)
@@ -837,6 +889,19 @@ export default function POC() {
                 <History className="h-4 w-4 text-amber-500" />
                 Histórico dos Ciclos
               </button>
+
+              <button
+                type="button"
+                onClick={() => setAbaAutenticada('solicitacoes_vii')}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-md transition-colors ${
+                  abaAutenticada === 'solicitacoes_vii'
+                    ? 'bg-[#0a2540] text-white shadow-xs font-bold'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                <Search className="h-4 w-4 text-[#0284c7]" />
+                Consulta de Protocolo &amp; SLA (Inciso VII)
+              </button>
             </div>
 
             {/* ABA 1: MANIFESTAÇÃO DE INTERESSE */}
@@ -1163,6 +1228,254 @@ export default function POC() {
                     Nenhum registro encontrado para os filtros selecionados.
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ABA 5: CONSULTA DE PROTOCOLO, SLA E PARECER FUNDAMENTADO (INCISO VII) */}
+            {abaAutenticada === 'solicitacoes_vii' && (
+              <div className="space-y-6 animate-fade-in">
+                {/* CARD DE CONSULTA POR PROTOCOLO (ESTRUTURA SÓBRIA OFICIAL TSB) */}
+                <div className="bg-white border border-slate-200 rounded-lg p-5 sm:p-6 shadow-xs space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Search className="h-4 w-4 text-[#0a2540]" />
+                      <h3 className="text-sm sm:text-base font-bold text-[#0a2540]">
+                        Consulta de Protocolo, SLA e Parecer Fundamentado
+                      </h3>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      Acompanhe o andamento regulatório da sua manifestação técnica pelo número de
+                      protocolo gerado.
+                    </p>
+                  </div>
+
+                  {/* FORMULÁRIO COM CAMPO + BOTÃO */}
+                  <form
+                    onSubmit={handleConsultarProtocolo}
+                    className="flex flex-col sm:flex-row gap-3 pt-1"
+                  >
+                    <Input
+                      type="text"
+                      value={consultaProtocolo}
+                      onChange={(e) => setConsultaProtocolo(e.target.value)}
+                      placeholder="INFORME O PROTOCOLO (EX: TSB-2026-8942)"
+                      className="font-mono text-xs uppercase h-11 border-slate-300 focus-visible:ring-1 focus-visible:ring-[#0a2540] flex-1 tracking-wider"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={consultandoProtocolo || !consultaProtocolo.trim()}
+                      className="h-11 px-6 bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {consultandoProtocolo ? (
+                        <>
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          Consultando...
+                        </>
+                      ) : (
+                        'Verificar Protocolo'
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* RESULTADO DA CONSULTA */}
+                  {resultadoConsulta && resultadoConsulta.buscado && (
+                    <div className="pt-2 animate-fade-in">
+                      {resultadoConsulta.encontrado && resultadoConsulta.dados ? (
+                        (() => {
+                          const sol = resultadoConsulta.dados
+                          const userCnpj = (user as unknown as { cnpj?: string })?.cnpj || ''
+                          const userEmail = user?.email || ''
+                          const isTitular = Boolean(
+                            (sol.cnpj &&
+                              userCnpj &&
+                              sol.cnpj.replace(/\D/g, '') === userCnpj.replace(/\D/g, '')) ||
+                            (sol.email &&
+                              userEmail &&
+                              sol.email.toLowerCase() === userEmail.toLowerCase()),
+                          )
+
+                          return (
+                            <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
+                              {/* CABEÇALHO DO RESULTADO */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    Protocolo Autuado
+                                  </span>
+                                  <div className="font-mono font-bold text-base sm:text-lg text-[#0a2540] flex items-center gap-2">
+                                    <span>{sol.protocolo}</span>
+                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-semibold">
+                                      {sol.status || 'Em Análise Técnica'}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="text-left sm:text-right text-xs text-slate-600">
+                                  <div className="font-semibold text-slate-800">
+                                    SLA Regulatório: {sol.sla_dias || 20} dias úteis
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 font-mono">
+                                    Data de Entrada:{' '}
+                                    {sol.created
+                                      ? new Date(sol.created).toLocaleDateString('pt-BR')
+                                      : 'Conforme Registro'}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* GRID TÉCNICO REGULATÓRIO */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                                <div className="p-3 bg-white border border-slate-200 rounded">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                                    Modalidade
+                                  </span>
+                                  <span className="font-semibold text-[#0a2540]">
+                                    {sol.modalidade || 'Firme Ordinário'}
+                                  </span>
+                                </div>
+
+                                <div className="p-3 bg-white border border-slate-200 rounded">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                                    Capacidade Solicitada
+                                  </span>
+                                  <span className="font-semibold text-[#0a2540] font-mono">
+                                    {Number(sol.capacidade).toLocaleString('pt-BR')} m³/dia
+                                  </span>
+                                </div>
+
+                                <div className="p-3 bg-white border border-slate-200 rounded">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                                    Trecho / Instalação
+                                  </span>
+                                  <span className="font-semibold text-[#0a2540] truncate block">
+                                    {sol.trecho || 'Gasoduto Uruguaiana - Triunfo'}
+                                  </span>
+                                </div>
+
+                                <div className="p-3 bg-white border border-slate-200 rounded">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase block">
+                                    Pontos (Recebimento &rarr; Entrega)
+                                  </span>
+                                  <span className="font-semibold text-[#0a2540] truncate block">
+                                    {sol.ponto_recebimento || 'EMED Uruguaiana'} &rarr;{' '}
+                                    {sol.ponto_entrega || 'Triunfo'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* DETALHES ADICIONAIS QUANDO FOR DO CARREGADOR LOGADO (LGPD COMPLIANT) */}
+                              {isTitular && (
+                                <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded text-xs space-y-2">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-[#0a2540] flex items-center gap-1.5 text-xs">
+                                      <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                                      Dados Cadastrais da Titularidade (Ambiente Seguro)
+                                    </span>
+                                    <Badge className="bg-blue-100 text-[#143b73] border-blue-300 text-[10px]">
+                                      Solicitante Autenticado
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-700 pt-1">
+                                    {sol.razao_social && (
+                                      <div>
+                                        <span className="text-slate-500 font-medium">
+                                          Razão Social:
+                                        </span>{' '}
+                                        <strong className="text-slate-900">
+                                          {sol.razao_social}
+                                        </strong>
+                                      </div>
+                                    )}
+                                    {sol.cnpj && (
+                                      <div>
+                                        <span className="text-slate-500 font-medium">CNPJ:</span>{' '}
+                                        <strong className="font-mono text-slate-900">
+                                          {sol.cnpj}
+                                        </strong>
+                                      </div>
+                                    )}
+                                    {sol.periodo && (
+                                      <div>
+                                        <span className="text-slate-500 font-medium">
+                                          Período Demandado:
+                                        </span>{' '}
+                                        <strong className="text-slate-900">{sol.periodo}</strong>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* PARECER FUNDAMENTADO TÉCNICO (ART. 10 DA RES. ANP 11/2016) */}
+                              <div className="space-y-1.5 pt-1">
+                                <span className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                                  <FileText className="h-4 w-4 text-[#0284c7]" />
+                                  Parecer Fundamentado da Transportadora (Art. 10, §2º da Res. ANP
+                                  nº 11/2016):
+                                </span>
+                                <div className="p-3.5 bg-white border border-slate-200 rounded text-xs text-slate-700 leading-relaxed whitespace-pre-line shadow-2xs">
+                                  {sol.parecer_fundamentado ||
+                                    'Solicitação de acesso formalmente recepcionada. Em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa nos pontos de conexão.'}
+                                </div>
+                              </div>
+
+                              {/* DESFECHO REGULATÓRIO DETALHADO (SE HOUVER) */}
+                              {sol.desfecho_tipo && (
+                                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded text-xs text-amber-950 space-y-1">
+                                  <span className="font-bold block">
+                                    Desfecho Regulatório (Art. 10, §2º): {sol.desfecho_tipo}
+                                  </span>
+                                  {sol.termos_condicoes && (
+                                    <p className="text-[11px] text-slate-700">
+                                      <strong>Termos e Condições:</strong> {sol.termos_condicoes}
+                                    </p>
+                                  )}
+                                  {sol.previsao_disponibilidade && (
+                                    <p className="text-[11px] text-slate-700">
+                                      <strong>Previsão de Disponibilidade:</strong>{' '}
+                                      {sol.previsao_disponibilidade}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()
+                      ) : (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
+                          <div className="font-bold flex items-center gap-1.5">
+                            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                            Protocolo não localizado
+                          </div>
+                          <p className="leading-relaxed">
+                            Nenhum registro foi encontrado para o código{' '}
+                            <strong className="font-mono">
+                              {resultadoConsulta.protocoloPesquisado}
+                            </strong>
+                            . Verifique se o número foi digitado corretamente conforme o comprovante
+                            formal recebido por e-mail (Ex: TSB-2026-8942).
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ORIENTAÇÕES REGULATÓRIAS COMPLEMENTARES */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 space-y-2">
+                  <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                    <HelpCircle className="h-4 w-4 text-[#0284c7]" />
+                    Sobre o Fluxo de Solicitação de Acesso (Inciso VII da Res. ANP nº 11/2016)
+                  </div>
+                  <p className="leading-relaxed">
+                    Conforme o padrão adotado pelos transportadores do setor dutoviário brasileiro
+                    (NTS/TAG/TBG), as solicitações de acesso podem ser formalizadas através do
+                    preenchimento e assinatura digital do formulário PDF oficial, com envio ao canal
+                    regulatório institucional{' '}
+                    <strong className="text-[#0a2540]">regulacao@tsb.com.br</strong>. A emissão do
+                    parecer fundamentado ocorre em até 20 dias úteis, permanecendo disponível para
+                    consulta nesta área autenticada.
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
