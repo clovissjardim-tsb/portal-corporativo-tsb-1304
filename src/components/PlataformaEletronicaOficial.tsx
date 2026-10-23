@@ -782,21 +782,22 @@ export default function PlataformaEletronica({
                           {item?.descricao || metaIncisos.VII.descricaoPadrao}
                         </p>
 
-                        {/* DOCUMENTOS EM PDF PARA BAIXAR/VISUALIZAR */}
-                        <div className="space-y-2 pt-1">
-                          {/* 1. Formulário Oficial em PDF gerado diretamente */}
-                          <DocumentLinkRow
-                            url="#"
-                            onClick={handleBaixarFormularioAcessoPdf}
-                            label={
-                              gerandoPdfAcesso
-                                ? 'Gerando Formulário Oficial PDF...'
-                                : 'Formulário Oficial de Solicitação de Acesso (PDF)'
-                            }
-                            sublabel="Modelo oficial TSB assinado para formalização por e-mail"
-                          />
+                        {/* AÇÃO PRINCIPAL E DOCUMENTOS EM PDF */}
+                        <div className="space-y-3 pt-1">
+                          {/* Botão de Solicitação Direta via Módulo POCC */}
+                          <div>
+                            <Link to="/poc">
+                              <Button
+                                size="sm"
+                                className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                              >
+                                <Lock className="h-3.5 w-3.5 text-slate-200" />
+                                Solicitar Acesso
+                              </Button>
+                            </Link>
+                          </div>
 
-                          {/* 2. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
+                          {/* 1. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
                           {docResumoPontos.url ? (
                             <DocumentLinkRow
                               url={docResumoPontos.url}
@@ -823,7 +824,7 @@ export default function PlataformaEletronica({
                             />
                           )}
 
-                          {/* 3. Resumo da Demanda por Instalação de Transporte */}
+                          {/* 2. Resumo da Demanda por Instalação de Transporte */}
                           {docResumoTrechos.url && (
                             <DocumentLinkRow
                               url={docResumoTrechos.url}
@@ -870,14 +871,6 @@ export default function PlataformaEletronica({
                             <ShieldCheck className="h-3.5 w-3.5" />
                             Ver Resumos Oficiais por Ponto e Instalação &rarr;
                           </button>
-                          <span className="text-slate-300">•</span>
-                          <Link
-                            to="/poc"
-                            className="text-[#0a2540] hover:text-[#0284c7] font-semibold inline-flex items-center gap-1"
-                          >
-                            <Lock className="h-3 w-3" />
-                            Acessar Módulo POCC (com login) &rarr;
-                          </Link>
                         </div>
                       </div>
                     )}
