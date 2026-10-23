@@ -1,27 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Link } from 'react-router-dom'
 import {
-  FileText,
   FileDown,
   ExternalLink,
   Search,
   CheckCircle2,
-  XCircle,
   Info,
   ShieldCheck,
-  RefreshCw,
-  PlusCircle,
-  Layers,
   Download,
-  FileSpreadsheet,
   Mail,
-  ArrowRight,
   Lock,
+  ChevronDown,
 } from 'lucide-react'
 import {
   transparenciaService,
@@ -38,6 +30,100 @@ import type {
 } from '@/services/solicitacoes'
 import type { OfertaCessaoPublica } from '@/services/cessoes'
 import { gerarFormularioAcessoPdf } from '@/services/formularioSolicitacaoAcessoPdf'
+
+// Ícone de documento PDF estilo NTS idêntico ao do Boletim Eletrônico
+// (glifo discreto de 16-18px com canto dobrado e mini-etiqueta 'PDF')
+function PdfIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 inline-block align-middle text-red-600 ${className}`}
+      aria-hidden="true"
+      style={{ minWidth: '16px', minHeight: '16px', maxWidth: '20px', maxHeight: '20px' }}
+    >
+      <path
+        d="M3 2.5C3 1.94772 3.44772 1.5 4 1.5H9.5L13 5V13.5C13 14.0523 12.5523 14.5 12 14.5H4C3.44772 14.5 3 14.0523 3 13.5V2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        fill="#fef2f2"
+      />
+      <path
+        d="M9.5 1.5V5H13"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <rect x="4.2" y="7.2" width="7.6" height="4.8" rx="0.8" fill="currentColor" />
+      <text
+        x="8"
+        y="10.8"
+        fill="#ffffff"
+        fontSize="3.2"
+        fontWeight="800"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        textAnchor="middle"
+        letterSpacing="0.2"
+      >
+        PDF
+      </text>
+    </svg>
+  )
+}
+
+// Linha de link de documento compacta idêntica ao Boletim Eletrônico
+interface DocumentLinkRowProps {
+  url: string
+  label: string
+  title?: string
+  external?: boolean
+  sublabel?: string
+  onClick?: () => void
+}
+
+function DocumentLinkRow({ url, label, title, external, sublabel, onClick }: DocumentLinkRowProps) {
+  if (!url && !onClick) return null
+  return (
+    <div className="group flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          title={title || label}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs cursor-pointer text-left"
+        >
+          <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
+          <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
+            {label}
+          </span>
+        </button>
+      ) : (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title || label}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs"
+        >
+          <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
+          <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
+            {label}
+          </span>
+          {external && (
+            <span className="text-[11px] text-slate-400 font-normal no-underline">(externo)</span>
+          )}
+        </a>
+      )}
+      {sublabel && (
+        <span className="text-xs text-slate-500 pl-6 sm:pl-0 font-normal">{sublabel}</span>
+      )}
+    </div>
+  )
+}
 
 export interface PlataformaEletronicaProps {
   // Sub-abas
@@ -203,6 +289,68 @@ export default function PlataformaEletronica({
     }
   }, [incisosBdMap])
 
+  // Estado do acordeão para os Incisos I a VIII
+  // Inicialmente todos colapsados por padrão (Set vazio). Permite abertura suave individual ou múltipla.
+  const [incisosAbertos, setIncisosAbertos] = useState<Set<string>>(new Set())
+
+  const toggleInciso = (numeroRomano: string) => {
+    setIncisosAbertos((prev) => {
+      const novo = new Set(prev)
+      if (novo.has(numeroRomano)) {
+        novo.delete(numeroRomano)
+      } else {
+        novo.add(numeroRomano)
+      }
+      return novo
+    })
+  }
+
+  // Títulos curtos e descrições regulamentares de referência para os Incisos I a VIII
+  const metaIncisos: Record<string, { tituloCurto: string; descricaoPadrao: string }> = {
+    I: {
+      tituloCurto: 'Fluxos Físicos',
+      descricaoPadrao:
+        'Apresenta os fluxos físicos de gás natural operados no sistema dutoviário da TSB, com os volumes programados e realizados nos pontos de recepção e entrega.',
+    },
+    II: {
+      tituloCurto: 'Características Técnicas e Operacionais de Instalação de Transporte',
+      descricaoPadrao:
+        'Descrição técnica detalhada, parâmetros construtivos de operação, pressões de projeto e instalações dos gasodutos integrantes da malha TSB.',
+    },
+    III: {
+      tituloCurto:
+        'Capacidade Disponível, Fluxo Oposto ao Fluxo Físico e Capacidade Ociosa por Ponto Relevante',
+      descricaoPadrao:
+        'Demonstrativo técnico da capacidade disponível, capacidade em fluxo oposto e capacidade ociosa por ponto relevante, incluindo as previsões rolantes de 7 anos (capacidade firme) e 2 anos (capacidade interruptível).',
+    },
+    IV: {
+      tituloCurto: 'Capacidades Contratadas por Contrato de Serviço de Transporte Celebrado',
+      descricaoPadrao:
+        'Relação consolidada das capacidades contratadas por ponto de recebimento e entrega para cada contrato de serviço de transporte vigente na malha dutoviária da TSB.',
+    },
+    V: {
+      tituloCurto: 'Simulação Termo-Hidráulica',
+      descricaoPadrao:
+        'Estudos e relatórios de simulação termo-hidráulica em regime permanente e transiente para os Trechos 1 (Uruguaiana–Triunfo) e 3 (Polo Petroquímico) do sistema dutoviário da TSB.',
+    },
+    VI: {
+      tituloCurto: 'Termos e Condições Tarifárias e Não Tarifárias',
+      descricaoPadrao:
+        'Condições gerais tarifárias, metodologia de cálculo tarifário homologada pela ANP, prazos de contratação, penalidades e regras de acesso de terceiros à infraestrutura dutoviária.',
+    },
+    VII: {
+      tituloCurto: 'Solicitação de Acesso (Consulta de Disponibilidade de Acesso)',
+      descricaoPadrao:
+        'Publicação periódica dos demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII), além dos canais regulatórios para solicitação de acesso: ambiente transacional do POCC (com login) ou canal secundário por e-mail mediante envio de formulário oficial assinado (PDF) com parecer fundamentado em até 20 dias úteis (Art. 10).',
+    },
+    VIII: {
+      tituloCurto:
+        'Resumo das Ofertas de Cessão de Capacidade Contratada Informadas ao Transportador',
+      descricaoPadrao:
+        'Publicação passiva periódica em documento oficial (PDF) do resumo das ofertas de cessão de capacidade contratada informadas à TSB por carregadores, promovendo o aproveitamento eficiente do sistema com garantia de sigilo e conformidade com a LGPD.',
+    },
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* CARD PRINCIPAL ESPELHANDO ESTRUTURA OFICIAL TSB (IGUAL AO BOLETIM ELETRÔNICO OFICIAL) */}
@@ -263,41 +411,579 @@ export default function PlataformaEletronica({
 
         {/* CONTEÚDO PRINCIPAL */}
         <div className="p-6 sm:p-8 space-y-10">
-          {/* ========================================================
-              SUB-ABA 1: INCISOS I A VI (ESPELHANDO FIELMENTE O SITE)
-              ======================================================== */}
-          {subAba === 'i_vi' && (
-            <div className="space-y-6">
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <h2 className="text-base sm:text-lg font-bold text-[#0a1d37] font-display">
-                      {headerIncisos1a6.titulo}
-                    </h2>
-                    <div className="w-full h-px bg-slate-200 mt-2 mb-3" />
-                    {headerIncisos1a6.descricao && (
-                      <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                        {headerIncisos1a6.descricao}
-                      </p>
+          {/* =========================================================================
+              SEÇÃO PRINCIPAL: INCISOS I A VIII EM ACORDEÃO (PADRÃO BOLETIM ELETRÔNICO)
+              - Cada inciso (I a VIII) é uma linha de acordeão colapsada por padrão
+              - Título curto do inciso + chevron suave
+              - Ao expandir: texto descritivo regulatório curto + links de documentos
+                com o glifo compacto de PDF (16-18px) estilo NTS
+              ========================================================================= */}
+          <section id="bloco-incisos-acordeao" className="space-y-6">
+            <div className="space-y-2 border-b border-slate-200 pb-4">
+              <div className="flex flex-wrap items-baseline gap-2.5">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display tracking-tight">
+                  {headerIncisos1a6.titulo}
+                </h2>
+                <span className="text-sm font-normal text-slate-500 italic">
+                  (Incisos I a VIII)
+                </span>
+              </div>
+              {headerIncisos1a6.descricao && (
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                  {headerIncisos1a6.descricao}
+                </p>
+              )}
+            </div>
+
+            {/* LISTAGEM DOS INCISOS I A VIII EM ACORDEÃO */}
+            <div className="border border-slate-200 rounded-lg divide-y divide-slate-200 overflow-hidden bg-white shadow-xs">
+              {/* INCISO I */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_i')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('I')
+                const doc = resolverUrlDocumento(
+                  item,
+                  'https://tsb.com.br/wp-content/uploads/2023/04/fluxo_fisico.pdf',
+                )
+                const tituloTexto = metaIncisos.I.tituloCurto
+                const labelDoc =
+                  doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                    ? doc.nomeExibicao
+                    : 'Fluxos Físicos de Gás Natural — Demonstrativo Técnico'
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('I')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">I.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.I.descricaoPadrao}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow url={doc.url} label={labelDoc} />
+                        </div>
+                      </div>
                     )}
                   </div>
-                  {(() => {
-                    if (!headerIncisos1a6.item) return null
-                    const doc = resolverUrlDocumento(headerIncisos1a6.item, '')
-                    if (!doc.url) return null
-                    return (
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-50 text-[#0284c7] hover:bg-sky-100 text-xs font-semibold shrink-0 transition-colors border border-sky-200 self-start mt-1"
-                      >
-                        <FileDown className="h-3.5 w-3.5" />
-                        {doc.nomeExibicao || 'Anexo'}
-                      </a>
-                    )
-                  })()}
-                </div>
+                )
+              })()}
+
+              {/* INCISO II */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_ii')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('II')
+                const doc = resolverUrlDocumento(
+                  item,
+                  'https://tsb.com.br/wp-content/uploads/2023/04/bibArq000438-2.pdf',
+                )
+                const tituloTexto = metaIncisos.II.tituloCurto
+                const labelDoc =
+                  doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                    ? doc.nomeExibicao
+                    : 'Características Técnicas e Operacionais das Instalações de Transporte'
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('II')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">II.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.II.descricaoPadrao}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow url={doc.url} label={labelDoc} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO III */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_iii')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('III')
+                const doc = resolverUrlDocumento(
+                  item,
+                  'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-Disponivel-SITE.pdf',
+                )
+                const tituloTexto = metaIncisos.III.tituloCurto
+                const labelDoc =
+                  doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                    ? doc.nomeExibicao
+                    : 'Demonstrativo de Capacidade Disponível por Ponto Relevante'
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('III')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">III.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.III.descricaoPadrao}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow url={doc.url} label={labelDoc} />
+                        </div>
+                        <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed max-w-3xl">
+                          <span className="font-semibold text-[#0a2540]">
+                            Previsão de Disponibilidade (Padrão TBG):
+                          </span>{' '}
+                          A previsão rolante de 7 anos (capacidade firme) e 2 anos (capacidade
+                          não-firme) é publicada neste documento oficial em PDF e atualizada
+                          periodicamente pela área técnica da TSB.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO IV */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_iv')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('IV')
+                const doc = resolverUrlDocumento(
+                  item,
+                  'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-gasoduto-A.pdf',
+                )
+                const tituloTexto = metaIncisos.IV.tituloCurto
+                const labelDoc =
+                  doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                    ? doc.nomeExibicao
+                    : 'Relação de Capacidades Contratadas por Contrato Celebrado'
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('IV')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">IV.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.IV.descricaoPadrao}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow url={doc.url} label={labelDoc} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO V */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_v')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('V')
+                const doc1 = resolverUrlDocumento(
+                  item,
+                  'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-1.pdf',
+                )
+                const doc2 = resolverUrlSecundaria(
+                  item,
+                  'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-3.pdf',
+                )
+                const tituloTexto = metaIncisos.V.tituloCurto
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('V')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">V.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.V.descricaoPadrao}
+                        </p>
+                        <div className="space-y-2 pt-1">
+                          <DocumentLinkRow
+                            url={doc1.url}
+                            label={
+                              doc1.nomeExibicao && doc1.nomeExibicao !== '- Baixar Arquivo'
+                                ? doc1.nomeExibicao
+                                : 'Simulação Termo-Hidráulica — Trecho 1 (Uruguaiana-Triunfo)'
+                            }
+                          />
+                          {doc2.url && (
+                            <DocumentLinkRow
+                              url={doc2.url}
+                              label={
+                                doc2.nomeExibicao && doc2.nomeExibicao !== 'Arquivo Secundário'
+                                  ? doc2.nomeExibicao
+                                  : 'Simulação Termo-Hidráulica — Trecho 3 (Polo Petroquímico)'
+                              }
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO VI */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_vi')
+                if (item && item.ativo === false) return null
+                const isOpen = incisosAbertos.has('VI')
+                const doc = resolverUrlDocumento(
+                  item,
+                  'https://tsb.com.br/wp-content/uploads/2023/04/termo_de_acesso.pdf',
+                )
+                const tituloTexto = metaIncisos.VI.tituloCurto
+                const labelDoc =
+                  doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
+                    ? doc.nomeExibicao
+                    : 'Termos e Condições Tarifárias e Não Tarifárias de Acesso'
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('VI')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">VI.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.VI.descricaoPadrao}
+                        </p>
+                        <div className="pt-1">
+                          <DocumentLinkRow url={doc.url} label={labelDoc} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO VII */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_vii')
+                const isOpen = incisosAbertos.has('VII')
+                const docResumoPontos = resolverUrlDocumento(
+                  incisosBdMap.get('resumo_solicitacoes_vii_pdf'),
+                  '',
+                )
+                const docResumoTrechos = resolverUrlDocumento(
+                  incisosBdMap.get('resumo_demandas_trechos_vii_pdf'),
+                  '',
+                )
+                const tituloTexto = metaIncisos.VII.tituloCurto
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('VII')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">VII.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 space-y-4 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.VII.descricaoPadrao}
+                        </p>
+
+                        {/* DOCUMENTOS EM PDF PARA BAIXAR/VISUALIZAR */}
+                        <div className="space-y-2 pt-1">
+                          {/* 1. Formulário Oficial em PDF gerado diretamente */}
+                          <DocumentLinkRow
+                            url="#"
+                            onClick={handleBaixarFormularioAcessoPdf}
+                            label={
+                              gerandoPdfAcesso
+                                ? 'Gerando Formulário Oficial PDF...'
+                                : 'Formulário Oficial de Solicitação de Acesso (PDF)'
+                            }
+                            sublabel="Modelo oficial TSB assinado para formalização por e-mail"
+                          />
+
+                          {/* 2. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
+                          {docResumoPontos.url ? (
+                            <DocumentLinkRow
+                              url={docResumoPontos.url}
+                              label={
+                                docResumoPontos.nomeExibicao &&
+                                docResumoPontos.nomeExibicao !== '- Baixar Arquivo'
+                                  ? docResumoPontos.nomeExibicao
+                                  : 'Resumo das Solicitações de Acesso Efetuadas por Ponto Relevante (PDF)'
+                              }
+                            />
+                          ) : (
+                            <DocumentLinkRow
+                              url="#secao-resumos-oficiais-vii"
+                              onClick={() => {
+                                setSubAba('vii')
+                                setTimeout(() => {
+                                  document
+                                    .getElementById('secao-resumos-oficiais-vii')
+                                    ?.scrollIntoView({ behavior: 'smooth' })
+                                }, 100)
+                              }}
+                              label="Resumo das Solicitações de Acesso Efetuadas por Ponto Relevante (PDF)"
+                              sublabel="Consultar card regulatório de publicação do resumo"
+                            />
+                          )}
+
+                          {/* 3. Resumo da Demanda por Instalação de Transporte */}
+                          {docResumoTrechos.url && (
+                            <DocumentLinkRow
+                              url={docResumoTrechos.url}
+                              label={
+                                docResumoTrechos.nomeExibicao &&
+                                docResumoTrechos.nomeExibicao !== '- Baixar Arquivo'
+                                  ? docResumoTrechos.nomeExibicao
+                                  : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (PDF)'
+                              }
+                            />
+                          )}
+                        </div>
+
+                        {/* ATALHOS PARA AS SEÇÕES RICAS PRESERVADAS */}
+                        <div className="pt-2 border-t border-slate-200/80 flex flex-wrap items-center gap-3 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSubAba('vii')
+                              setTimeout(() => {
+                                document
+                                  .getElementById('secao-consulta-protocolo-vii')
+                                  ?.scrollIntoView({ behavior: 'smooth' })
+                              }, 100)
+                            }}
+                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Search className="h-3.5 w-3.5" />
+                            Consultar Protocolo / SLA (Art. 10) &rarr;
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSubAba('vii')
+                              setTimeout(() => {
+                                document
+                                  .getElementById('secao-resumos-oficiais-vii')
+                                  ?.scrollIntoView({ behavior: 'smooth' })
+                              }, 100)
+                            }}
+                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Ver Resumos Oficiais por Ponto e Instalação &rarr;
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <Link
+                            to="/poc"
+                            className="text-[#0a2540] hover:text-[#0284c7] font-semibold inline-flex items-center gap-1"
+                          >
+                            <Lock className="h-3 w-3" />
+                            Acessar Módulo POCC (com login) &rarr;
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+
+              {/* INCISO VIII */}
+              {(() => {
+                const item = incisosBdMap.get('inciso_viii')
+                const isOpen = incisosAbertos.has('VIII')
+                const docResumoCessoes = resolverUrlDocumento(
+                  incisosBdMap.get('resumo_cessoes_viii_pdf'),
+                  '',
+                )
+                const tituloTexto = metaIncisos.VIII.tituloCurto
+
+                return (
+                  <div className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleInciso('VIII')}
+                      aria-expanded={isOpen}
+                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
+                        <span className="font-bold text-[#0a2540] mr-2">VIII.</span>
+                        {tituloTexto}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 space-y-4 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
+                          {item?.descricao || metaIncisos.VIII.descricaoPadrao}
+                        </p>
+
+                        {/* DOCUMENTO EM PDF DE RESUMO DAS OFERTAS DE CESSÃO */}
+                        <div className="pt-1">
+                          {docResumoCessoes.url ? (
+                            <DocumentLinkRow
+                              url={docResumoCessoes.url}
+                              label={
+                                docResumoCessoes.nomeExibicao &&
+                                docResumoCessoes.nomeExibicao !== '- Baixar Arquivo'
+                                  ? docResumoCessoes.nomeExibicao
+                                  : 'Resumo das Ofertas de Cessão de Capacidade Contratada (PDF)'
+                              }
+                            />
+                          ) : (
+                            <DocumentLinkRow
+                              url="#secao-resumo-oficial-viii"
+                              onClick={() => {
+                                setSubAba('viii')
+                                setTimeout(() => {
+                                  document
+                                    .getElementById('secao-resumo-oficial-viii')
+                                    ?.scrollIntoView({ behavior: 'smooth' })
+                                }, 100)
+                              }}
+                              label="Resumo das Ofertas de Cessão de Capacidade Contratada (PDF)"
+                              sublabel="Consultar card regulatório de publicação do resumo"
+                            />
+                          )}
+                        </div>
+
+                        {/* ATALHO PARA SEÇÃO RICA PASSIVA DO INCISO VIII */}
+                        <div className="pt-2 border-t border-slate-200/80 flex items-center text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSubAba('viii')
+                              setTimeout(() => {
+                                document
+                                  .getElementById('secao-resumo-oficial-viii')
+                                  ?.scrollIntoView({ behavior: 'smooth' })
+                              }, 100)
+                            }}
+                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Ver Publicação Oficial Passiva do Inciso VIII (padrão TAG/NTS) &rarr;
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+          </section>
+
+          {/* ========================================================
+              TABELA CONSOLIDADA DOS INCISOS I A VIII (PRESERVADA COM SEUS BOTÕES)
+              ======================================================== */}
+          {subAba === 'i_vi' && (
+            <div className="space-y-4 pt-6 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                <h3 className="text-sm font-bold text-[#0a2540] uppercase tracking-wider font-display">
+                  Quadro Consolidado de Documentos e Estudos (Incisos I a VIII)
+                </h3>
+                <span className="text-xs text-slate-500">Resolução ANP nº 11/2016 • Art. 9º</span>
               </div>
 
               {/* TABELA PRINCIPAL NO MESMO PADRÃO DO BOLETIM ELETRÔNICO OFICIAL */}
