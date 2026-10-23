@@ -133,6 +133,45 @@ export const CABECALHOS_FALLBACK: Record<
       'Proposta tarifária submetida à Consulta Pública Tarifária e homologada pela ANP para o ciclo (Art. 37-A, §1º, III e §2º).',
     nome_arquivo_custom: 'Proposta Tarifária (PDF)',
   },
+  pocc_capacidade_ofertada: {
+    titulo: 'Capacidade Ofertada e Disponível por Ponto de Entrada e Zona de Saída',
+    descricao:
+      'Demonstrativo consolidado da capacidade de transporte ofertada (m³/dia) e capacidade disponível por Ponto de Entrada (Canoas) e Zona de Saída (Triunfo / Uruguaiana) nos Trechos 1 e 3 da malha TSB.',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.7-CAPACIDADES_DISPONIVEIS-PE-E-ZS-5.pdf',
+    nome_arquivo_custom: 'Capacidades Disponíveis PE e ZS (PDF)',
+  },
+  pocc_modelo_manifestacao_interesse: {
+    titulo: 'Modelo de Manifestação de Interesse (POCC — Art. 37-A, §5º, I)',
+    descricao:
+      'Formulário-padrão de manifestação de interesse não vinculante para download pelo Carregador, com identificação cadastral, indicação de demanda estimada e declarações regulatórias.',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2023/11/MODELO-MANIFESTAC%CC%A7A%CC%83O-DE-INTERESSE.pdf',
+    nome_arquivo_custom: 'Modelo de Manifestação de Interesse (PDF)',
+  },
+  pocc_modelo_proposta_garantida: {
+    titulo: 'Modelo de Proposta Garantida Vinculante (POCC — Art. 37-A, §5º, III)',
+    descricao:
+      'Minuta-padrão de proposta vinculante para apresentação de garantia financeira, indicação de capacidade, tarifa de transporte de referência e ponto de entrada/zona de saída.',
+    url_externa: 'https://www.tsb.com.br/wp-content/uploads/2023/11/Modelo-Proposta-Garantida.pdf',
+    nome_arquivo_custom: 'Modelo de Proposta Garantida (PDF)',
+  },
+  pocc_requisitos_habilitacao: {
+    titulo: 'Requisitos de Habilitação do Carregador (Documentos e Condições Cadastrais)',
+    descricao:
+      'Relação documental e requisitos técnicos, societários, fiscais, regulatórios (Autorização ANP) e de classificação de crédito exigidos para habilitação prévia do Carregador junto à TSB.',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.9-REQUISITOS-DE-HABILITAC%CC%A7A%CC%83O-DO-CARREGADOR.pdf',
+    nome_arquivo_custom: 'Requisitos de Habilitação do Carregador (PDF)',
+  },
+  pocc_resultados_ciclo: {
+    titulo: 'Resultados e Publicações das Etapas do Ciclo (Manifestações, Propostas e ANP)',
+    descricao:
+      'Publicação oficial das manifestações de interesse recebidas, propostas garantidas homologadas, alocações de capacidade e atos de aprovação da ANP (Despachos e Notas Técnicas no DOU).',
+    url_externa:
+      'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.11-DESPACHO-SIM-ANP-No-1.328-11-2024-DOU.pdf',
+    nome_arquivo_custom: 'Aprovação ANP Proposta Tarifária e POCC (DOU)',
+  },
 }
 
 export interface ItemTransparencia {

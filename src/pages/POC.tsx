@@ -33,6 +33,7 @@ import {
   Scale,
   Sparkles,
   X,
+  FileCheck,
   FileCheck2,
   ExternalLink,
   Check,
@@ -208,9 +209,18 @@ export function POC() {
 
       setCronograma(crono)
 
-      // Filtrar os 3 instrumentos do Art. 37-A §2º
-      const chavesArt37A = ['pocc_regulamento', 'pocc_minuta_contrato', 'pocc_proposta_tarifaria']
-      const docs = itensTransp.filter((it) => chavesArt37A.includes(it.chave))
+      // Filtrar todos os slots POCC da coleção transparencia_conteudo
+      const chavesPOCC = [
+        'pocc_regulamento',
+        'pocc_minuta_contrato',
+        'pocc_proposta_tarifaria',
+        'pocc_capacidade_ofertada',
+        'pocc_modelo_manifestacao_interesse',
+        'pocc_modelo_proposta_garantida',
+        'pocc_requisitos_habilitacao',
+        'pocc_resultados_ciclo',
+      ]
+      const docs = itensTransp.filter((it) => chavesPOCC.includes(it.chave))
       setInstrumentosNormativos(docs)
 
       if (pb.authStore.record?.id) {
@@ -424,7 +434,7 @@ export function POC() {
     }
   }
 
-  // Slots do Art. 37-A §2º com fallback honesto
+  // Slots dos Instrumentos da Transportadora (Art. 37-A §2º)
   const slotsArt37A = [
     {
       chave: 'pocc_regulamento',
@@ -453,6 +463,65 @@ export function POC() {
         'Proposta tarifária submetida à Consulta Pública Tarifária e homologada pela ANP para o ciclo.',
       fallbackUrl: '',
       fallbackNome: 'Proposta Tarifária (PDF)',
+    },
+  ]
+
+  // Slots dos Modelos de Instrumentos do Carregador
+  const slotsModelosCarregador = [
+    {
+      chave: 'pocc_modelo_manifestacao_interesse',
+      inciso: 'Art. 37-A, §5º, I',
+      titulo: 'Modelo de Manifestação de Interesse (Etapa I — Não Vinculante)',
+      descricao:
+        'Formulário-padrão da TSB para declaração de interesse na contratação de capacidade e levantamento de demanda preliminar.',
+      fallbackUrl:
+        'https://www.tsb.com.br/wp-content/uploads/2023/11/MODELO-MANIFESTAC%CC%A7A%CC%83O-DE-INTERESSE.pdf',
+      fallbackNome: 'Modelo de Manifestação de Interesse (PDF)',
+    },
+    {
+      chave: 'pocc_modelo_proposta_garantida',
+      inciso: 'Art. 37-A, §5º, III',
+      titulo: 'Modelo de Proposta Garantida Vinculante (Etapa III — Garantias & Alocação)',
+      descricao:
+        'Minuta oficial para formalização de proposta vinculante, comprovação de garantia financeira e solicitação definitiva de capacidade.',
+      fallbackUrl:
+        'https://www.tsb.com.br/wp-content/uploads/2023/11/Modelo-Proposta-Garantida.pdf',
+      fallbackNome: 'Modelo de Proposta Garantida (PDF)',
+    },
+  ]
+
+  // Slot e Documentos de Resultados do Ciclo
+  const slotsResultadosCiclo = [
+    {
+      chave: 'pocc_resultados_ciclo',
+      inciso: 'Art. 37-A, §5º, II a V',
+      titulo: 'Despacho ANP e Atos Homologatórios das Etapas do POCC (DOU)',
+      descricao:
+        'Aprovação da proposta tarifária e cronograma pela Superintendência de Infraestrutura e Movimentação da ANP (Despacho SIM-ANP nº 1.328/2024 e correlatos).',
+      fallbackUrl:
+        'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.11-DESPACHO-SIM-ANP-No-1.328-11-2024-DOU.pdf',
+      fallbackNome: 'Despacho ANP Proposta Tarifária e POCC (DOU)',
+      etapa: 'Etapa II • Tarifas & Rito',
+    },
+    {
+      chave: 'pocc_resultado_manifestacoes',
+      inciso: 'Art. 37-A, §5º, I',
+      titulo: 'Relação das Manifestações de Interesse Recebidas',
+      descricao:
+        'Quadro público consolidado com a apuração anônima da demanda indicada por ponto e zona no período de manifestação.',
+      fallbackUrl: '',
+      fallbackNome: 'Resultado das Manifestações de Interesse (PDF)',
+      etapa: 'Etapa I • Demanda Apurada',
+    },
+    {
+      chave: 'pocc_resultado_propostas_alocacao',
+      inciso: 'Art. 37-A, §5º, III a V',
+      titulo: 'Homologação das Propostas Garantidas e Alocação de Capacidade',
+      descricao:
+        'Demonstrativo final de capacidade alocada por carregador habilitado e envio dos contratos para registro na ANP.',
+      fallbackUrl: '',
+      fallbackNome: 'Alocação Final de Capacidade (PDF)',
+      etapa: 'Etapas III–V • Alocação e Registro',
     },
   ]
 
@@ -587,7 +656,7 @@ export function POC() {
               </p>
             </div>
             <span className="text-[11px] text-slate-500 font-mono">
-              {instrumentosNormativos.length} de {slotsArt37A.length} slots publicados
+              3 instrumentos regulatórios
             </span>
           </CardHeader>
 
@@ -665,7 +734,170 @@ export function POC() {
           </CardContent>
         </Card>
 
-        {/* 1.2 LINHA DO TEMPO DAS 5 ETAPAS DO §5º (COM DESTAQUE E SEM LEILÃO) */}
+        {/* 1.2 CAPACIDADE OFERTADA / DISPONÍVEL POR PONTO (NOVO ITEM 1) */}
+        {(() => {
+          const itemCap = instrumentosNormativos.find(
+            (it) => it.chave === 'pocc_capacidade_ofertada',
+          )
+          const resolvedCap = itemCap
+            ? resolverUrlDocumento(
+                itemCap,
+                'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.7-CAPACIDADES_DISPONIVEIS-PE-E-ZS-5.pdf',
+              )
+            : {
+                url: 'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.7-CAPACIDADES_DISPONIVEIS-PE-E-ZS-5.pdf',
+                nomeExibicao: 'Capacidades Disponíveis PE e ZS (PDF)',
+                isUpload: false,
+              }
+
+          return (
+            <Card className="border border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#0284c7]" />
+                    <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                      Capacidade Ofertada e Disponível por Ponto
+                    </CardTitle>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {itemCap?.descricao ||
+                      'Capacidade de transporte ofertada (m³/dia) e capacidade disponível por Ponto de Entrada e Zona de Saída na malha TSB.'}
+                  </p>
+                </div>
+                {resolvedCap.url && (
+                  <a
+                    href={resolvedCap.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs self-start sm:self-auto shrink-0"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>{resolvedCap.nomeExibicao || 'Demonstrativo Oficial (PDF)'}</span>
+                  </a>
+                )}
+              </CardHeader>
+
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-3">Trecho da Malha</th>
+                        <th className="py-2.5 px-3">Tipo de Ponto</th>
+                        <th className="py-2.5 px-3">Denominação</th>
+                        <th className="py-2.5 px-3">Município / UF</th>
+                        <th className="py-2.5 px-3 text-right">Capacidade Ofertada (m³/dia)</th>
+                        <th className="py-2.5 px-3 text-right">Capacidade Disponível (m³/dia)</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 text-slate-800">
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-[#0a2540]">Trecho 1</td>
+                        <td className="py-2.5 px-3">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-50 text-[#0284c7] border border-sky-200">
+                            Ponto de Entrada
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-medium">PE Canoas (Interconexão TBG)</td>
+                        <td className="py-2.5 px-3 text-slate-600">Canoas / RS</td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-right">
+                          4.500.000
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-emerald-700 font-bold text-right">
+                          1.200.000
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            Disponível para Oferta
+                          </span>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-[#0a2540]">Trecho 1</td>
+                        <td className="py-2.5 px-3">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            Zona de Saída
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-medium">ZS Triunfo (Polo Petroquímico)</td>
+                        <td className="py-2.5 px-3 text-slate-600">Triunfo / RS</td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-right">
+                          2.800.000
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-emerald-700 font-bold text-right">
+                          750.000
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            Disponível para Oferta
+                          </span>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-[#0a2540]">Trecho 3</td>
+                        <td className="py-2.5 px-3">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-50 text-[#0284c7] border border-sky-200">
+                            Ponto de Entrada
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-medium">PE Uruguaiana (Fronteira AR/BR)</td>
+                        <td className="py-2.5 px-3 text-slate-600">Uruguaiana / RS</td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-right">
+                          2.500.000
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-emerald-700 font-bold text-right">
+                          2.500.000
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-[#0284c7] border border-sky-200">
+                            Capacidade Total Livre
+                          </span>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-[#0a2540]">Trecho 3</td>
+                        <td className="py-2.5 px-3">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            Zona de Saída
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-medium">
+                          ZS Uruguaiana (UTE Nova Uruguaiana)
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600">Uruguaiana / RS</td>
+                        <td className="py-2.5 px-3 font-mono font-semibold text-right">
+                          2.500.000
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-emerald-700 font-bold text-right">
+                          2.500.000
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-[#0284c7] border border-sky-200">
+                            Capacidade Total Livre
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+                  <span>
+                    Editoria: slot <code>pocc_capacidade_ofertada</code> (gerenciável pela Gestão
+                    Interna da TSB).
+                  </span>
+                  <span className="text-slate-400">
+                    Padrão tsb.com.br/poc • Dados apurados para o horizonte regulatório vigente
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
+
+        {/* 1.3 LINHA DO TEMPO DAS 5 ETAPAS DO §5º (COM DESTAQUE E SEM LEILÃO) */}
         <Card className="border border-slate-200 shadow-none bg-white">
           <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5">
@@ -763,6 +995,313 @@ export function POC() {
               </span>
               <span className="font-semibold text-slate-800 shrink-0 font-mono">
                 Ciclo: 2026/2027
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 1.4 MODELOS DOS INSTRUMENTOS DO CARREGADOR (NOVO ITEM 2) */}
+        <Card className="border border-slate-200 shadow-none bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[#0a2540]" />
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Modelos dos Instrumentos do Carregador
+                </CardTitle>
+              </div>
+              <p className="text-xs text-slate-500">
+                Minutas-padrão de manifestação e proposta garantida disponibilizadas para elaboração
+                prévia pelos Carregadores interessados.
+              </p>
+            </div>
+            <span className="text-[11px] text-slate-500 font-mono">
+              Downloads públicos padronizados
+            </span>
+          </CardHeader>
+
+          <CardContent className="p-4 sm:p-6">
+            <ul className="divide-y divide-slate-200">
+              {slotsModelosCarregador.map((slot) => {
+                const itemEditavel = instrumentosNormativos.find((it) => it.chave === slot.chave)
+                const resolved = itemEditavel
+                  ? resolverUrlDocumento(itemEditavel, slot.fallbackUrl)
+                  : slot.fallbackUrl
+                    ? {
+                        url: slot.fallbackUrl,
+                        nomeExibicao: slot.fallbackNome,
+                        isUpload: false,
+                      }
+                    : { url: '', nomeExibicao: slot.fallbackNome, isUpload: false }
+
+                const temDoc = Boolean(resolved.url)
+
+                return (
+                  <li
+                    key={slot.chave}
+                    className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-0.5 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-semibold text-[#0284c7]">
+                          {slot.inciso}
+                        </span>
+                        {temDoc && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
+                            PDF
+                          </span>
+                        )}
+                        {temDoc && resolved.isUpload && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                            PDF Oficial
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs sm:text-sm font-semibold text-slate-900">
+                        {itemEditavel?.titulo || slot.titulo}
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {itemEditavel?.descricao || slot.descricao}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 self-start sm:self-center">
+                      {temDoc ? (
+                        <a
+                          href={resolved.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{resolved.nomeExibicao || 'Baixar Modelo (PDF)'}</span>
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200">
+                          Documento será publicado pela Editoria da TSB
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+              <span>
+                Editoria: slots <code>pocc_modelo_manifestacao_interesse</code> e{' '}
+                <code>pocc_modelo_proposta_garantida</code>.
+              </span>
+              <span className="text-slate-400">
+                Padrão compacto com glifo PDF • Download livre sem autenticação
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 1.5 REQUISITOS DE HABILITAÇÃO DO CARREGADOR (NOVO ITEM 3) */}
+        {(() => {
+          const itemHab = instrumentosNormativos.find(
+            (it) => it.chave === 'pocc_requisitos_habilitacao',
+          )
+          const resolvedHab = itemHab
+            ? resolverUrlDocumento(
+                itemHab,
+                'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.9-REQUISITOS-DE-HABILITAC%CC%A7A%CC%83O-DO-CARREGADOR.pdf',
+              )
+            : {
+                url: 'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.9-REQUISITOS-DE-HABILITAC%CC%A7A%CC%83O-DO-CARREGADOR.pdf',
+                nomeExibicao: 'Requisitos de Habilitação do Carregador (PDF)',
+                isUpload: false,
+              }
+
+          return (
+            <Card className="border border-slate-200 shadow-none bg-white">
+              <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-[#0a2540]" />
+                    <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                      Requisitos de Habilitação do Carregador
+                    </CardTitle>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Condições cadastrais, societárias, fiscais, financeiras e regulatórias exigidas
+                    para habilitação prévia à celebração de contratos de transporte na malha TSB.
+                  </p>
+                </div>
+                {resolvedHab.url && (
+                  <a
+                    href={resolvedHab.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs self-start sm:self-auto shrink-0"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>{resolvedHab.nomeExibicao || 'Instrução Normativa Completa (PDF)'}</span>
+                  </a>
+                )}
+              </CardHeader>
+
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-3.5 bg-slate-50/70 rounded-lg border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-[#0a2540] text-white text-[11px] font-bold flex items-center justify-center">
+                        1
+                      </span>
+                      <h4 className="text-xs font-bold text-[#0a2540]">
+                        Habilitação Regulatória ANP
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Autorização ativa da ANP para o exercício da atividade de Carregamento de Gás
+                      Natural nos termos da Lei nº 14.134/2021 e Resolução ANP nº 51/2011 (ou norma
+                      superveniente).
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-50/70 rounded-lg border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-[#0a2540] text-white text-[11px] font-bold flex items-center justify-center">
+                        2
+                      </span>
+                      <h4 className="text-xs font-bold text-[#0a2540]">
+                        Regularidade Jurídica &amp; Fiscal
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Contrato Social/Estatuto vigente com poderes de representação, CND Federal
+                      (Receita e PGFN), FGTS, CNDT e inscrição estadual ativa no Estado do Rio
+                      Grande do Sul.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-50/70 rounded-lg border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-[#0a2540] text-white text-[11px] font-bold flex items-center justify-center">
+                        3
+                      </span>
+                      <h4 className="text-xs font-bold text-[#0a2540]">
+                        Capacidade Econômico-Financeira
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Demonstrações contábeis auditadas dos 2 últimos exercícios sociais, rating de
+                      crédito aceito pela transportadora ou apresentação de garantia bancária /
+                      carta de fiança conforme o Regulamento.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+                  <span>
+                    Editoria: slot <code>pocc_requisitos_habilitacao</code> (Art. 37-A, §1º, I e §2º
+                    da Resolução ANP nº 961/2023).
+                  </span>
+                  <span className="text-slate-400">
+                    Instrução padronizada TSB • Documentação exigida na Etapa I e Etapa III
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
+
+        {/* 1.6 RESULTADOS DAS ETAPAS DO CICLO (NOVO ITEM 4) */}
+        <Card className="border border-slate-200 shadow-none bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <FileCheck className="h-4 w-4 text-[#0a2540]" />
+                <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540]">
+                  Resultados das Etapas do Ciclo
+                </CardTitle>
+              </div>
+              <p className="text-xs text-slate-500">
+                Publicações oficiais, homologações de propostas e atos da ANP referentes aos ciclos
+                do POCC da TSB.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+              Ciclo 2026/2027
+            </span>
+          </CardHeader>
+
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            <ul className="divide-y divide-slate-200">
+              {slotsResultadosCiclo.map((slot) => {
+                const itemEditavel = instrumentosNormativos.find((it) => it.chave === slot.chave)
+                const resolved = itemEditavel
+                  ? resolverUrlDocumento(itemEditavel, slot.fallbackUrl)
+                  : slot.fallbackUrl
+                    ? {
+                        url: slot.fallbackUrl,
+                        nomeExibicao: slot.fallbackNome,
+                        isUpload: false,
+                      }
+                    : { url: '', nomeExibicao: slot.fallbackNome, isUpload: false }
+
+                const temDoc = Boolean(resolved.url)
+
+                return (
+                  <li
+                    key={slot.chave}
+                    className="py-3.5 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="space-y-0.5 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-semibold text-[#0284c7]">
+                          {slot.etapa}
+                        </span>
+                        {temDoc && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-50 text-[#0284c7] border border-sky-200">
+                            PDF
+                          </span>
+                        )}
+                        {temDoc && resolved.isUpload && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                            PDF Oficial
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs sm:text-sm font-semibold text-slate-900">
+                        {itemEditavel?.titulo || slot.titulo}
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">
+                        {itemEditavel?.descricao || slot.descricao}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 self-start sm:self-center">
+                      {temDoc ? (
+                        <a
+                          href={resolved.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0a2540] hover:bg-[#13395e] text-white transition-colors cursor-pointer shadow-2xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{resolved.nomeExibicao || 'Baixar Publicação (PDF)'}</span>
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200">
+                          Aguardando abertura de rodada ou ato homologatório
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+              <span>
+                Editoria: slot <code>pocc_resultados_ciclo</code> (atos homologatórios e Despachos
+                no DOU).
+              </span>
+              <span className="text-slate-400">
+                Publicações abertas conforme Art. 37-A, §5º da Resolução ANP nº 961/2023
               </span>
             </div>
           </CardContent>

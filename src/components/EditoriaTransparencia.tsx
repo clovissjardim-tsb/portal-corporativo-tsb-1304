@@ -413,7 +413,7 @@ export function EditoriaTransparencia() {
           }`}
         >
           <Layers className="h-3.5 w-3.5 text-emerald-500" />
-          Plataforma Eletrônica &amp; POCC Art. 37-A
+          Plataforma Eletrônica &amp; POCC (Art. 9º e Art. 37-A)
           <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-200 text-[#0a2540] font-bold">
             {contagens.plataforma_inciso}
           </span>
