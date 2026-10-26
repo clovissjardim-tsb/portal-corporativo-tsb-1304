@@ -14,15 +14,13 @@ import {
   RefreshCw,
   ArrowLeft,
   Layers,
-  FileText,
   DollarSign,
   Users,
   Clock,
   BookOpen,
-  CheckCircle2,
   ListTodo,
   LogOut,
-  FolderGit2,
+  Briefcase,
 } from 'lucide-react'
 
 export default function Gestao() {
@@ -284,37 +282,41 @@ export default function Gestao() {
         </p>
       </div>
 
-      {/* SEÇÕES DO ROADMAP (CARDS SUCINTOS) */}
+      {/* SEÇÕES DO ROADMAP (6 CARDS APROVADOS) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* CARD 1: AUTENTICAÇÃO DA EQUIPE */}
+        {/* CARD 1: AUTENTICAÇÃO E CREDENCIAMENTO */}
         <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
-                <KeyRound className="h-4 w-4" />
+                <Users className="h-4 w-4" />
               </div>
               <CardTitle className="text-sm font-bold text-[#0a2540]">
-                1. Autenticação da Equipe
+                Autenticação e Credenciamento
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Login seguro corporativo com perfis e níveis de acesso.
+            Controle de acesso ao painel: credenciamento da equipe TSB e de usuários externos, com
+            níveis de permissão por perfil.
           </CardContent>
         </Card>
 
-        {/* CARD 2: PAINEL INICIAL */}
+        {/* CARD 2: ADMINISTRAÇÃO DO POCC */}
         <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
-                <FolderGit2 className="h-4 w-4" />
+                <Briefcase className="h-4 w-4" />
               </div>
-              <CardTitle className="text-sm font-bold text-[#0a2540]">2. Painel Inicial</CardTitle>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                Administração do POCC
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Visão geral do portal e dos fluxos em andamento.
+            Administração do POCC (Programa de Oferta de Capacidade): acompanhamento das
+            manifestações de interesse dos carregadores e condução das etapas até a contratação.
           </CardContent>
         </Card>
 
@@ -326,12 +328,13 @@ export default function Gestao() {
                 <Layers className="h-4 w-4" />
               </div>
               <CardTitle className="text-sm font-bold text-[#0a2540]">
-                3. Editoria da Transparência
+                Editoria da Transparência
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Criação, edição e exclusão de todo o conteúdo público com upload de PDFs.
+            Criação, edição e exclusão do conteúdo público dos três módulos da Transparência —
+            Boletim Eletrônico, Plataforma Eletrônica e Monitoramento — com upload de PDFs oficiais.
           </CardContent>
         </Card>
 
@@ -342,34 +345,17 @@ export default function Gestao() {
               <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
                 <DollarSign className="h-4 w-4" />
               </div>
-              <CardTitle className="text-sm font-bold text-[#0a2540]">
-                4. Tarifa em Destaque
-              </CardTitle>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">Tarifa em Destaque</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Edição do quadro de tarifas apresentado na página inicial.
+            Cadastro e atualização do quadro &quot;TARIFA CONTRATO EXTRAORDINÁRIO TRECHO T3 –
+            2026&quot;, exibido em destaque na página inicial institucional do portal (tarifa,
+            vigência e textos do card).
           </CardContent>
         </Card>
 
-        {/* CARD 5: CREDENCIAIS E ACESSOS */}
-        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
-                <Users className="h-4 w-4" />
-              </div>
-              <CardTitle className="text-sm font-bold text-[#0a2540]">
-                5. Credenciais e Acessos
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Gestão de contas da equipe e de usuários externos.
-          </CardContent>
-        </Card>
-
-        {/* CARD 6: FILA DE SOLICITAÇÕES */}
+        {/* CARD 5: FILA DE SOLICITAÇÕES */}
         <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
@@ -377,29 +363,31 @@ export default function Gestao() {
                 <Clock className="h-4 w-4" />
               </div>
               <CardTitle className="text-sm font-bold text-[#0a2540]">
-                6. Fila de Solicitações
+                Fila de Solicitações
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Acompanhamento e resposta das solicitações de acesso.
+            Recebimento, análise e resposta das Solicitações de Acesso do Inciso VII, com controle
+            do prazo de resposta.
           </CardContent>
         </Card>
 
-        {/* CARD 7: FERRAMENTAS DE APOIO */}
-        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors md:col-span-2">
+        {/* CARD 6: FERRAMENTAS DE APOIO */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
                 <BookOpen className="h-4 w-4" />
               </div>
               <CardTitle className="text-sm font-bold text-[#0a2540]">
-                7. Ferramentas de Apoio
+                Ferramentas de Apoio
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Avisos do portal, documentos de referência e exportação de dados.
+            Recursos do dia a dia: avisos no portal, documentos de referência e exportação de dados
+            para planilhas.
           </CardContent>
         </Card>
       </div>
