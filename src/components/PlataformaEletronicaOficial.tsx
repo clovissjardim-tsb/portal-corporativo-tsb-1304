@@ -724,21 +724,34 @@ export default function PlataformaEletronica({
                             </Button>
                           </div>
 
-                          {/* 1. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
-                          {docResumoPontos.url && (
+                          {/* 1. Resumo das Solicitações por Ponto Relevante */}
+                          {docResumoPontos.url ? (
                             <DocumentLinkRow
                               url={docResumoPontos.url}
                               label={
                                 docResumoPontos.nomeExibicao &&
-                                docResumoPontos.nomeExibicao !== '- Baixar Arquivo'
+                                docResumoPontos.nomeExibicao !== '- Baixar Arquivo' &&
+                                docResumoPontos.nomeExibicao !== 'Baixar Documento'
                                   ? docResumoPontos.nomeExibicao
-                                  : 'Resumo das Solicitações de Acesso Efetuadas por Ponto Relevante (PDF)'
+                                  : 'Resumo das Solicitações por Ponto Relevante'
                               }
+                            />
+                          ) : (
+                            <DocumentLinkRow
+                              url="#"
+                              onClick={() => {
+                                toast({
+                                  title: 'Resumo das Solicitações por Ponto Relevante',
+                                  description:
+                                    'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
+                                })
+                              }}
+                              label="Resumo das Solicitações por Ponto Relevante"
                             />
                           )}
 
-                          {/* 2. Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (Documento Oficial) */}
-                          {docResumoTrechos.url && (
+                          {/* 2. Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 */}
+                          {docResumoTrechos.url ? (
                             <DocumentLinkRow
                               url={docResumoTrechos.url}
                               label={
@@ -746,8 +759,21 @@ export default function PlataformaEletronica({
                                 docResumoTrechos.nomeExibicao !== '- Baixar Arquivo' &&
                                 docResumoTrechos.nomeExibicao !== 'Baixar Documento'
                                   ? docResumoTrechos.nomeExibicao
-                                  : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (Documento Oficial)'
+                                  : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3'
                               }
+                            />
+                          ) : (
+                            <DocumentLinkRow
+                              url="#"
+                              onClick={() => {
+                                toast({
+                                  title:
+                                    'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3',
+                                  description:
+                                    'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
+                                })
+                              }}
+                              label="Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3"
                             />
                           )}
                         </div>
