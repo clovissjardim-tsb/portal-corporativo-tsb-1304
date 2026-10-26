@@ -56,11 +56,12 @@ export default function Layout({ children }: LayoutProps) {
               <button
                 type="button"
                 onClick={logout}
-                title="Sair"
+                title="Sair da sessão"
                 aria-label="Sair da sessão"
-                className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm cursor-pointer"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sair</span>
               </button>
             ) : (
               <Link
@@ -76,16 +77,26 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* MOBILE MENU TOGGLE & ACTIONS */}
           <div className="lg:hidden flex items-center gap-2">
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <button
                 type="button"
                 onClick={logout}
-                title="Sair"
+                title="Sair da sessão"
                 aria-label="Sair da sessão"
-                className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm cursor-pointer"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sair</span>
               </button>
+            ) : (
+              <Link
+                to="/login"
+                state={{ from: { pathname: '/transparencia' } }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Entrar</span>
+              </Link>
             )}
             <button
               type="button"
@@ -127,8 +138,8 @@ export default function Layout({ children }: LayoutProps) {
                     logout()
                     setMobileMenuOpen(false)
                   }}
-                  className="flex items-center justify-center gap-2 py-2 px-3 text-sm font-semibold rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Sair"
+                  className="inline-flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm cursor-pointer"
+                  title="Sair da sessão"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sair</span>
@@ -138,9 +149,10 @@ export default function Layout({ children }: LayoutProps) {
                   to="/login"
                   state={{ from: { pathname: '/transparencia' } }}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center py-2 px-3 text-sm font-semibold rounded bg-[#0284c7] text-white hover:bg-[#0369a1]"
+                  className="inline-flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm"
                 >
-                  Entrar no Portal
+                  <LogIn className="h-4 w-4" />
+                  <span>Entrar</span>
                 </Link>
               )}
             </div>
