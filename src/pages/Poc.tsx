@@ -1,92 +1,433 @@
-import React from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   FileText,
-  Layers,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  Scale,
-  ExternalLink,
+  Lock,
+  ArrowRight,
+  ShieldCheck,
   Info,
+  ExternalLink,
+  ChevronRight,
 } from 'lucide-react'
+import {
+  transparenciaService,
+  resolverUrlDocumento,
+  type ItemTransparencia,
+} from '@/services/transparencia'
+import { pocService, type DocumentoPOCItem } from '@/services/poc'
+
+// Ícone de documento PDF estilo NTS/Boletim (glifo discreto de 16-18px com canto dobrado e contorno refinado)
+function PdfIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 inline-block align-middle text-red-600 ${className}`}
+      aria-hidden="true"
+      style={{ minWidth: '16px', minHeight: '16px', maxWidth: '18px', maxHeight: '18px' }}
+    >
+      {/* Contorno do arquivo com canto superior direito chanfrado */}
+      <path
+        d="M3 2.5C3 1.94772 3.44772 1.5 4 1.5H9.5L13 5V13.5C13 14.0523 12.5523 14.5 12 14.5H4C3.44772 14.5 3 14.0523 3 13.5V2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        fill="#fef2f2"
+      />
+      {/* Canto dobrado */}
+      <path
+        d="M9.5 1.5V5H13"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Badge/Texto 'PDF' em miniatura */}
+      <rect x="4.2" y="7.2" width="7.6" height="4.8" rx="0.8" fill="currentColor" />
+      <text
+        x="8"
+        y="10.8"
+        fill="#ffffff"
+        fontSize="3.2"
+        fontWeight="800"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        textAnchor="middle"
+        letterSpacing="0.2"
+      >
+        PDF
+      </text>
+    </svg>
+  )
+}
+
+// Ícone de documento Word para os modelos .docx
+function WordIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 inline-block align-middle text-blue-700 ${className}`}
+      aria-hidden="true"
+      style={{ minWidth: '16px', minHeight: '16px', maxWidth: '18px', maxHeight: '18px' }}
+    >
+      <path
+        d="M3 2.5C3 1.94772 3.44772 1.5 4 1.5H9.5L13 5V13.5C13 14.0523 12.5523 14.5 12 14.5H4C3.44772 14.5 3 14.0523 3 13.5V2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        fill="#eff6ff"
+      />
+      <path
+        d="M9.5 1.5V5H13"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <rect x="3.8" y="7.2" width="8.4" height="4.8" rx="0.8" fill="currentColor" />
+      <text
+        x="8"
+        y="10.8"
+        fill="#ffffff"
+        fontSize="3.0"
+        fontWeight="800"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        textAnchor="middle"
+        letterSpacing="0.2"
+      >
+        DOC
+      </text>
+    </svg>
+  )
+}
+
+// Definição dos slots de documentos agrupados conforme o site real da TSB
+interface SlotDocConfig {
+  chaveTransparencia?: string
+  chavePocDoc?: string
+  titulo: string
+  subtitulo?: string
+  formato: 'pdf' | 'word'
+  rotuloArquivoPadrao: string
+  urlPadrao?: string
+}
+
+interface GrupoDocsConfig {
+  id: string
+  tituloGrupo: string
+  descricaoGrupo?: string
+  slots: SlotDocConfig[]
+}
+
+const GRUPOS_DOCUMENTOS_POCC: GrupoDocsConfig[] = [
+  {
+    id: 'ciclo_2025_2026',
+    tituloGrupo: 'Ciclo POCC 2025/2026',
+    descricaoGrupo:
+      'POCC 2025 para prestação de serviço de transporte extraordinário em 2026 (aprovado pela ANP)',
+    slots: [
+      {
+        chaveTransparencia: 'pocc_aprovacao_anp_oficio555',
+        titulo: 'Aprovação pela ANP',
+        subtitulo: 'Ofício nº 555/2025/SIM-CTC/SIM/ANP-RJ-e',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Ofício nº 555/2025-SIM (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2026/04/OFICIO-No-555_2025_SIM-CTC_SIM_ANP-RJ-e.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_contrato_master_assinado',
+        chavePocDoc: 'minuta_contrato_transporte_2026',
+        titulo: 'Contrato Master',
+        subtitulo: 'Contrato Master completo do ciclo 2026',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Contrato Master Completo (PDF)',
+        urlPadrao: 'https://www.tsb.com.br/wp-content/uploads/2025/12/CONTRATO-MASTER-2026.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_capacidade_ofertada',
+        titulo: 'Capacidade de Transporte Ofertada',
+        subtitulo: 'Capacidade de transporte ofertada para o ciclo de 2026',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Capacidade de Transporte Ofertada (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2025/12/CAPACIDADE-DE-TRANSPORTE-OFERTADA-PARA-2026.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_cronograma_indicativo',
+        chavePocDoc: 'cronograma_detalhado_2026',
+        titulo: 'Cronograma',
+        subtitulo: 'Cronograma indicativo do ciclo regulatório e etapas do POCC',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Cronograma Indicativo 2026–2030 (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2026/04/Cronograma-Indicativo-Ciclo-Regulatorio-2026-2030.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_tarifa_contrato_extraordinario',
+        titulo: 'Tarifa Contrato Extraordinário',
+        subtitulo: 'Tarifa homologada para o Trecho 3 (T3) para o ciclo de 2026',
+        formato: 'word',
+        rotuloArquivoPadrao: 'Tarifa T3 para 2026 (Word)',
+        urlPadrao: 'https://www.tsb.com.br/wp-content/uploads/2026/02/Tarifa-T3-para-2026-1.docx',
+      },
+    ],
+  },
+  {
+    id: 'modelos',
+    tituloGrupo: 'Modelos de Documentos',
+    descricaoGrupo:
+      'Minutas e formulários padronizados disponibilizados para download prévio pelos proponentes',
+    slots: [
+      {
+        chaveTransparencia: 'pocc_modelo_manifestacao_interesse',
+        titulo: 'Modelo de Manifestação de Interesse (PDF)',
+        subtitulo:
+          'Formulário-padrão de manifestação de interesse não vinculante (Art. 37-A, §5º, I)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Modelo de Manifestação de Interesse (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/11/MODELO-MANIFESTAC%CC%A7A%CC%83O-DE-INTERESSE.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_modelo_manifestacao_interesse_word',
+        titulo: 'Modelo de Manifestação de Interesse (Word)',
+        subtitulo: 'Formulário editável para preenchimento pelos carregadores interessados',
+        formato: 'word',
+        rotuloArquivoPadrao: 'Manifestação de Interesse — Modelo em Word',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/12/MODELO-MANIFESTAC%CC%A7A%CC%83O-DE-INTERESSE.docx',
+      },
+      {
+        chaveTransparencia: 'pocc_modelo_proposta_garantida',
+        titulo: 'Modelo de Proposta Garantida (PDF)',
+        subtitulo:
+          'Minuta-padrão de proposta vinculante com aporte de garantias (Art. 37-A, §5º, III)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Modelo de Proposta Garantida (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/11/Modelo-Proposta-Garantida.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_modelo_proposta_garantida_word',
+        titulo: 'Modelo de Proposta Garantida (Word)',
+        subtitulo: 'Minuta editável para submissão da proposta vinculante',
+        formato: 'word',
+        rotuloArquivoPadrao: 'Modelo de Proposta Garantida — Modelo em Word',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/12/Modelo-Proposta-Garantida.docx',
+      },
+    ],
+  },
+  {
+    id: 'informacoes_tecnicas',
+    tituloGrupo: 'Informações Técnicas e Cadastrais',
+    descricaoGrupo:
+      'Parâmetros hidráulicos da infraestrutura, capacidades operacionais e exigências habilitatórias',
+    slots: [
+      {
+        chaveTransparencia: 'pocc_capacidades_pe_zs',
+        titulo: 'Capacidades Disponíveis no Ponto de Entrada e Zonas de Saída',
+        subtitulo: 'Valores nominais e operacionais nos Trechos 1 e 3 da malha TSB',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Capacidades Disponíveis PE e ZS (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.7-CAPACIDADES_DISPONIVEIS-PE-E-ZS-5.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_calculo_capacidade',
+        titulo: 'Cálculo da Capacidade de Transporte',
+        subtitulo:
+          'Memória técnica e metodologia da simulação termo-hidráulica da TSB (Item 1.7.8)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Cálculo da Capacidade de Transporte (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.8-CA%CC%81LCULO-DA-CAPACIDADE-DE-TRANSPORTE.pdf',
+      },
+      {
+        chaveTransparencia: 'pocc_requisitos_habilitacao',
+        titulo: 'Requisitos de Habilitação do Carregador',
+        subtitulo: 'Documentação societária, fiscal, técnica e cadastral exigida (Item 1.7.9)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Requisitos de Habilitação do Carregador (PDF)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2023/11/1.7.9-REQUISITOS-DE-HABILITAC%CC%A7A%CC%83O-DO-CARREGADOR.pdf',
+      },
+    ],
+  },
+  {
+    id: 'atos_regulatorios',
+    tituloGrupo: 'Atos Regulatórios da ANP',
+    descricaoGrupo:
+      'Deliberações, aprovações de propostas tarifárias e despachos publicados no Diário Oficial da União',
+    slots: [
+      {
+        chaveTransparencia: 'pocc_resultados_ciclo',
+        chavePocDoc: 'proposta_tarifaria_anp_2026',
+        titulo: 'Despacho ANP com aprovação da proposta tarifária (DOU)',
+        subtitulo: 'Despacho SIM/ANP nº 1.328/2024 publicado no DOU',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Despacho ANP nº 1.328/2024 (PDF / DOU)',
+        urlPadrao:
+          'https://www.tsb.com.br/wp-content/uploads/2024/11/1.7.11-DESPACHO-SIM-ANP-No-1.328-11-2024-DOU.pdf',
+      },
+    ],
+  },
+  {
+    id: 'resultados',
+    tituloGrupo: 'Resultados do Processo',
+    descricaoGrupo:
+      'Publicação formal das decisões e homologações de cada etapa conforme deliberação da ANP',
+    slots: [
+      {
+        chaveTransparencia: 'pocc_resultado_manifestacao',
+        chavePocDoc: 'resultado_manifestacao_2026',
+        titulo: 'Resultado da Manifestação de Interesse',
+        subtitulo: 'Ato oficial com o balanço preliminar de demanda (Art. 37-A, §5º, I)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Resultado da Manifestação de Interesse (PDF)',
+        urlPadrao: undefined, // Estado inicial: Ainda não publicado
+      },
+      {
+        chaveTransparencia: 'pocc_resultado_proposta_garantida',
+        chavePocDoc: 'resultado_final_2026',
+        titulo: 'Resultado de Proposta Garantida',
+        subtitulo:
+          'Classificação das propostas firmes e alocação final da capacidade (Art. 37-A, §5º, III)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Resultado de Proposta Garantida (PDF)',
+        urlPadrao: undefined, // Estado inicial: Ainda não publicado
+      },
+      {
+        chaveTransparencia: 'pocc_homologacao_mi',
+        titulo: 'Homologação da etapa de Manifestação de Interesse (MI)',
+        subtitulo: 'Ato de homologação da TSB e encaminhamento à ANP (Art. 37-A, §5º, II)',
+        formato: 'pdf',
+        rotuloArquivoPadrao: 'Homologação da Etapa de MI (PDF)',
+        urlPadrao: undefined, // Estado inicial: Ainda não publicado
+      },
+    ],
+  },
+]
 
 export default function Poc() {
-  const etapas = [
-    {
-      numero: 'I',
-      titulo:
-        'Identificação dos potenciais Carregadores e manifestação de interesse não vinculante',
-      descricao:
-        'Etapa inicial destinada ao mapeamento da demanda do mercado e à manifestação prévia de interesse por parte dos potenciais carregadores, em caráter não vinculante.',
-      baseLegal: 'Art. 37-A, § 5º, I',
-    },
-    {
-      numero: 'II',
-      titulo:
-        'Aprovação pela ANP das Tarifas de Referência e da eventual redistribuição da Capacidade Disponível',
-      descricao:
-        'Aprovação pela Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP) dos valores das Tarifas de Referência e da eventual redistribuição da Capacidade Disponível resultantes da etapa de manifestação de interesse.',
-      baseLegal: 'Art. 37-A, § 5º, II',
-    },
-    {
-      numero: 'III',
-      titulo: 'Análise das propostas garantidas vinculantes e alocação de capacidade',
-      descricao:
-        'Recebimento e análise das propostas firmes apresentadas pelos carregadores interessados acompanhadas das devidas garantias, procedendo-se aos mecanismos de alocação de capacidade conforme regulamento aprovado.',
-      baseLegal: 'Art. 37-A, § 5º, III',
-    },
-    {
-      numero: 'IV',
-      titulo: 'Celebração dos instrumentos contratuais e apresentação das respectivas garantias',
-      descricao:
-        'Formalização dos Contratos de Serviço de Transporte padronizados entre o Transportador e os carregadores contemplados na alocação, com o aporte das garantias contratuais cabíveis.',
-      baseLegal: 'Art. 37-A, § 5º, IV',
-    },
-    {
-      numero: 'V',
-      titulo: 'Envio dos contratos celebrados para registro na ANP (Art. 26)',
-      descricao:
-        'Encaminhamento formal de todos os instrumentos contratuais devidamente celebrados para arquivamento e registro na ANP, em estrito cumprimento ao art. 26 da regulamentação aplicável.',
-      baseLegal: 'Art. 37-A, § 5º, V c/c Art. 26',
-    },
-  ]
+  const [itensTransparencia, setItensTransparencia] = useState<ItemTransparencia[]>([])
+  const [docsPocBd, setDocsPocBd] = useState<DocumentoPOCItem[]>([])
 
-  const instrumentos = [
-    {
-      inciso: 'I',
-      nome: 'Minuta do regulamento para oferta e contratação de capacidade',
-      detalhe:
-        'Documento norteador do processo contendo o cronograma das etapas, exigências de garantias, critérios de alocação de capacidade e regras operacionais.',
-      referencia: 'Art. 37-A, § 1º, I e Art. 38-A',
-    },
-    {
-      inciso: 'II',
-      nome: 'Minuta do Contrato de Serviço de Transporte de gás natural',
-      detalhe:
-        'Instrumento contratual padronizado que regerá os direitos e obrigações entre o Transportador e o Carregador na prestação dos serviços de transporte.',
-      referencia: 'Art. 37-A, § 1º, II',
-    },
-    {
-      inciso: 'III',
-      nome: 'Proposta tarifária',
-      detalhe:
-        'Valores das Tarifas de Referência e metodologia aplicável, submetidos à ANP nos termos da regulamentação tarifária.',
-      referencia: 'Art. 37-A, § 1º, III',
-    },
-  ]
+  const carregarDados = useCallback(async () => {
+    try {
+      const [todosTransp, docsPoc] = await Promise.all([
+        transparenciaService.listarTodos(),
+        pocService.listarTodosDocumentos(),
+      ])
+      setItensTransparencia(todosTransp)
+      setDocsPocBd(docsPoc)
+    } catch (e) {
+      console.warn('[Poc] Usando fallbacks canônicos para documentos da POCC:', e)
+    }
+  }, [])
+
+  useEffect(() => {
+    carregarDados()
+  }, [carregarDados])
+
+  // Mapas para resolução rápida de uploads e URLs publicadas
+  const transpMap = useMemo(() => {
+    const map = new Map<string, ItemTransparencia>()
+    itensTransparencia.forEach((it) => map.set(it.chave, it))
+    return map
+  }, [itensTransparencia])
+
+  const pocDocMap = useMemo(() => {
+    const map = new Map<string, DocumentoPOCItem>()
+    docsPocBd.forEach((d) => map.set(d.chave, d))
+    return map
+  }, [docsPocBd])
+
+  // Resolve para cada slot se há arquivo publicado no banco ou fallback
+  const resolverSlot = (slot: SlotDocConfig) => {
+    // 1. Tenta achar na coleção de transparência (onde a Editoria faz uploads)
+    if (slot.chaveTransparencia && transpMap.has(slot.chaveTransparencia)) {
+      const item = transpMap.get(slot.chaveTransparencia)!
+      if (item.ativo !== false) {
+        const info = resolverUrlDocumento(item, slot.urlPadrao || '')
+        if (info.url && info.url !== 'https://www.tsb.com.br/poc/' && info.url !== '#') {
+          return {
+            publicado: true,
+            url: info.url,
+            rotulo:
+              item.nome_arquivo_custom && item.nome_arquivo_custom !== '- Baixar Arquivo'
+                ? item.nome_arquivo_custom
+                : slot.rotuloArquivoPadrao,
+            subtitulo: item.descricao || slot.subtitulo,
+          }
+        }
+      }
+    }
+
+    // 2. Tenta achar na coleção poc_documentos
+    if (slot.chavePocDoc && pocDocMap.has(slot.chavePocDoc)) {
+      const item = pocDocMap.get(slot.chavePocDoc)!
+      if (item.ativo) {
+        if (item.arquivo && item.id && item.collectionId) {
+          return {
+            publicado: true,
+            url: `/api/files/${item.collectionId}/${item.id}/${item.arquivo}`,
+            rotulo: item.nome_arquivo_custom || slot.rotuloArquivoPadrao,
+            subtitulo: item.descricao || slot.subtitulo,
+          }
+        }
+        if (
+          item.url_externa &&
+          item.url_externa.trim() &&
+          item.url_externa !== 'https://www.tsb.com.br/poc/'
+        ) {
+          return {
+            publicado: true,
+            url: item.url_externa.trim(),
+            rotulo: item.nome_arquivo_custom || slot.rotuloArquivoPadrao,
+            subtitulo: item.descricao || slot.subtitulo,
+          }
+        }
+      }
+    }
+
+    // 3. Usa URL padrão do slot se informada (link oficial TSB)
+    if (slot.urlPadrao) {
+      return {
+        publicado: true,
+        url: slot.urlPadrao,
+        rotulo: slot.rotuloArquivoPadrao,
+        subtitulo: slot.subtitulo,
+      }
+    }
+
+    // 4. Estado discreto "Ainda não publicado"
+    return {
+      publicado: false,
+      url: '',
+      rotulo: 'Ainda não publicado',
+      subtitulo: slot.subtitulo,
+    }
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* CABEÇALHO DA PÁGINA */}
-      <div className="space-y-2">
+    <div className="space-y-8 animate-fade-in pb-12">
+      {/* CABEÇALHO DA PÁGINA PÚBLICA */}
+      <div className="space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
             className="border-blue-200 bg-blue-50/70 text-[#0a2540] text-[10px] font-bold tracking-wider uppercase font-display"
           >
-            Resolução ANP nº 961/2023 · Art. 37-A
+            Resolução ANP nº 961/2023 · Arts. 2º XXXIV-C, 26 e 37-A
           </Badge>
           <Badge
             variant="outline"
@@ -94,182 +435,224 @@ export default function Poc() {
           >
             Acesso Público
           </Badge>
-        </div>
-
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a2540] font-display">
-          POC — Programa de Oferta de Capacidade
-        </h1>
-
-        <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-4xl">
-          Procedimento conduzido pela{' '}
-          <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong> sob a supervisão da{' '}
-          <strong>Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)</strong>, por
-          meio de utilização de plataforma eletrônica dos transportadores e observância estrita dos
-          procedimentos estabelecidos na Resolução ANP nº 961/2023 (Art. 37-A).
-        </p>
-      </div>
-
-      {/* SEÇÃO A: O QUE É */}
-      <Card className="border border-slate-200 shadow-xs bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-sky-50 text-[#0284c7]">
-              <HelpCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-bold text-[#0a2540] font-display">
-                O que é o Processo de Oferta e Contratação de Capacidade
-              </CardTitle>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Definição regulatória conforme a Resolução ANP nº 961/2023 (alteração da Resolução
-                ANP nº 11/2016)
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4 text-sm text-slate-700 leading-relaxed space-y-3">
-          <p>
-            Conforme o <strong>Art. 2º, inciso XXXIV-C</strong> da regulamentação (acrescentado pela
-            Resolução ANP nº 961/2023), o <em>Processo de Oferta e Contratação de Capacidade</em> é
-            o:
-          </p>
-          <div className="p-4 bg-slate-50 rounded-lg border-l-4 border-l-[#0284c7] border border-slate-200 text-slate-800 text-sm italic font-medium">
-            &ldquo;procedimento, com garantia de acesso a todos os interessados, que tem por
-            finalidade contratar capacidade de transporte firme em gasodutos existentes.&rdquo;
-          </div>
-          <p className="text-xs text-slate-600">
-            O procedimento assegura os princípios de publicidade, transparência, isonomia e livre
-            acesso não discriminatório a todos os Carregadores interessados na utilização da
-            infraestrutura dutoviária da TSB.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* SEÇÃO B: ETAPAS DO PROCESSO (ART. 37-A, § 5º) */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <div>
-            <h2 className="text-xl font-bold text-[#0a2540] font-display flex items-center gap-2">
-              <Layers className="h-5 w-5 text-[#0284c7]" />
-              Etapas do Processo (Art. 37-A, § 5º)
-            </h2>
-            <p className="text-xs text-slate-500">
-              Procedimento sequencial determinado pela Resolução ANP nº 961/2023 para a contratação
-              firme
-            </p>
-          </div>
-          <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded self-start sm:self-auto">
-            5 Etapas Regulatórias
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            Fase atual: aguardando abertura
           </span>
         </div>
 
-        <div className="space-y-3">
-          {etapas.map((etapa) => (
-            <div
-              key={etapa.numero}
-              className="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-colors"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#0a2540] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display shadow-2xs">
-                  {etapa.numero}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <h3 className="text-sm sm:text-base font-semibold text-[#0a2540]">
-                      {etapa.titulo}
-                    </h3>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded shrink-0 self-start sm:self-auto">
-                      {etapa.baseLegal}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed pt-1">{etapa.descricao}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a2540] font-display">
+          Plataforma de Oferta e Contratação de Capacidade da TSB (POCC)
+        </h1>
+
+        <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl text-justify sm:text-left">
+          Procedimento conduzido pela{' '}
+          <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong> sob a regulação da{' '}
+          <strong>Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)</strong>, em
+          estrito cumprimento à Resolução ANP nº 961/2023 (alteração da Resolução ANP nº 11/2016,
+          Arts. 2º, XXXIV-C; 26; e 37-A). O processo assegura publicidade, transparência e isonomia
+          na contratação de capacidade de transporte firme da malha dutoviária.
+        </p>
       </div>
 
-      {/* SEÇÃO C: INSTRUMENTOS SUBMETIDOS À ANP (ART. 37-A, § 1º) */}
-      <Card className="border border-slate-200 shadow-xs bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-blue-50 text-[#0a2540]">
-              <Scale className="h-5 w-5 text-[#0284c7]" />
+      {/* SEÇÃO PÚBLICA: DOCUMENTOS DO PROCESSO (TABELA 2 COLUNAS NO PADRÃO BOLETIM / SITE REAL TSB) */}
+      <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
+        <CardHeader className="pb-3 border-b border-slate-200 bg-slate-50/70">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-[#0a2540]">
+              <FileText className="h-5 w-5 text-[#0284c7]" />
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold font-display">
+                  Documentos do Processo
+                </CardTitle>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  Publicações oficiais, instrumentos contratuais, tarifas e deliberações
+                  regulatórias
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-lg font-bold text-[#0a2540] font-display">
-                Instrumentos submetidos à ANP (Art. 37-A, § 1º)
-              </CardTitle>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Documentos obrigatórios submetidos previamente pelo Transportador à aprovação da
-                Agência
-              </p>
-            </div>
+            <span className="text-[11px] font-mono text-slate-500 bg-white px-2.5 py-1 rounded border border-slate-200 self-start sm:self-auto">
+              Publicação Oficial · Res. ANP nº 961/2023
+            </span>
           </div>
         </CardHeader>
-        <CardContent className="pt-5 space-y-5">
-          {/* Grid dos 3 instrumentos */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {instrumentos.map((item) => (
-              <div
-                key={item.inciso}
-                className="p-4 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2 flex flex-col justify-between"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
-                      Inciso {item.inciso}
-                    </span>
-                    <FileText className="h-4 w-4 text-[#0284c7]" />
-                  </div>
-                  <h4 className="text-xs font-bold text-[#0a2540] leading-snug">{item.nome}</h4>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">{item.detalhe}</p>
-                </div>
-                <div className="pt-2 border-t border-slate-200/80 text-[10px] font-mono text-slate-500">
-                  Ref.: {item.referencia}
-                </div>
-              </div>
-            ))}
-          </div>
 
-          {/* Destaques dos §§ 2º, 3º e 4º */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="p-3.5 rounded-lg border border-sky-100 bg-sky-50/50 space-y-1.5 text-xs">
-              <div className="flex items-center gap-1.5 font-bold text-[#0a2540]">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0" />
-                <span>Publicação e Disponibilização (§ 2º e § 4º)</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                O Transportador disponibilizará no seu sítio eletrônico e em plataforma eletrônica,
-                após aprovação da ANP, todos os instrumentos referidos no § 1º (Art. 37-A, § 2º).
-                Após aprovados, não poderão ser alterados sem prévia e expressa anuência da ANP (§
-                4º).
-              </p>
-            </div>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm border-collapse">
+              <thead>
+                <tr className="bg-slate-100/80 border-b border-slate-200 text-[#0a2540] font-semibold">
+                  <th className="py-2.5 px-4 sm:px-6 w-3/5 font-display text-xs uppercase tracking-wider">
+                    Documento
+                  </th>
+                  <th className="py-2.5 px-4 sm:px-6 w-2/5 font-display text-xs uppercase tracking-wider text-right sm:text-left">
+                    Arquivo
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {GRUPOS_DOCUMENTOS_POCC.map((grupo) => (
+                  <React.Fragment key={grupo.id}>
+                    {/* LINHA DE CABEÇALHO DO GRUPO (PADRÃO SITE REAL TSB) */}
+                    <tr className="bg-slate-50/90 border-t-2 border-slate-200">
+                      <td
+                        colSpan={2}
+                        className="py-2.5 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider text-[#0a2540] font-display"
+                      >
+                        <div className="flex items-center justify-between flex-wrap gap-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-3.5 bg-[#0284c7] rounded-xs inline-block" />
+                            {grupo.tituloGrupo}
+                          </span>
+                          {grupo.descricaoGrupo && (
+                            <span className="text-[11px] text-slate-500 font-normal normal-case">
+                              {grupo.descricaoGrupo}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
 
-            <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50 space-y-1.5 text-xs">
-              <div className="flex items-center gap-1.5 font-bold text-[#0a2540]">
-                <AlertCircle className="h-4 w-4 text-[#0284c7] shrink-0" />
-                <span>Consulta Pública Tarifária (§ 3º)</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                A proposta tarifária será posta em <strong>Consulta Pública Tarifária</strong>, em
-                conformidade com o disposto no inciso I do art. 44-A da Resolução ANP nº 11/2016 e
-                na Resolução ANP nº 15/2014, assegurando ampla participação e escuta dos
-                interessados.
-              </p>
-            </div>
+                    {/* LINHAS DOS DOCUMENTOS DO GRUPO */}
+                    {grupo.slots.map((slot, index) => {
+                      const res = resolverSlot(slot)
+                      return (
+                        <tr
+                          key={`${grupo.id}-${index}`}
+                          className="hover:bg-slate-50/60 transition-colors"
+                        >
+                          {/* COLUNA 1: NOME DO DOCUMENTO */}
+                          <td className="py-3 px-4 sm:px-6 align-middle">
+                            <div className="space-y-0.5">
+                              <span className="font-medium text-slate-900 block leading-snug">
+                                {slot.titulo}
+                              </span>
+                              {res.subtitulo && (
+                                <span className="text-[11px] text-slate-500 block leading-relaxed">
+                                  {res.subtitulo}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* COLUNA 2: ARQUIVO / LINK OU ESTADO DISCRETO "Ainda não publicado" */}
+                          <td className="py-3 px-4 sm:px-6 align-middle text-right sm:text-left">
+                            {res.publicado ? (
+                              <a
+                                href={res.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`Abrir/baixar ${res.rotulo}`}
+                                className="group inline-flex items-center gap-2 text-xs font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs"
+                              >
+                                {slot.formato === 'word' ? (
+                                  <WordIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                ) : (
+                                  <PdfIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                )}
+                                <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7] text-left">
+                                  {res.rotulo}
+                                </span>
+                                <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-[#0284c7] shrink-0 hidden sm:inline" />
+                              </a>
+                            ) : (
+                              /* Estado honesto discreto: mesma linha discreta sem card grande nem estado vazio pesado */
+                              <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-mono italic">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
+                                Ainda não publicado
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
 
-      {/* AVISO DISCRETO NO RODAPÉ DA PÁGINA */}
+      {/* SEÇÃO PÚBLICA: PARTICIPAÇÃO NO PROCESSO (INFORMATIVA, SEM FORMULÁRIOS) COM BOTÃO ACESSAR POCC */}
+      <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
+        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2.5 text-[#0a2540]">
+              <div className="p-2 rounded-md bg-blue-50 text-[#0284c7]">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold font-display">
+                  Participação no Processo de Oferta de Capacidade
+                </CardTitle>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  Regras de habilitação prévia e acesso às etapas restritas aos carregadores
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
+              Art. 37-A, § 5º, I e III
+            </span>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-5 space-y-5">
+          <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-3">
+            <p>
+              A contratação de capacidade de transporte firme na malha dutoviária da TSB observa as
+              etapas regulatórias sequenciais estabelecidas no{' '}
+              <strong>Art. 37-A da Resolução ANP nº 961/2023</strong>. A consulta aos editais,
+              minutas contratuais e tarifas é <strong>integralmente pública e aberta</strong> a
+              qualquer interessado na tabela acima.
+            </p>
+            <p>
+              Por determinação regulatória e conformidade com a LGPD (Lei nº 13.709/2018), a
+              submissão dos atos formais &mdash; compreendendo a{' '}
+              <strong>Manifestação de Interesse Não Vinculante</strong> (Etapa I, §5º, I) e a{' '}
+              <strong>Proposta Garantida Vinculante</strong> (Etapa III, §5º, III) &mdash; é{' '}
+              <strong>reservada exclusivamente a carregadores credenciados</strong> portadores de
+              registro perante a ANP, mediante autenticação segura. Nenhum dado cadastral ou
+              proposta é submetido em ambiente público.
+            </p>
+          </div>
+
+          {/* DESTAQUE INSTITUCIONAL: BOTÃO ACESSAR POCC */}
+          <div className="p-5 rounded-lg border-2 border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-[#0284c7]" />
+                <h3 className="text-sm font-bold text-[#0a2540] font-display uppercase tracking-wide">
+                  Área Restrita do Carregador · POCC
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 max-w-xl">
+                Acesse o ambiente seguro para credenciamento, manifestação de interesse e submissão
+                de propostas com garantias nas etapas cabíveis do cronograma.
+              </p>
+            </div>
+
+            <Button
+              asChild
+              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-5 py-2.5 h-auto cursor-pointer shadow-xs shrink-0"
+            >
+              <Link to="/pocc-acesso" className="inline-flex items-center gap-2">
+                <span>Acessar POCC</span>
+                <ArrowRight className="h-3.5 w-3.5 text-sky-300" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* AVISO REGULATÓRIO DISCRETO NO RODAPÉ */}
       <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600 flex items-start sm:items-center gap-3">
         <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5 sm:mt-0" />
         <div className="leading-relaxed">
           <span className="font-semibold text-slate-800">Acompanhamento regulatório: </span>
-          As etapas e publicações do processo serão divulgadas nesta página conforme avançarem.
+          As datas, aditamentos e publicações das etapas serão divulgados nesta página conforme
+          avançarem os prazos legais e as homologações da Agência Nacional do Petróleo, Gás Natural
+          e Biocombustíveis.
         </div>
       </div>
     </div>

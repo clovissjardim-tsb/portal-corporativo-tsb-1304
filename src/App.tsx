@@ -10,6 +10,7 @@ import Layout from '@/components/Layout'
 import Index from './pages/Index'
 import Transparencia from './pages/Transparencia'
 import Poc from './pages/Poc'
+import PoccAcesso from './pages/PoccAcesso'
 import SolicitacaoAcesso from './pages/SolicitacaoAcesso'
 import Gestao from './pages/Gestao'
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/transparencia" element={<Transparencia />} />
             <Route path="/poc" element={<Poc />} />
+            <Route path="/pocc-acesso" element={<PoccAcesso />} />
             <Route path="/solicitacao-acesso" element={<SolicitacaoAcesso />} />
             <Route path="/gestao" element={<Gestao />} />
             <Route path="/gestao-interna" element={<Gestao />} />
