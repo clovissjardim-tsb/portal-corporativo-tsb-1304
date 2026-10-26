@@ -221,24 +221,6 @@ export default function PlataformaEletronica({
   const { isAuthenticated } = useAuth()
   const { toast } = useToast()
 
-  const handleBaixarFormularioAcesso = async () => {
-    try {
-      const { gerarFormularioAcessoPdf } = await import('@/services/formularioSolicitacaoAcessoPdf')
-      await gerarFormularioAcessoPdf()
-      toast({
-        title: 'Formulário Baixado',
-        description:
-          'Preencha o formulário oficial, assine e encaminhe por e-mail à TSB (comercial@tsb.com.br).',
-      })
-    } catch (e) {
-      console.error('Erro ao gerar formulário de acesso PDF:', e)
-      toast({
-        title: 'Erro no Download',
-        description: 'Não foi possível gerar o formulário em PDF no momento.',
-        variant: 'destructive',
-      })
-    }
-  }
   // Itens da Plataforma Eletrônica gerenciados pelo PocketBase
   const [itensBd, setItensBd] = useState<ItemTransparencia[]>([])
 
@@ -343,7 +325,7 @@ export default function PlataformaEletronica({
     VII: {
       tituloCurto: 'Solicitação de Acesso (Consulta de Disponibilidade de Acesso)',
       descricaoPadrao:
-        'Publicação periódica dos demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII), além dos canais regulatórios para solicitação de acesso por e-mail mediante envio de formulário oficial assinado (PDF) com parecer fundamentado em até 20 dias úteis (Art. 10).',
+        'Demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII) e canal regulatório eletrônico para Solicitação de Acesso à capacidade de transporte dutoviário (Art. 10 da Res. ANP nº 11/2016), com parecer fundamentado em até 20 dias úteis e acompanhamento público por protocolo.',
     },
     VIII: {
       tituloCurto:
@@ -721,16 +703,24 @@ export default function PlataformaEletronica({
 
                         {/* AÇÃO PRINCIPAL E DOCUMENTOS EM PDF */}
                         <div className="space-y-3 pt-1">
-                          {/* Botão para Baixar Formulário Oficial de Solicitação de Acesso */}
+                          {/* Botão para Solicitação de Acesso (fluxo web automatizado autenticado) */}
                           <div>
                             <Button
                               size="sm"
                               type="button"
-                              onClick={handleBaixarFormularioAcesso}
+                              onClick={() => {
+                                if (!isAuthenticated) {
+                                  navigate('/login', {
+                                    state: { from: { pathname: '/solicitacao-acesso' } },
+                                  })
+                                } else {
+                                  navigate('/solicitacao-acesso')
+                                }
+                              }}
                               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                             >
-                              <FileDown className="h-3.5 w-3.5 text-slate-200" />
-                              Baixar Formulário Oficial de Solicitação de Acesso (PDF)
+                              <ShieldCheck className="h-3.5 w-3.5 text-sky-300" />
+                              Solicitação de Acesso
                             </Button>
                           </div>
 
