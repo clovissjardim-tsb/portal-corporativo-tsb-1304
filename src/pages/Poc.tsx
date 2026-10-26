@@ -509,7 +509,7 @@ export default function Poc() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a2540] font-display">
-          Processo de Oferta e Contratação de Capacidade (POC)
+          Processo de Oferta e Contratação de Capacidade (POCC)
         </h1>
 
         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl text-justify sm:text-left">
