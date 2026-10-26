@@ -9,7 +9,6 @@ import Layout from '@/components/Layout'
 // Páginas principais do Portal TSB
 import Index from './pages/Index'
 import Transparencia from './pages/Transparencia'
-import POC from './pages/POC'
 import Gestao from './pages/Gestao'
 
 // Páginas de Autenticação PocketBase
@@ -38,7 +37,6 @@ const App = () => (
           >
             <Route path="/" element={<Index />} />
             <Route path="/transparencia" element={<Transparencia />} />
-            <Route path="/poc" element={<POC />} />
             <Route path="/gestao" element={<Gestao />} />
 
             {/* Rotas de Autenticação */}

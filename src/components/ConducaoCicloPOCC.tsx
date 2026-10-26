@@ -110,7 +110,7 @@ export function ConducaoCicloPOCC() {
       setEtapas((prev) => prev.map((e) => (e.id === atualizada.id ? atualizada : e)))
       toast({
         title: 'Cronograma Atualizado!',
-        description: `Etapa ${atualizada.numero_etapa} atualizada para "${novoStatus}". Refletido no módulo público /poc.`,
+        description: `Etapa ${atualizada.numero_etapa} atualizada para "${novoStatus}".`,
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao atualizar cronograma.'
@@ -329,7 +329,7 @@ export function ConducaoCicloPOCC() {
           <div className="text-xs text-slate-600 flex items-center justify-between">
             <span>
               Controle a fase ativa do ciclo POCC. As alterações são sincronizadas em tempo real com
-              o cronograma exibido publicamente na página <code>/poc</code>.
+              o cronograma do ciclo regulatório.
             </span>
             <span className="font-semibold text-slate-800">Ciclo: {cicloAtual}</span>
           </div>
@@ -900,7 +900,7 @@ export function ConducaoCicloPOCC() {
                   className="rounded text-[#0284c7]"
                 />
                 <Label htmlFor="ed_atv" className="text-xs cursor-pointer">
-                  Documento Ativo e Visível no Portal Público (/poc)
+                  Documento Ativo e Homologado no Sistema
                 </Label>
               </div>
 

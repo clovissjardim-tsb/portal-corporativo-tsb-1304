@@ -221,12 +221,21 @@ export default function PlataformaEletronica({
   const { isAuthenticated } = useAuth()
   const { toast } = useToast()
 
-  const handleSolicitarAcessoClick = () => {
-    if (isAuthenticated) {
-      navigate('/poc#solicitacao-acesso-inciso-vii')
-    } else {
-      navigate('/login', {
-        state: { from: { pathname: '/poc', hash: '#solicitacao-acesso-inciso-vii' } },
+  const handleBaixarFormularioAcesso = async () => {
+    try {
+      const { gerarFormularioAcessoPdf } = await import('@/services/formularioSolicitacaoAcessoPdf')
+      await gerarFormularioAcessoPdf()
+      toast({
+        title: 'Formulário Baixado',
+        description:
+          'Preencha o formulário oficial, assine e encaminhe por e-mail à TSB (comercial@tsb.com.br).',
+      })
+    } catch (e) {
+      console.error('Erro ao gerar formulário de acesso PDF:', e)
+      toast({
+        title: 'Erro no Download',
+        description: 'Não foi possível gerar o formulário em PDF no momento.',
+        variant: 'destructive',
       })
     }
   }
@@ -334,7 +343,7 @@ export default function PlataformaEletronica({
     VII: {
       tituloCurto: 'Solicitação de Acesso (Consulta de Disponibilidade de Acesso)',
       descricaoPadrao:
-        'Publicação periódica dos demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII), além dos canais regulatórios para solicitação de acesso: ambiente transacional do POCC (com login) ou canal secundário por e-mail mediante envio de formulário oficial assinado (PDF) com parecer fundamentado em até 20 dias úteis (Art. 10).',
+        'Publicação periódica dos demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII), além dos canais regulatórios para solicitação de acesso por e-mail mediante envio de formulário oficial assinado (PDF) com parecer fundamentado em até 20 dias úteis (Art. 10).',
     },
     VIII: {
       tituloCurto:
@@ -712,16 +721,16 @@ export default function PlataformaEletronica({
 
                         {/* AÇÃO PRINCIPAL E DOCUMENTOS EM PDF */}
                         <div className="space-y-3 pt-1">
-                          {/* Botão de Solicitação Direta via Área do Carregador */}
+                          {/* Botão para Baixar Formulário Oficial de Solicitação de Acesso */}
                           <div>
                             <Button
                               size="sm"
                               type="button"
-                              onClick={handleSolicitarAcessoClick}
+                              onClick={handleBaixarFormularioAcesso}
                               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                             >
-                              <Lock className="h-3.5 w-3.5 text-slate-200" />
-                              Solicitar Acesso
+                              <FileDown className="h-3.5 w-3.5 text-slate-200" />
+                              Baixar Formulário Oficial de Solicitação de Acesso (PDF)
                             </Button>
                           </div>
 

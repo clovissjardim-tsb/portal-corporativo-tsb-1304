@@ -25,7 +25,7 @@ export default function Login() {
   const { toast } = useToast()
 
   const locationState = location.state as { from?: { pathname: string; hash?: string } } | null
-  const fromPath = locationState?.from?.pathname || '/poc'
+  const fromPath = locationState?.from?.pathname || '/transparencia'
   const fromHash = locationState?.from?.hash || ''
   const from = `${fromPath}${fromHash}`
 

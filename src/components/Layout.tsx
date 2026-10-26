@@ -11,10 +11,9 @@ export default function Layout({ children }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
 
-  const navLinks = [
+  const navLinks: { label: string; to: string; subtitle?: string }[] = [
     { label: 'Institucional', to: '/' },
     { label: 'Transparência (ANP)', to: '/transparencia' },
-    { label: 'POC', subtitle: 'Oferta de Capacidade', to: '/poc' },
     { label: 'Gestão Interna', to: '/gestao' },
   ]
 
@@ -73,7 +72,7 @@ export default function Layout({ children }: LayoutProps) {
             ) : (
               <Link
                 to="/login"
-                state={{ from: { pathname: '/poc' } }}
+                state={{ from: { pathname: '/transparencia' } }}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded border border-white/30 text-white hover:bg-white/10 hover:border-white transition-all duration-200 shadow-sm"
               >
                 <LogIn className="h-3.5 w-3.5" />
@@ -134,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
               ) : (
                 <Link
                   to="/login"
-                  state={{ from: { pathname: '/poc' } }}
+                  state={{ from: { pathname: '/transparencia' } }}
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center py-2 px-3 text-sm font-semibold rounded bg-[#0284c7] text-white hover:bg-[#0369a1]"
                 >
