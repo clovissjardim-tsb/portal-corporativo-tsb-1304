@@ -124,40 +124,51 @@ function DocumentLinkRow({
 }: DocumentLinkRowProps) {
   if (!publicado || !url) {
     return (
-      <span
-        className={`inline-flex items-center gap-1.5 text-xs text-slate-400 font-mono italic ${className}`}
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
-        Ainda não publicado
-      </span>
+      <div className={`space-y-1 ${className}`}>
+        <div className="flex items-center gap-2">
+          {formato === 'word' ? (
+            <WordIcon className="w-4 h-4 text-slate-300" />
+          ) : (
+            <PdfIcon className="w-4 h-4 text-slate-300" />
+          )}
+          <span className="text-sm font-medium text-slate-400">{label}</span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-mono italic">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
+            Ainda não publicado
+          </span>
+        </div>
+        {sublabel && (
+          <p className="text-xs text-slate-500 pl-6 font-normal leading-relaxed">{sublabel}</p>
+        )}
+      </div>
     )
   }
 
   return (
-    <div
-      className={`group inline-flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ${className}`}
-    >
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        title={title || label}
-        className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs text-left"
-      >
-        {formato === 'word' ? (
-          <WordIcon className="w-4 h-4 text-blue-700 transition-transform group-hover:scale-110" />
-        ) : (
-          <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
-        )}
-        <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
-          {label}
-        </span>
-        {external && (
-          <span className="text-[11px] text-slate-400 font-normal no-underline">(externo)</span>
-        )}
-      </a>
+    <div className={`group space-y-1 ${className}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title || label}
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs text-left"
+        >
+          {formato === 'word' ? (
+            <WordIcon className="w-4 h-4 text-blue-700 transition-transform group-hover:scale-110" />
+          ) : (
+            <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
+          )}
+          <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
+            {label}
+          </span>
+          {external && (
+            <span className="text-[11px] text-slate-400 font-normal no-underline">(externo)</span>
+          )}
+        </a>
+      </div>
       {sublabel && (
-        <span className="text-xs text-slate-500 pl-6 sm:pl-0 font-normal">{sublabel}</span>
+        <p className="text-xs text-slate-500 pl-6 font-normal leading-relaxed">{sublabel}</p>
       )}
     </div>
   )
@@ -510,106 +521,73 @@ export default function Poc() {
         </p>
       </div>
 
-      {/* SEÇÃO PÚBLICA: DOCUMENTOS DO PROCESSO (TABELA 2 COLUNAS NO PADRÃO BOLETIM / SITE REAL TSB) */}
-      <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-        <CardHeader className="pb-3 border-b border-slate-200 bg-slate-50/70">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <FileText className="h-5 w-5 text-[#0284c7]" />
-              <div>
-                <CardTitle className="text-base sm:text-lg font-bold font-display">
-                  Documentos do Processo
-                </CardTitle>
-                <p className="text-xs text-slate-500 font-normal mt-0.5">
-                  Publicações oficiais, instrumentos contratuais, tarifas e deliberações
-                  regulatórias
-                </p>
-              </div>
+      {/* SEÇÃO PÚBLICA: DOCUMENTOS DO PROCESSO (PADRÃO TRANSPARÊNCIA: UM CARD POR GRUPO DE DOCUMENTOS COM LINHAS EMPILHADAS) */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+          <div className="flex items-center gap-2.5 text-[#0a2540]">
+            <FileText className="h-5 w-5 text-[#0284c7] shrink-0" />
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold font-display tracking-tight text-[#0a2540]">
+                Documentos do Processo
+              </h2>
+              <p className="text-xs text-slate-500 font-normal">
+                Publicações oficiais, instrumentos contratuais, tarifas e deliberações regulatórias
+              </p>
             </div>
-            <span className="text-[11px] font-mono text-slate-500 bg-white px-2.5 py-1 rounded border border-slate-200 self-start sm:self-auto">
-              Publicação Oficial · Res. ANP nº 961/2023
-            </span>
           </div>
-        </CardHeader>
+          <span className="text-[11px] font-mono text-slate-500 bg-white px-2.5 py-1 rounded border border-slate-200 self-start sm:self-auto">
+            Publicação Oficial · Res. ANP nº 961/2023
+          </span>
+        </div>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm border-collapse">
-              <thead>
-                <tr className="bg-slate-100/80 border-b border-slate-200 text-[#0a2540] font-semibold">
-                  <th className="py-2.5 px-4 sm:px-6 w-3/5 font-display text-xs uppercase tracking-wider">
-                    Documento
-                  </th>
-                  <th className="py-2.5 px-4 sm:px-6 w-2/5 font-display text-xs uppercase tracking-wider text-right sm:text-left">
-                    Arquivo
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {GRUPOS_DOCUMENTOS_POCC.map((grupo) => (
-                  <React.Fragment key={grupo.id}>
-                    {/* LINHA DE CABEÇALHO DO GRUPO (PADRÃO SITE REAL TSB) */}
-                    <tr className="bg-slate-50/90 border-t-2 border-slate-200">
-                      <td
-                        colSpan={2}
-                        className="py-2.5 px-4 sm:px-6 font-bold text-xs uppercase tracking-wider text-[#0a2540] font-display"
-                      >
-                        <div className="flex items-center justify-between flex-wrap gap-1">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-3.5 bg-[#0284c7] rounded-xs inline-block" />
-                            {grupo.tituloGrupo}
-                          </span>
-                          {grupo.descricaoGrupo && (
-                            <span className="text-[11px] text-slate-500 font-normal normal-case">
-                              {grupo.descricaoGrupo}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+        <div className="space-y-6">
+          {GRUPOS_DOCUMENTOS_POCC.map((grupo) => (
+            <Card
+              key={grupo.id}
+              className="border border-slate-200 shadow-xs bg-white overflow-hidden rounded-xl"
+            >
+              <CardHeader className="px-6 py-4 border-b border-slate-200 bg-slate-50/70">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-1.5 h-4 bg-[#0284c7] rounded-xs inline-block shrink-0" />
+                  <div>
+                    <CardTitle className="text-sm sm:text-base font-bold font-display text-[#0a2540]">
+                      {grupo.tituloGrupo}
+                    </CardTitle>
+                    {grupo.descricaoGrupo && (
+                      <p className="text-xs text-slate-500 font-normal mt-0.5 leading-relaxed">
+                        {grupo.descricaoGrupo}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
 
-                    {/* LINHAS DOS DOCUMENTOS DO GRUPO */}
-                    {grupo.slots.map((slot, index) => {
-                      const res = resolverSlot(slot)
-                      return (
-                        <tr
-                          key={`${grupo.id}-${index}`}
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
-                          {/* COLUNA 1: NOME DO DOCUMENTO */}
-                          <td className="py-3 px-4 sm:px-6 align-middle">
-                            <div className="space-y-0.5">
-                              <span className="font-medium text-slate-900 block leading-snug">
-                                {slot.titulo}
-                              </span>
-                              {res.subtitulo && (
-                                <span className="text-[11px] text-slate-500 block leading-relaxed">
-                                  {res.subtitulo}
-                                </span>
-                              )}
-                            </div>
-                          </td>
+              <CardContent className="p-6 sm:p-7">
+                <div className="space-y-5 divide-y divide-slate-100">
+                  {grupo.slots.map((slot, index) => {
+                    const res = resolverSlot(slot)
+                    const labelExibicao = slot.titulo
+                    const sublabelExibicao = res.subtitulo || slot.subtitulo
 
-                          {/* COLUNA 2: ARQUIVO / LINK NO PADRÃO CONSAGRADO DA TRANSPARÊNCIA */}
-                          <td className="py-3 px-4 sm:px-6 align-middle text-right sm:text-left">
-                            <DocumentLinkRow
-                              url={res.url}
-                              label={res.rotulo}
-                              title={`Abrir/baixar ${res.rotulo}`}
-                              formato={slot.formato}
-                              publicado={res.publicado}
-                            />
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                    return (
+                      <div key={`${grupo.id}-${index}`} className="pt-4 first:pt-0">
+                        <DocumentLinkRow
+                          url={res.url}
+                          label={labelExibicao}
+                          title={`Abrir/baixar ${res.rotulo || slot.titulo}`}
+                          sublabel={sublabelExibicao}
+                          formato={slot.formato}
+                          publicado={res.publicado}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       {/* SEÇÃO PÚBLICA: PARTICIPAÇÃO NO PROCESSO (INFORMATIVA, SEM FORMULÁRIOS) COM BOTÃO ACESSAR POCC */}
       <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
@@ -641,7 +619,7 @@ export default function Poc() {
               etapas regulatórias sequenciais estabelecidas no{' '}
               <strong>Art. 37-A da Resolução ANP nº 961/2023</strong>. A consulta aos editais,
               minutas contratuais e tarifas é <strong>integralmente pública e aberta</strong> a
-              qualquer interessado na tabela acima.
+              qualquer interessado nos blocos acima.
             </p>
             <p>
               Por determinação regulatória e conformidade com a LGPD (Lei nº 13.709/2018), a
