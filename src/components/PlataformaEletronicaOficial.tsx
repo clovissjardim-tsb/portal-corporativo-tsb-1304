@@ -323,9 +323,9 @@ export default function PlataformaEletronica({
         'Condições gerais tarifárias, metodologia de cálculo tarifário homologada pela ANP, prazos de contratação, penalidades e regras de acesso de terceiros à infraestrutura dutoviária.',
     },
     VII: {
-      tituloCurto: 'Solicitação de Acesso (Consulta de Disponibilidade de Acesso)',
+      tituloCurto: 'Solicitação de Acesso',
       descricaoPadrao:
-        'Demonstrativos consolidados de solicitações e demanda por instalação (Art. 9º, VII) e canal regulatório eletrônico para Solicitação de Acesso à capacidade de transporte dutoviário (Art. 10 da Res. ANP nº 11/2016), com parecer fundamentado em até 20 dias úteis e acompanhamento público por protocolo.',
+        'Solicitação de acesso formalizada em ambiente autenticado, com protocolo regulatório gerado na confirmação e resposta da transportadora em até 20 dias úteis (Art. 10, §2º, da Resolução ANP nº 11/2016).',
     },
     VIII: {
       tituloCurto:
@@ -725,57 +725,70 @@ export default function PlataformaEletronica({
                           </div>
 
                           {/* 1. Resumo das Solicitações por Ponto Relevante */}
-                          {docResumoPontos.url ? (
-                            <DocumentLinkRow
-                              url={docResumoPontos.url}
-                              label={
-                                docResumoPontos.nomeExibicao &&
-                                docResumoPontos.nomeExibicao !== '- Baixar Arquivo' &&
-                                docResumoPontos.nomeExibicao !== 'Baixar Documento'
-                                  ? docResumoPontos.nomeExibicao
-                                  : 'Resumo das Solicitações por Ponto Relevante'
-                              }
-                            />
-                          ) : (
-                            <DocumentLinkRow
-                              url="#"
-                              onClick={() => {
-                                toast({
-                                  title: 'Resumo das Solicitações por Ponto Relevante',
-                                  description:
-                                    'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
-                                })
-                              }}
-                              label="Resumo das Solicitações por Ponto Relevante"
-                            />
-                          )}
+                          <div className="space-y-1">
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              Documento consolidado com a relação anônima e agregada das
+                              solicitações de acesso por ponto relevante de recebimento e entrega
+                            </p>
+                            {docResumoPontos.url ? (
+                              <DocumentLinkRow
+                                url={docResumoPontos.url}
+                                label={
+                                  docResumoPontos.nomeExibicao &&
+                                  docResumoPontos.nomeExibicao !== '- Baixar Arquivo' &&
+                                  docResumoPontos.nomeExibicao !== 'Baixar Documento'
+                                    ? docResumoPontos.nomeExibicao
+                                    : 'Resumo das Solicitações por Ponto Relevante'
+                                }
+                              />
+                            ) : (
+                              <DocumentLinkRow
+                                url="#"
+                                onClick={() => {
+                                  toast({
+                                    title: 'Resumo das Solicitações por Ponto Relevante',
+                                    description:
+                                      'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
+                                  })
+                                }}
+                                label="Resumo das Solicitações por Ponto Relevante"
+                              />
+                            )}
+                          </div>
 
                           {/* 2. Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 */}
-                          {docResumoTrechos.url ? (
-                            <DocumentLinkRow
-                              url={docResumoTrechos.url}
-                              label={
-                                docResumoTrechos.nomeExibicao &&
-                                docResumoTrechos.nomeExibicao !== '- Baixar Arquivo' &&
-                                docResumoTrechos.nomeExibicao !== 'Baixar Documento'
-                                  ? docResumoTrechos.nomeExibicao
-                                  : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3'
-                              }
-                            />
-                          ) : (
-                            <DocumentLinkRow
-                              url="#"
-                              onClick={() => {
-                                toast({
-                                  title:
-                                    'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3',
-                                  description:
-                                    'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
-                                })
-                              }}
-                              label="Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3"
-                            />
-                          )}
+                          <div className="space-y-1">
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              Demonstrativo consolidado em PDF da capacidade demandada por
+                              instalação dutoviária (Trecho 1: Uruguaiana-Triunfo e Trecho 3: Polo
+                              Petroquímico)
+                            </p>
+                            {docResumoTrechos.url ? (
+                              <DocumentLinkRow
+                                url={docResumoTrechos.url}
+                                label={
+                                  docResumoTrechos.nomeExibicao &&
+                                  docResumoTrechos.nomeExibicao !== '- Baixar Arquivo' &&
+                                  docResumoTrechos.nomeExibicao !== 'Baixar Documento'
+                                    ? docResumoTrechos.nomeExibicao
+                                    : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3'
+                                }
+                              />
+                            ) : (
+                              <DocumentLinkRow
+                                url="#"
+                                onClick={() => {
+                                  toast({
+                                    title:
+                                      'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3',
+                                    description:
+                                      'Documento oficial publicado periodicamente pela equipe da TSB (Art. 9º, §1º, VII da Resolução ANP nº 11/2016).',
+                                  })
+                                }}
+                                label="Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3"
+                              />
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
