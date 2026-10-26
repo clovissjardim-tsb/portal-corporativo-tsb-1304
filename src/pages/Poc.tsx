@@ -652,7 +652,7 @@ export default function Poc() {
               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-5 py-2.5 h-auto cursor-pointer shadow-xs shrink-0"
             >
               <Link to="/pocc-acesso" className="inline-flex items-center gap-2">
-                <span>Acessar POCC</span>
+                <span>Portal de Contratação de Capacidade</span>
                 <ArrowRight className="h-3.5 w-3.5 text-sky-300" />
               </Link>
             </Button>
