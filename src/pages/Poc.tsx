@@ -442,16 +442,16 @@ export default function Poc() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a2540] font-display">
-          Plataforma de Oferta e Contratação de Capacidade da TSB (POCC)
+          Processo de Oferta e Contratação de Capacidade (POCC)
         </h1>
 
         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl text-justify sm:text-left">
-          Procedimento conduzido pela{' '}
-          <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong> sob a regulação da{' '}
+          Processo conduzido pela <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong>,
+          sob regulação da{' '}
           <strong>Agência Nacional do Petróleo, Gás Natural e Biocombustíveis (ANP)</strong>, em
-          estrito cumprimento à Resolução ANP nº 961/2023 (alteração da Resolução ANP nº 11/2016,
-          Arts. 2º, XXXIV-C; 26; e 37-A). O processo assegura publicidade, transparência e isonomia
-          na contratação de capacidade de transporte firme da malha dutoviária.
+          cumprimento à Resolução ANP nº 961/2023 &mdash; que altera a Resolução ANP nº 11/2016
+          (Arts. 2º, XXXIV-C; 26; e 37-A). O processo assegura publicidade, transparência e isonomia
+          na contratação de capacidade firme de transporte na malha dutoviária da TSB.
         </p>
       </div>
 
