@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { Menu, X, LogIn, LogOut, ShieldCheck } from 'lucide-react'
+import { Menu, X, LogIn, LogOut } from 'lucide-react'
 
 interface LayoutProps {
   children?: React.ReactNode
@@ -53,23 +53,15 @@ export default function Layout({ children }: LayoutProps) {
           {/* DESKTOP ACTIONS */}
           <div className="hidden lg:flex items-center gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-xs font-semibold text-sky-300 flex items-center gap-1 justify-end">
-                    <ShieldCheck className="h-3 w-3" />
-                    <span>{user?.name || user?.email || 'Autenticado'}</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">Sessão Ativa</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={logout}
-                  title="Sair da sessão"
-                  className="p-1.5 rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sair"
+                aria-label="Sair da sessão"
+                className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             ) : (
               <Link
                 to="/login"
@@ -82,8 +74,19 @@ export default function Layout({ children }: LayoutProps) {
             )}
           </div>
 
-          {/* MOBILE MENU TOGGLE */}
+          {/* MOBILE MENU TOGGLE & ACTIONS */}
           <div className="lg:hidden flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={logout}
+                title="Sair"
+                aria-label="Sair da sessão"
+                className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -118,19 +121,18 @@ export default function Layout({ children }: LayoutProps) {
 
             <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
               {isAuthenticated ? (
-                <div className="flex items-center justify-between px-3 py-2 bg-white/5 rounded text-xs text-slate-300">
-                  <span className="truncate">Conectado: {user?.name || user?.email}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      logout()
-                      setMobileMenuOpen(false)
-                    }}
-                    className="text-red-400 font-semibold hover:underline cursor-pointer"
-                  >
-                    Sair
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="flex items-center justify-center gap-2 py-2 px-3 text-sm font-semibold rounded text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Sair"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </button>
               ) : (
                 <Link
                   to="/login"
