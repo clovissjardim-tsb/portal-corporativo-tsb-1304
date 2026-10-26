@@ -315,8 +315,8 @@ export default function Gestao() {
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Administração do POCC (Programa de Oferta de Capacidade): acompanhamento das
-            manifestações de interesse dos carregadores e condução das etapas até a contratação.
+            Administração do POCC (Processo de Oferta e Contratação de Capacidade): acompanhamento
+            das manifestações de interesse dos carregadores e condução das etapas até a contratação.
           </CardContent>
         </Card>
 
