@@ -3,15 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  FileText,
-  Lock,
-  ArrowRight,
-  ShieldCheck,
-  Info,
-  ExternalLink,
-  ChevronRight,
-} from 'lucide-react'
+import { FileText, Lock, ArrowRight, ShieldCheck, Info, ChevronRight } from 'lucide-react'
 import {
   transparenciaService,
   resolverUrlDocumento,
@@ -105,6 +97,69 @@ function WordIcon({ className = 'w-4 h-4' }: { className?: string }) {
         DOC
       </text>
     </svg>
+  )
+}
+
+// Linha de documento simples e limpa no padrão consagrado da Transparência (Boletim / Plataforma)
+interface DocumentLinkRowProps {
+  url?: string
+  label: string
+  title?: string
+  external?: boolean
+  sublabel?: string
+  formato?: 'pdf' | 'word'
+  publicado?: boolean
+  className?: string
+}
+
+function DocumentLinkRow({
+  url,
+  label,
+  title,
+  external,
+  sublabel,
+  formato = 'pdf',
+  publicado = true,
+  className = '',
+}: DocumentLinkRowProps) {
+  if (!publicado || !url) {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 text-xs text-slate-400 font-mono italic ${className}`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
+        Ainda não publicado
+      </span>
+    )
+  }
+
+  return (
+    <div
+      className={`group inline-flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ${className}`}
+    >
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={title || label}
+        className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs text-left"
+      >
+        {formato === 'word' ? (
+          <WordIcon className="w-4 h-4 text-blue-700 transition-transform group-hover:scale-110" />
+        ) : (
+          <PdfIcon className="w-4 h-4 text-red-600 transition-transform group-hover:scale-110" />
+        )}
+        <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7]">
+          {label}
+        </span>
+        {external && (
+          <span className="text-[11px] text-slate-400 font-normal no-underline">(externo)</span>
+        )}
+      </a>
+      {sublabel && (
+        <span className="text-xs text-slate-500 pl-6 sm:pl-0 font-normal">{sublabel}</span>
+      )}
+    </div>
   )
 }
 
@@ -535,33 +590,15 @@ export default function Poc() {
                             </div>
                           </td>
 
-                          {/* COLUNA 2: ARQUIVO / LINK OU ESTADO DISCRETO "Ainda não publicado" */}
+                          {/* COLUNA 2: ARQUIVO / LINK NO PADRÃO CONSAGRADO DA TRANSPARÊNCIA */}
                           <td className="py-3 px-4 sm:px-6 align-middle text-right sm:text-left">
-                            {res.publicado ? (
-                              <a
-                                href={res.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={`Abrir/baixar ${res.rotulo}`}
-                                className="group inline-flex items-center gap-2 text-xs font-medium text-slate-800 hover:text-[#0284c7] transition-colors py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] rounded-xs"
-                              >
-                                {slot.formato === 'word' ? (
-                                  <WordIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                ) : (
-                                  <PdfIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                )}
-                                <span className="underline decoration-slate-300 underline-offset-4 group-hover:decoration-[#0284c7] text-left">
-                                  {res.rotulo}
-                                </span>
-                                <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-[#0284c7] shrink-0 hidden sm:inline" />
-                              </a>
-                            ) : (
-                              /* Estado honesto discreto: mesma linha discreta sem card grande nem estado vazio pesado */
-                              <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-mono italic">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 inline-block" />
-                                Ainda não publicado
-                              </span>
-                            )}
+                            <DocumentLinkRow
+                              url={res.url}
+                              label={res.rotulo}
+                              title={`Abrir/baixar ${res.rotulo}`}
+                              formato={slot.formato}
+                              publicado={res.publicado}
+                            />
                           </td>
                         </tr>
                       )
