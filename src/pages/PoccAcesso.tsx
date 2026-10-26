@@ -14,24 +14,18 @@ import {
   RefreshCw,
   AlertCircle,
   ArrowLeft,
-  FileText,
   Clock,
-  Layers,
   CheckCircle2,
-  Info,
   UserCheck,
   Download,
   PlusCircle,
   CheckCircle,
-  Search,
-  ExternalLink,
 } from 'lucide-react'
 import {
   pocService,
   ManifestacaoInteressePOC,
   PropostaVinculantePOC,
   SubmissaoCompletaPOC,
-  ResumoPublicoProtocoloPOC,
 } from '@/services/poc'
 import { FluxoSubmissaoPOC } from '@/components/FluxoSubmissaoPOC'
 
@@ -55,12 +49,6 @@ export default function PoccAcesso() {
   const [manifestacoesLegadas, setManifestacoesLegadas] = useState<ManifestacaoInteressePOC[]>([])
   const [propostasLegadas, setPropostasLegadas] = useState<PropostaVinculantePOC[]>([])
   const [carregandoHistorico, setCarregandoHistorico] = useState<boolean>(false)
-
-  // Consulta por Protocolo dentro da Área do Carregador
-  const [termoBuscaProtocolo, setTermoBuscaProtocolo] = useState<string>('')
-  const [consultandoProtocolo, setConsultandoProtocolo] = useState<boolean>(false)
-  const [resultadoConsulta, setResultadoConsulta] = useState<ResumoPublicoProtocoloPOC | null>(null)
-  const [erroConsulta, setErroConsulta] = useState<string | null>(null)
 
   // Estado da Tela de Autenticação Fictícia / Simulada
   const [loginSimuladoLiberado, setLoginSimuladoLiberado] = useState<boolean>(false)
@@ -117,33 +105,6 @@ export default function PoccAcesso() {
       carregarHistorico()
     }
   }, [loginSimuladoLiberado, carregarHistorico])
-
-  // Handler de Consulta de Protocolo na Área do Carregador
-  const handleConsultarProtocolo = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const limpo = termoBuscaProtocolo.trim()
-    if (!limpo) {
-      setErroConsulta('Digite o número do protocolo.')
-      return
-    }
-
-    setConsultandoProtocolo(true)
-    setErroConsulta(null)
-    setResultadoConsulta(null)
-
-    try {
-      const res = await pocService.consultarProtocoloPublico(limpo)
-      if (res) {
-        setResultadoConsulta(res)
-      } else {
-        setErroConsulta('Protocolo não localizado nos registros do POC.')
-      }
-    } catch (err: any) {
-      setErroConsulta('Erro ao consultar protocolo: ' + (err?.message || 'tente novamente.'))
-    } finally {
-      setConsultandoProtocolo(false)
-    }
-  }
 
   // Dados do usuário autenticado no padrão LGPD
   const userRazaoSocial =
@@ -581,117 +542,6 @@ export default function PoccAcesso() {
             </CardContent>
           </Card>
 
-          {/* CONSULTA DE PROTOCOLO DO POC (PADRÃO DO INCISO VII) */}
-          <Card className="border border-slate-200 shadow-xs bg-white">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 text-[#0a2540]">
-                  <Search className="h-4 w-4 text-[#0284c7]" />
-                  <CardTitle className="text-sm font-bold font-display">
-                    Consulta de Andamento por Protocolo POC
-                  </CardTitle>
-                </div>
-                <span className="text-[10px] text-slate-500 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-                  Padrão Inciso VII · Resguardo LGPD
-                </span>
-              </div>
-              <CardDescription className="text-xs text-slate-500">
-                Digite o número do protocolo para verificar o status e o parecer preliminar de
-                análise da submissão.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <form onSubmit={handleConsultarProtocolo} className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    type="text"
-                    placeholder="Ex: POC-2026-1234, POC-MI-... ou POC-PG-..."
-                    value={termoBuscaProtocolo}
-                    onChange={(e) => setTermoBuscaProtocolo(e.target.value)}
-                    className="text-xs font-mono uppercase bg-white border-slate-300"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={consultandoProtocolo}
-                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold shrink-0"
-                >
-                  {consultandoProtocolo ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Consultando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-3.5 w-3.5 mr-1.5" />
-                      Consultar Protocolo
-                    </>
-                  )}
-                </Button>
-              </form>
-
-              {erroConsulta && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span>{erroConsulta}</span>
-                </div>
-              )}
-
-              {resultadoConsulta && (
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3 text-xs animate-fade-in">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                    <div>
-                      <span className="text-[11px] text-slate-500 block">
-                        Protocolo Localizado:
-                      </span>
-                      <strong className="text-sm font-bold text-[#0a2540] font-mono">
-                        {resultadoConsulta.protocolo}
-                      </strong>
-                    </div>
-                    <Badge className="bg-[#0a2540] text-white text-xs">
-                      {resultadoConsulta.status}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Ciclo / Modalidade:</span>
-                      <span className="text-slate-800 font-medium">
-                        POC {resultadoConsulta.ciclo}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Data de Recepção:</span>
-                      <span className="text-slate-800">
-                        {new Date(resultadoConsulta.created).toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Capacidade Proposta:</span>
-                      <span className="text-slate-800 font-mono font-medium">
-                        {resultadoConsulta.capacidade_proposta
-                          ? `${Number(resultadoConsulta.capacidade_proposta).toLocaleString('pt-BR')} mil m³/d`
-                          : resultadoConsulta.capacidade_solicitada_manif
-                            ? `${Number(resultadoConsulta.capacidade_solicitada_manif).toLocaleString('pt-BR')} mil m³/d`
-                            : '—'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-white rounded border border-slate-200 space-y-1">
-                    <span className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">
-                      Parecer Regulatório Oficial:
-                    </span>
-                    <p className="text-xs text-slate-700 leading-relaxed">
-                      {resultadoConsulta.parecer_fundamentado ||
-                        'Submissão devidamente protocolada e em análise documental pela equipe técnica do POC.'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* SEÇÃO "MEUS PROTOCOLOS": EXIBIÇÃO DE PROTOCOLOS E SEUS STATUS */}
           <Card className="border border-slate-200 shadow-xs bg-white">
             <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
@@ -965,18 +815,6 @@ export default function PoccAcesso() {
               )}
             </CardContent>
           </Card>
-
-          {/* AVISO REGULATÓRIO */}
-          <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600 flex items-start gap-3">
-            <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              <span className="font-semibold text-slate-800">Diretrizes da ANP: </span>
-              O cronograma e a liberação das etapas obedecem aos prazos preclusivos fixados pela
-              Agência Nacional do Petróleo, Gás Natural e Biocombustíveis. Novas funcionalidades e
-              formulários serão disponibilizados nesta área restrita conforme as publicações
-              oficiais no Diário Oficial da União.
-            </div>
-          </div>
 
           {/* RODAPÉ */}
           <div className="text-center text-xs text-slate-500 pt-4 border-t border-slate-200 space-y-1">
