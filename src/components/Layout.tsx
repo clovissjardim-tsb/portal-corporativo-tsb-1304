@@ -23,27 +23,6 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#1e293b] font-sans antialiased">
       {/* HEADER FIXO / STICKY */}
       <header className="sticky top-0 z-50 bg-[#0a2540] text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-        {/* TOP BAR */}
-        <div className="border-b border-white/10 text-xs py-1.5 px-4 sm:px-6">
-          <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-            <span className="font-medium text-slate-300 truncate">
-              Transportadora Sulbrasileira de Gás S.A. — Portal Corporativo e Regulatório
-            </span>
-            <div className="flex items-center gap-4 shrink-0 text-slate-300">
-              <span className="cursor-default select-none text-slate-400">
-                Idioma: <strong className="text-white font-semibold">PT</strong> | EN
-              </span>
-              <span className="text-slate-500">|</span>
-              <Link
-                to="/"
-                className="hover:text-white transition-colors underline-offset-2 hover:underline"
-              >
-                Canal LGPD
-              </Link>
-            </div>
-          </div>
-        </div>
-
         {/* MAIN NAV BAR */}
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* LOGO OFICIAL TSB */}
