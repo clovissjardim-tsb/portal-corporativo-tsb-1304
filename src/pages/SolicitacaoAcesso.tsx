@@ -59,15 +59,25 @@ export default function SolicitacaoAcesso() {
     setErroLoginSimulado(null)
 
     const usuarioLimpo = loginUsuario.trim()
-    const senhaLimpa = loginSenha.trim()
+    const usuarioValidoDemo = 'usuario_carregador'
+    const emailSessao = user?.email?.trim().toLowerCase()
 
     if (!usuarioLimpo) {
-      setErroLoginSimulado('Informe o usuário ou e-mail corporativo.')
+      setErroLoginSimulado(
+        'Informe o usuário credenciado (utilize usuario_carregador no ambiente de demonstração).',
+      )
       return
     }
 
-    if (!senhaLimpa) {
-      setErroLoginSimulado('Informe a senha de acesso.')
+    const usuarioInformadoLower = usuarioLimpo.toLowerCase()
+    const ehUsuarioValido =
+      usuarioInformadoLower === usuarioValidoDemo.toLowerCase() ||
+      (emailSessao && usuarioInformadoLower === emailSessao)
+
+    if (!ehUsuarioValido) {
+      setErroLoginSimulado(
+        'Usuário não reconhecido para demonstração. Utilize usuario_carregador para prosseguir.',
+      )
       return
     }
 
@@ -309,28 +319,35 @@ export default function SolicitacaoAcesso() {
 
             <div className="space-y-1.5">
               <Label htmlFor="loginUsuario" className="text-xs font-semibold text-slate-700">
-                Usuário (E-mail Corporativo)
+                Usuário do Carregador
               </Label>
               <Input
                 id="loginUsuario"
                 type="text"
-                placeholder="usuario@empresa.com.br"
+                placeholder="usuario_carregador"
                 value={loginUsuario}
                 onChange={(e) => setLoginUsuario(e.target.value)}
                 className="text-xs bg-white text-slate-900 border-slate-300 focus-visible:ring-[#0284c7]"
                 disabled={autenticandoSimulacao}
                 autoComplete="username"
               />
+              <p className="text-[11px] text-slate-500">
+                Ambiente demonstrativo: utilize{' '}
+                <span className="font-mono font-medium text-slate-700">usuario_carregador</span>.
+              </p>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="loginSenha" className="text-xs font-semibold text-slate-700">
-                Senha
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="loginSenha" className="text-xs font-semibold text-slate-700">
+                  Senha
+                </Label>
+                <span className="text-[11px] text-slate-400">Opcional na demonstração</span>
+              </div>
               <Input
                 id="loginSenha"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Em branco ou qualquer texto"
                 value={loginSenha}
                 onChange={(e) => setLoginSenha(e.target.value)}
                 className="text-xs bg-white text-slate-900 border-slate-300 focus-visible:ring-[#0284c7]"
