@@ -267,6 +267,37 @@ export interface InputItemTransparencia {
   remover_arquivo_secundario?: boolean
 }
 
+export interface VersaoTransparencia {
+  id: string
+  conteudo_id?: string
+  slot_chave: string
+  titulo: string
+  data_versao?: string
+  descricao?: string
+  ordem?: number
+  arquivo?: string
+  url_externa?: string
+  nome_arquivo_custom?: string
+  ativo?: boolean
+  created?: string
+  updated?: string
+  collectionId?: string
+  collectionName?: string
+}
+
+export interface InputVersaoTransparencia {
+  conteudo_id?: string
+  slot_chave: string
+  titulo: string
+  data_versao?: string
+  descricao?: string
+  ordem?: number
+  url_externa?: string
+  nome_arquivo_custom?: string
+  ativo?: boolean
+  arquivo?: File | null
+}
+
 /**
  * Retorna a URL pública completa para baixar ou visualizar o arquivo armazenado no PocketBase,
  * ou fallback para a URL externa informada, ou string vazia.
@@ -505,5 +536,130 @@ export const transparenciaService = {
     return await pb
       .collection('transparencia_conteudo')
       .update<ItemTransparencia>(id, { ativo: !ativoAtual }, { requestKey: null })
+  },
+
+  // =========================================================================
+  // ACERVO DE VERSÕES ANTERIORES (PORTARIA ANP Nº 1/2003, ART. 2º, §2º)
+  // =========================================================================
+
+  /**
+   * Lista todas as versões ativas ou cadastradas para um slot_chave (ou para todos os slots)
+   */
+  async listarVersoes(slotChave?: string, apenasAtivos = false): Promise<VersaoTransparencia[]> {
+    try {
+      let filter = ''
+      if (slotChave) {
+        filter = apenasAtivos
+          ? `slot_chave = "${slotChave}" && ativo != false`
+          : `slot_chave = "${slotChave}"`
+      } else if (apenasAtivos) {
+        filter = `ativo != false`
+      }
+
+      const records = await pb
+        .collection('transparencia_versoes')
+        .getFullList<VersaoTransparencia>({
+          filter: filter || undefined,
+          sort: '-created,-data_versao',
+          requestKey: null,
+        })
+      return records
+    } catch (error) {
+      console.warn('[transparenciaService] Falha ao listar versões:', error)
+      return []
+    }
+  },
+
+  /**
+   * Cria uma nova versão arquivada para um slot
+   */
+  async criarVersao(dados: InputVersaoTransparencia): Promise<VersaoTransparencia> {
+    const formData = new FormData()
+    formData.append('slot_chave', dados.slot_chave)
+    formData.append('titulo', dados.titulo)
+    if (dados.conteudo_id) formData.append('conteudo_id', dados.conteudo_id)
+    if (dados.data_versao) formData.append('data_versao', dados.data_versao)
+    if (dados.descricao) formData.append('descricao', dados.descricao)
+    if (dados.ordem !== undefined) formData.append('ordem', String(dados.ordem))
+    if (dados.url_externa) formData.append('url_externa', dados.url_externa)
+    if (dados.nome_arquivo_custom) formData.append('nome_arquivo_custom', dados.nome_arquivo_custom)
+    formData.append('ativo', dados.ativo !== false ? 'true' : 'false')
+
+    if (dados.arquivo instanceof File) {
+      formData.append('arquivo', dados.arquivo)
+    }
+
+    try {
+      return await pb
+        .collection('transparencia_versoes')
+        .create<VersaoTransparencia>(formData, { requestKey: null })
+    } catch (error) {
+      console.error('[transparenciaService] Erro ao criar versão:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Arquiva o documento atualmente vigente em um slot antes de substituí-lo
+   * Copia o arquivo atual (ou URL externa atual) para a tabela de versões
+   */
+  async arquivarDocumentoAtual(
+    item: ItemTransparencia,
+    tituloVersao: string,
+    dataVersao?: string,
+    descricao?: string,
+  ): Promise<VersaoTransparencia> {
+    // Se o item tem arquivo no PocketBase, obtemos seu Blob para enviar como arquivo da versão
+    let arquivoParaEnviar: File | null = null
+
+    if (item.arquivo && item.id && item.collectionId) {
+      try {
+        const fileUrl = pb.files.getURL(item, item.arquivo)
+        const res = await fetch(fileUrl)
+        if (res.ok) {
+          const blob = await res.blob()
+          arquivoParaEnviar = new File([blob], item.arquivo, {
+            type: blob.type || 'application/pdf',
+          })
+        }
+      } catch (err) {
+        console.warn(
+          '[transparenciaService] Não foi possível fazer download do blob atual, gravando URL externa:',
+          err,
+        )
+      }
+    }
+
+    const fallbackUrl = item.url_externa || ''
+    const fallbackNome = item.nome_arquivo_custom || ''
+
+    return await this.criarVersao({
+      conteudo_id: item.id,
+      slot_chave: item.chave,
+      titulo: tituloVersao || `Versão arquivada em ${new Date().toLocaleDateString('pt-BR')}`,
+      data_versao:
+        dataVersao ||
+        (item.updated
+          ? new Date(item.updated).toLocaleDateString('pt-BR')
+          : new Date().toLocaleDateString('pt-BR')),
+      descricao: descricao || item.descricao || '',
+      url_externa: arquivoParaEnviar ? undefined : fallbackUrl,
+      nome_arquivo_custom: fallbackNome,
+      arquivo: arquivoParaEnviar,
+      ativo: true,
+    })
+  },
+
+  /**
+   * Exclui uma versão arquivada
+   */
+  async excluirVersao(id: string): Promise<boolean> {
+    try {
+      await pb.collection('transparencia_versoes').delete(id, { requestKey: null })
+      return true
+    } catch (error) {
+      console.error('[transparenciaService] Erro ao excluir versão:', error)
+      throw error
+    }
   },
 }

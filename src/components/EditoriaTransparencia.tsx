@@ -31,7 +31,10 @@ import {
   Check,
   Calendar,
   Activity,
+  History,
+  Archive,
 } from 'lucide-react'
+import type { VersaoTransparencia } from '@/services/transparencia'
 
 const MESES = [
   'Janeiro',
@@ -88,6 +91,26 @@ export function EditoriaTransparencia() {
     null,
   )
   const [removerArquivoSecundarioAtual, setRemoverArquivoSecundarioAtual] = useState(false)
+
+  // Opção para arquivar versão anterior antes de substituir
+  const [arquivarVersaoAoSubstituir, setArquivarVersaoAoSubstituir] = useState(false)
+  const [rotuloVersaoArquivamento, setRotuloVersaoArquivamento] = useState('')
+
+  // Gestão dedicada de versões arquivadas (modal separado de histórico)
+  const [modalVersoesAberto, setModalVersoesAberto] = useState(false)
+  const [itemGerenciarVersoes, setItemGerenciarVersoes] = useState<ItemTransparencia | null>(null)
+  const [versoesItem, setVersoesItem] = useState<VersaoTransparencia[]>([])
+  const [carregandoVersoes, setCarregandoVersoes] = useState(false)
+
+  // Formulário para adicionar versão manual no modal de histórico
+  const [modoNovaVersaoManual, setModoNovaVersaoManual] = useState(false)
+  const [novaVersaoTitulo, setNovaVersaoTitulo] = useState('')
+  const [novaVersaoData, setNovaVersaoData] = useState('')
+  const [novaVersaoDescricao, setNovaVersaoDescricao] = useState('')
+  const [novaVersaoUrlExterna, setNovaVersaoUrlExterna] = useState('')
+  const [novaVersaoNomeArquivo, setNovaVersaoNomeArquivo] = useState('')
+  const [novaVersaoArquivo, setNovaVersaoArquivo] = useState<File | null>(null)
+  const [salvandoNovaVersao, setSalvandoNovaVersao] = useState(false)
 
   // Estado de envio
   const [salvando, setSalvando] = useState(false)
@@ -178,8 +201,145 @@ export function EditoriaTransparencia() {
     setRemoverArquivoAtual(false)
     setArquivoSecundarioSelecionado(null)
     setRemoverArquivoSecundarioAtual(false)
+    setArquivarVersaoAoSubstituir(false)
+    setRotuloVersaoArquivamento(`Versão anterior (${new Date().toLocaleDateString('pt-BR')})`)
 
     setModalAberto(true)
+  }
+
+  // Abrir modal de gerenciamento de versões de um item
+  const abrirGerenciarVersoes = async (item: ItemTransparencia) => {
+    setItemGerenciarVersoes(item)
+    setModalVersoesAberto(true)
+    setModoNovaVersaoManual(false)
+    setNovaVersaoTitulo('')
+    setNovaVersaoData(new Date().toLocaleDateString('pt-BR'))
+    setNovaVersaoDescricao('')
+    setNovaVersaoUrlExterna('')
+    setNovaVersaoNomeArquivo('')
+    setNovaVersaoArquivo(null)
+
+    setCarregandoVersoes(true)
+    try {
+      const lista = await transparenciaService.listarVersoes(item.chave)
+      setVersoesItem(lista)
+    } catch {
+      toast({
+        title: 'Erro ao listar versões',
+        description: 'Não foi possível carregar as versões arquivadas deste slot.',
+        variant: 'destructive',
+      })
+    } finally {
+      setCarregandoVersoes(false)
+    }
+  }
+
+  // Ação rápida: arquivar imediatamente o documento atual
+  const handleArquivarAtualImediato = async (item: ItemTransparencia) => {
+    const rotuloSugerido = prompt(
+      'Informe o rótulo/título para arquivar o documento vigente:',
+      `Versão vigente até ${new Date().toLocaleDateString('pt-BR')}`,
+    )
+    if (!rotuloSugerido) return
+
+    try {
+      await transparenciaService.arquivarDocumentoAtual(
+        item,
+        rotuloSugerido,
+        new Date().toLocaleDateString('pt-BR'),
+        item.descricao,
+      )
+      toast({
+        title: 'Versão Arquivada com Sucesso!',
+        description: `O documento vigente de "${item.titulo}" foi arquivado no acervo (§2º do Art. 2º).`,
+      })
+      if (modalVersoesAberto && itemGerenciarVersoes?.chave === item.chave) {
+        const atualizadas = await transparenciaService.listarVersoes(item.chave)
+        setVersoesItem(atualizadas)
+      }
+    } catch {
+      toast({
+        title: 'Erro ao arquivar versão',
+        description: 'Não foi possível arquivar o documento atual.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Excluir versão arquivada com confirmação
+  const handleExcluirVersao = async (versao: VersaoTransparencia) => {
+    if (
+      !confirm(
+        `Tem certeza que deseja excluir permanentemente a versão arquivada "${versao.titulo}"?`,
+      )
+    ) {
+      return
+    }
+
+    try {
+      await transparenciaService.excluirVersao(versao.id)
+      setVersoesItem((prev) => prev.filter((v) => v.id !== versao.id))
+      toast({
+        title: 'Versão Excluída',
+        description: `A versão arquivada "${versao.titulo}" foi removida.`,
+      })
+    } catch {
+      toast({
+        title: 'Erro ao excluir versão',
+        description: 'Não foi possível remover a versão arquivada.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Criar nova versão manual no modal de histórico
+  const handleCriarNovaVersaoManual = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!itemGerenciarVersoes) return
+    if (!novaVersaoTitulo.trim()) {
+      toast({
+        title: 'Título obrigatório',
+        description: 'Informe o título ou rótulo da versão a ser arquivada.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setSalvandoNovaVersao(true)
+    try {
+      const nova = await transparenciaService.criarVersao({
+        slot_chave: itemGerenciarVersoes.chave,
+        conteudo_id: itemGerenciarVersoes.id,
+        titulo: novaVersaoTitulo.trim(),
+        data_versao: novaVersaoData.trim() || new Date().toLocaleDateString('pt-BR'),
+        descricao: novaVersaoDescricao.trim(),
+        url_externa: novaVersaoUrlExterna.trim(),
+        nome_arquivo_custom: novaVersaoNomeArquivo.trim(),
+        arquivo: novaVersaoArquivo,
+        ativo: true,
+      })
+
+      setVersoesItem((prev) => [nova, ...prev])
+      setModoNovaVersaoManual(false)
+      setNovaVersaoTitulo('')
+      setNovaVersaoDescricao('')
+      setNovaVersaoUrlExterna('')
+      setNovaVersaoNomeArquivo('')
+      setNovaVersaoArquivo(null)
+
+      toast({
+        title: 'Versão Adicionada!',
+        description: `A versão "${nova.titulo}" foi arquivada com sucesso no acervo histórico.`,
+      })
+    } catch {
+      toast({
+        title: 'Erro ao arquivar versão',
+        description: 'Falha ao salvar a nova versão arquivada.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSalvandoNovaVersao(false)
+    }
   }
 
   // Abrir modal para novo relatório da Seção II ou Monitoramento de Congestionamento
@@ -273,6 +433,25 @@ export function EditoriaTransparencia() {
 
       const ehRelatorioMensal =
         subSecaoAtiva === 'boletim_secao2' || subSecaoAtiva === 'monitoramento_congestionamento'
+
+      // Se solicitado arquivar a versão atual antes de substituir por novo arquivo/URL
+      if (
+        itemEmEdicao &&
+        arquivarVersaoAoSubstituir &&
+        (arquivoSelecionado || formUrlExterna !== itemEmEdicao.url_externa)
+      ) {
+        try {
+          await transparenciaService.arquivarDocumentoAtual(
+            itemEmEdicao,
+            rotuloVersaoArquivamento.trim() ||
+              `Versão arquivada em ${new Date().toLocaleDateString('pt-BR')}`,
+            new Date().toLocaleDateString('pt-BR'),
+            itemEmEdicao.descricao,
+          )
+        } catch (err) {
+          console.warn('[EditoriaTransparencia] Não foi possível arquivar a versão anterior:', err)
+        }
+      }
 
       const inputDados = {
         secao: subSecaoAtiva,
@@ -683,6 +862,21 @@ export function EditoriaTransparencia() {
                     {/* Ações */}
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        {/* Botão de Histórico / Versões para alíneas e contratos do Boletim */}
+                        {(item.secao === 'boletim_secao1' || item.secao === 'boletim_contratos') &&
+                          item.chave !== 'alinea_h' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => abrirGerenciarVersoes(item)}
+                              className="h-7 px-2 text-xs text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-[#0284c7]"
+                              title="Gerenciar versões arquivadas (§2º do Art. 2º da Portaria ANP nº 1/2003)"
+                            >
+                              <History className="h-3 w-3 mr-1 text-[#0284c7]" />
+                              Versões
+                            </Button>
+                          )}
+
                         <Button
                           size="sm"
                           variant="outline"
@@ -980,6 +1174,48 @@ export function EditoriaTransparencia() {
                   )}
                 </div>
 
+                {/* OPÇÃO DE ARQUIVAMENTO AUTOMÁTICO (§2º do Art. 2º da Portaria ANP nº 1/2003) */}
+                {itemEmEdicao && (itemEmEdicao.arquivo || itemEmEdicao.url_externa) && (
+                  <div className="p-3 bg-white border border-slate-300 rounded-lg space-y-2.5">
+                    <div className="flex items-start gap-2">
+                      <input
+                        id="checkArquivarVersao"
+                        type="checkbox"
+                        checked={arquivarVersaoAoSubstituir}
+                        onChange={(e) => setArquivarVersaoAoSubstituir(e.target.checked)}
+                        className="mt-0.5 rounded text-[#0284c7] focus:ring-[#0284c7]"
+                      />
+                      <label
+                        htmlFor="checkArquivarVersao"
+                        className="text-xs text-slate-800 cursor-pointer"
+                      >
+                        <span className="font-semibold block">
+                          Arquivar documento vigente como versão anterior (§2º do Art. 2º da
+                          Portaria ANP nº 1/2003)
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          Salva uma cópia do arquivo/link atual no acervo público de versões
+                          anteriores antes de substituí-lo.
+                        </span>
+                      </label>
+                    </div>
+
+                    {arquivarVersaoAoSubstituir && (
+                      <div className="pl-5 space-y-1">
+                        <Label className="text-[11px] font-semibold text-slate-700">
+                          Rótulo da versão a ser arquivada:
+                        </Label>
+                        <Input
+                          value={rotuloVersaoArquivamento}
+                          onChange={(e) => setRotuloVersaoArquivamento(e.target.value)}
+                          placeholder="Ex: Vigência 2024–2025 ou Versão anterior 2024"
+                          className="h-7 text-xs bg-slate-50"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Campo de URL Externa como Fallback */}
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
@@ -1081,6 +1317,287 @@ export function EditoriaTransparencia() {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL DEDICADO DE GERENCIAMENTO DE VERSÕES ARQUIVADAS (§2º DO ART. 2º) */}
+      {modalVersoesAberto && itemGerenciarVersoes && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <Card className="w-full max-w-3xl bg-white border border-slate-300 shadow-xl overflow-hidden my-6 animate-scale-in">
+            {/* CABEÇALHO DO MODAL */}
+            <div className="bg-[#0a2540] text-white p-5 border-b border-slate-700 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-sky-300">
+                    Acervo de Versões Anteriores (§2º, Art. 2º Portaria ANP nº 1/2003)
+                  </span>
+                  <Badge variant="outline" className="text-[10px] text-sky-200 border-sky-400">
+                    {itemGerenciarVersoes.rotulo || itemGerenciarVersoes.chave}
+                  </Badge>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold truncate max-w-xl">
+                  {itemGerenciarVersoes.titulo}
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setModalVersoesAberto(false)}
+                className="text-white hover:bg-white/20 h-8 w-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {/* DOCUMENTO ATUALMENTE VIGENTE */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Documento Atualmente Vigente
+                  </span>
+                  <div className="text-xs text-slate-800 font-semibold pt-1">
+                    {resolverUrlDocumento(itemGerenciarVersoes).nomeExibicao}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Atualizado em:{' '}
+                    {itemGerenciarVersoes.updated
+                      ? new Date(itemGerenciarVersoes.updated).toLocaleDateString('pt-BR')
+                      : 'Data não informada'}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleArquivarAtualImediato(itemGerenciarVersoes)}
+                    className="text-xs text-[#0a2540] border-slate-300 hover:bg-slate-100 inline-flex items-center gap-1.5 h-8"
+                  >
+                    <Archive className="h-3.5 w-3.5 text-[#0284c7]" />
+                    Arquivar Versão Atual
+                  </Button>
+                </div>
+              </div>
+
+              {/* BARRA DE AÇÃO PARA ADICIONAR VERSÃO MANUAL */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-[#0284c7]" />
+                  <span className="text-xs font-bold text-[#0a2540]">
+                    Versões Anteriores Disponíveis ({versoesItem.length})
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => setModoNovaVersaoManual(!modoNovaVersaoManual)}
+                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold h-8 inline-flex items-center gap-1"
+                >
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  {modoNovaVersaoManual ? 'Fechar Formulário' : 'Adicionar Versão Manual'}
+                </Button>
+              </div>
+
+              {/* FORMULÁRIO DE NOVA VERSÃO MANUAL */}
+              {modoNovaVersaoManual && (
+                <form
+                  onSubmit={handleCriarNovaVersaoManual}
+                  className="p-4 bg-sky-50/50 border border-sky-200 rounded-lg space-y-3.5 animate-fade-in"
+                >
+                  <div className="font-semibold text-xs text-[#0a2540]">
+                    Cadastrar Documento / Versão Anterior
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-slate-700">
+                        Título / Rótulo da Versão *
+                      </Label>
+                      <Input
+                        required
+                        value={novaVersaoTitulo}
+                        onChange={(e) => setNovaVersaoTitulo(e.target.value)}
+                        placeholder="Ex: Vigência 2023–2024 ou Versão 1.0"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-slate-700">
+                        Data de Referência
+                      </Label>
+                      <Input
+                        value={novaVersaoData}
+                        onChange={(e) => setNovaVersaoData(e.target.value)}
+                        placeholder="Ex: 15/10/2024 ou Outubro/2024"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Descrição / Observações (Opcional)
+                    </Label>
+                    <Input
+                      value={novaVersaoDescricao}
+                      onChange={(e) => setNovaVersaoDescricao(e.target.value)}
+                      placeholder="Ex: Versão aprovada pelo Despacho ANP nº..."
+                      className="h-8 text-xs bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-slate-700">
+                        Enviar Arquivo (PDF)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept="application/pdf,.docx,.xlsx"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setNovaVersaoArquivo(e.target.files[0])
+                          }
+                        }}
+                        className="text-xs bg-white file:text-xs file:bg-slate-100 file:border-0 file:rounded file:px-2 file:py-1"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-slate-700">
+                        Ou Link Externo (Fallback)
+                      </Label>
+                      <Input
+                        value={novaVersaoUrlExterna}
+                        onChange={(e) => setNovaVersaoUrlExterna(e.target.value)}
+                        placeholder="https://www.tsb.com.br/wp-content/..."
+                        className="h-8 text-xs font-mono bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setModoNovaVersaoManual(false)}
+                      className="text-xs"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={salvandoNovaVersao}
+                      className="bg-[#0a2540] hover:bg-[#13395e] text-white text-xs font-bold"
+                    >
+                      {salvandoNovaVersao ? 'Salvando...' : 'Salvar Versão no Acervo'}
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {/* LISTA DE VERSÕES ARQUIVADAS */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="p-3">Versão / Rótulo</th>
+                      <th className="p-3">Data</th>
+                      <th className="p-3">Arquivo / Link</th>
+                      <th className="p-3 text-right w-20">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {carregandoVersoes ? (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-slate-500">
+                          Carregando versões arquivadas...
+                        </td>
+                      </tr>
+                    ) : versoesItem.length > 0 ? (
+                      versoesItem.map((v) => {
+                        const urlDoc = resolverUrlDocumento(v, v.url_externa || '')
+                        return (
+                          <tr key={v.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="p-3 font-semibold text-slate-800">
+                              <div>{v.titulo}</div>
+                              {v.descricao && (
+                                <div className="text-[11px] text-slate-500 font-normal">
+                                  {v.descricao}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3 text-slate-600 font-mono text-[11px]">
+                              {v.data_versao ||
+                                (v.created ? new Date(v.created).toLocaleDateString('pt-BR') : '-')}
+                            </td>
+                            <td className="p-3">
+                              {urlDoc.url ? (
+                                <a
+                                  href={urlDoc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#0284c7] hover:underline font-medium inline-flex items-center gap-1 truncate max-w-xs"
+                                >
+                                  <FileDown className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">
+                                    {urlDoc.nomeExibicao || 'Download PDF'}
+                                  </span>
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 italic">Sem arquivo</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleExcluirVersao(v)}
+                                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Excluir versão arquivada"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-slate-500">
+                          Nenhuma versão anterior arquivada neste slot. Use o botão acima para
+                          arquivar a atual ou adicionar uma versão manualmente.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="text-[11px] text-slate-500 italic bg-slate-50 p-3 rounded border border-slate-200">
+                <strong>Base regulatória:</strong> Conforme o §2º do Art. 2º da Portaria ANP nº
+                1/2003, as informações divulgadas no Boletim Eletrônico devem ser mantidas
+                disponíveis para consulta e recuperáveis por download por um período mínimo de 3
+                (três) anos.
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setModalVersoesAberto(false)}
+                className="text-xs"
+              >
+                Fechar
+              </Button>
+            </div>
           </Card>
         </div>
       )}

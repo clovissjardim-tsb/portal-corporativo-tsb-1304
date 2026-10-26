@@ -10,6 +10,7 @@ import {
   resolverUrlSecundaria,
   CABECALHOS_FALLBACK,
   type ItemTransparencia,
+  type VersaoTransparencia,
 } from '@/services/transparencia'
 import {
   FileText,
@@ -22,8 +23,11 @@ import {
   Eye,
   RotateCcw,
   ChevronDown,
+  ChevronRight,
   Info,
   ShieldAlert,
+  ArrowRight,
+  History,
 } from 'lucide-react'
 
 export interface BoletimEletronicoProps {
@@ -31,6 +35,7 @@ export interface BoletimEletronicoProps {
   setFiltroAnoMensal?: (val: string) => void
   filtroMesMensal?: string
   setFiltroMesMensal?: (val: string) => void
+  onNavegarParaPlataformaSecao?: (secaoId: string) => void
 }
 
 export interface RelatorioMensalItem {
@@ -190,6 +195,102 @@ function DocumentLinkRow({ url, label, title, external, sublabel }: DocumentLink
   )
 }
 
+// Componente para exibir o link retrátil "Versões anteriores" (§2º do Art. 2º da Portaria ANP nº 1/2003)
+interface VersoesAnterioresAcervoProps {
+  versoes: VersaoTransparencia[]
+  slotLabel?: string
+}
+
+function VersoesAnterioresAcervo({ versoes, slotLabel }: VersoesAnterioresAcervoProps) {
+  const [expandido, setExpandido] = useState(false)
+
+  // Se não houver versões arquivadas, NÃO renderiza nada (sem estado vazio)
+  if (!versoes || versoes.length === 0) return null
+
+  return (
+    <div className="pt-2 text-xs">
+      <button
+        type="button"
+        onClick={() => setExpandido((prev) => !prev)}
+        className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0284c7] font-medium transition-colors cursor-pointer py-1 group"
+        aria-expanded={expandido}
+      >
+        <History className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#0284c7]" />
+        <span className="underline decoration-slate-300 group-hover:decoration-[#0284c7]">
+          Versões anteriores ({versoes.length})
+        </span>
+        <ChevronRight
+          className={`h-3 w-3 text-slate-400 group-hover:text-[#0284c7] transition-transform duration-150 ${
+            expandido ? 'rotate-90' : 'rotate-0'
+          }`}
+        />
+      </button>
+
+      {expandido && (
+        <div className="mt-2 pl-3 sm:pl-4 border-l-2 border-slate-200 space-y-2 py-1 animate-fade-in bg-slate-50/50 rounded-r-md p-2.5">
+          <div className="text-[11px] text-slate-500 font-semibold flex items-center justify-between">
+            <span>
+              Acervo histórico (§2º, Art. 2º da Portaria ANP nº 1/2003)
+              {slotLabel ? ` — ${slotLabel}` : ''}:
+            </span>
+            <span className="text-[10px] text-slate-400 font-normal">Disponível para download</span>
+          </div>
+
+          <div className="space-y-1.5 divide-y divide-slate-100">
+            {versoes.map((v) => {
+              const urlDoc = resolverUrlDocumento(v, v.url_externa || '')
+              if (!urlDoc.url) return null
+
+              const dataFormatada =
+                v.data_versao || (v.created ? new Date(v.created).toLocaleDateString('pt-BR') : '')
+
+              return (
+                <div
+                  key={v.id}
+                  className="pt-1.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <PdfIcon className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                    <a
+                      href={urlDoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-slate-700 hover:text-[#0284c7] hover:underline truncate"
+                      title={v.titulo}
+                    >
+                      {v.titulo}
+                    </a>
+                    {v.descricao && (
+                      <span className="hidden md:inline text-[11px] text-slate-400 truncate max-w-xs">
+                        ({v.descricao})
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 text-[11px] text-slate-500">
+                    {dataFormatada && (
+                      <span className="font-mono text-slate-400">{dataFormatada}</span>
+                    )}
+                    <a
+                      href={urlDoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-[#0284c7] hover:underline"
+                    >
+                      <FileDown className="h-3 w-3" />
+                      <span>Download</span>
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Gera a série histórica desde 2003 (ano de criação da Portaria ANP 1/2003)
 function gerarHistoricoQuantidades(): RelatorioMensalItem[] {
   const agora = new Date()
@@ -232,16 +333,40 @@ function gerarHistoricoQuantidades(): RelatorioMensalItem[] {
 
 const HISTORICO_QUANTIDADES_COMPLETO: RelatorioMensalItem[] = gerarHistoricoQuantidades()
 
-export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
+export default function BoletimEletronico({
+  filtroAnoMensal: _filtroAnoMensal,
+  setFiltroAnoMensal: _setFiltroAnoMensal,
+  filtroMesMensal: _filtroMesMensal,
+  setFiltroMesMensal: _setFiltroMesMensal,
+  onNavegarParaPlataformaSecao,
+}: BoletimEletronicoProps = {}) {
   const { toast } = useToast()
 
   // Conteúdos editáveis vindos do PocketBase
   const [itensBd, setItensBd] = useState<ItemTransparencia[]>([])
+  // Versões arquivadas por slot_chave (§2º do Art. 2º da Portaria ANP nº 1/2003)
+  const [versoesPorSlot, setVersoesPorSlot] = useState<Map<string, VersaoTransparencia[]>>(
+    new Map(),
+  )
 
   const carregarItensTransparencia = useCallback(async () => {
     try {
-      const todos = await transparenciaService.listarTodos()
+      const [todos, todasVersoes] = await Promise.all([
+        transparenciaService.listarTodos(),
+        transparenciaService.listarVersoes(undefined, true),
+      ])
       setItensBd(todos)
+
+      // Agrupa versões por slot_chave
+      const mapVersoes = new Map<string, VersaoTransparencia[]>()
+      todasVersoes.forEach((v) => {
+        const slot = v.slot_chave
+        if (!mapVersoes.has(slot)) {
+          mapVersoes.set(slot, [])
+        }
+        mapVersoes.get(slot)!.push(v)
+      })
+      setVersoesPorSlot(mapVersoes)
     } catch (e) {
       console.warn('[BoletimEletronico] Usando dados canônicos como fallback:', e)
     }
@@ -615,6 +740,8 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 )
                 const tituloTexto =
                   item?.titulo || 'Termos e condições gerais de prestação de serviço'
+                const versoesAlinea = versoesPorSlot.get('alinea_a') || []
+
                 return (
                   <div className="transition-colors">
                     <button
@@ -647,6 +774,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Termos e Condições Gerais do Contrato de Transporte Extraordinário'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea a" />
                         </div>
                       </div>
                     )}
@@ -670,6 +798,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                     )
                   : null
                 const tituloTexto = item?.titulo || 'Modelo de contrato para cada tipo de serviço'
+                const versoesAlinea = versoesPorSlot.get('alinea_b') || []
 
                 return (
                   <div className="transition-colors">
@@ -716,6 +845,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                               }
                             />
                           )}
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea b" />
                         </div>
                       </div>
                     )}
@@ -733,6 +863,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000435.pdf',
                 )
                 const tituloTexto = item?.titulo || 'Modelo de Acordo de Conexão'
+                const versoesAlinea = versoesPorSlot.get('alinea_c') || []
 
                 return (
                   <div className="transition-colors">
@@ -766,6 +897,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Modelo de Acordo de Conexão às Instalações de Transporte'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea c" />
                         </div>
                       </div>
                     )}
@@ -785,6 +917,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 const tituloTexto =
                   item?.titulo ||
                   'Modelo de Acordo Operativo de Alocação das Quantidades de Gás nas Estações de Entrega'
+                const versoesAlinea = versoesPorSlot.get('alinea_d') || []
 
                 return (
                   <div className="transition-colors">
@@ -818,6 +951,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Modelo de Acordo Operativo de Alocação de Quantidades de Gás'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea d" />
                         </div>
                       </div>
                     )}
@@ -835,6 +969,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   'https://www.tsb.com.br/wp-content/uploads/2023/04/bibArq000437.pdf',
                 )
                 const tituloTexto = item?.titulo || 'Mapa atualizado das instalações de transporte'
+                const versoesAlinea = versoesPorSlot.get('alinea_e') || []
 
                 return (
                   <div className="transition-colors">
@@ -868,6 +1003,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Mapa das Instalações do Sistema Dutoviário TSB'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea e" />
                         </div>
                       </div>
                     )}
@@ -891,6 +1027,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 const tituloTexto =
                   item?.titulo ||
                   'Características físicas e capacidade máxima das instalações de transporte, nas melhores condições operacionais'
+                const versoesAlinea = versoesPorSlot.get('alinea_f') || []
 
                 return (
                   <div className="transition-colors">
@@ -937,6 +1074,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                               }
                             />
                           )}
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea f" />
                         </div>
                       </div>
                     )}
@@ -956,6 +1094,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 const tituloTexto =
                   item?.titulo ||
                   'Capacidade disponível para prestação de novos serviços de Transporte Firme nas melhores condições operacionais'
+                const versoesAlinea = versoesPorSlot.get('alinea_g') || []
 
                 return (
                   <div className="transition-colors">
@@ -989,6 +1128,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Demonstrativo de Capacidade Disponível para Novos Serviços'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea g" />
                         </div>
 
                         {/* BLOCO COLAPSADO EM 1 LINHA COM CHEVRON: ENTENDIMENTO CONCEITUAL PADRÃO NTS (2º NÍVEL) */}
@@ -1383,6 +1523,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 )
                 const tituloTexto =
                   item?.titulo || 'Interrupções e reduções de capacidade, atuais e planejadas'
+                const versoesAlinea = versoesPorSlot.get('alinea_i') || []
 
                 return (
                   <div className="transition-colors">
@@ -1416,6 +1557,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Interrupções e Reduções de Capacidade no Sistema Dutoviário'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea i" />
                         </div>
                       </div>
                     )}
@@ -1433,6 +1575,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                   'https://www.tsb.com.br/wp-content/uploads/2023/08/Ampliacoes-Planejadas.pdf',
                 )
                 const tituloTexto = item?.titulo || 'Ampliações planejadas'
+                const versoesAlinea = versoesPorSlot.get('alinea_j') || []
 
                 return (
                   <div className="transition-colors">
@@ -1466,12 +1609,42 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                                 : 'Projetos de Ampliações Planejadas e em Implantação'
                             }
                           />
+                          <VersoesAnterioresAcervo versoes={versoesAlinea} slotLabel="Alínea j" />
                         </div>
                       </div>
                     )}
                   </div>
                 )
               })()}
+            </div>
+
+            {/* NOTA DISCRETA DE REFERÊNCIA CRUZADA AO ART. 3º DA PORTARIA ANP Nº 1/2003 */}
+            <div className="mt-4 px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-2.5">
+                <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5 sm:mt-0" />
+                <span>
+                  <strong>
+                    Relatório de Simulações Termo-Hidráulicas (Art. 3º da Portaria ANP nº 1/2003):
+                  </strong>{' '}
+                  disponível no pilar Plataforma Eletrônica, seção Simulação Termo-Hidráulica
+                  (Trechos 1 e 3).
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavegarParaPlataformaSecao) {
+                    onNavegarParaPlataformaSecao('secao-simulacao-termo-hidraulica')
+                  } else {
+                    const el = document.getElementById('secao-simulacao-termo-hidraulica')
+                    el?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline cursor-pointer shrink-0 self-start sm:self-auto"
+              >
+                <span>Acessar Simulação</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             </div>
           </section>
 
@@ -1563,6 +1736,7 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                 const dataAtualizacao = itemContrato?.updated
                   ? new Date(itemContrato.updated).toLocaleDateString('pt-BR')
                   : null
+                const versoesContratos = versoesPorSlot.get('contratos_transporte_documento') || []
 
                 if (doc.url) {
                   return (
@@ -1577,6 +1751,12 @@ export default function BoletimEletronico(_props: BoletimEletronicoProps = {}) {
                           {itemContrato.descricao}
                         </p>
                       )}
+                      <div className="pl-7">
+                        <VersoesAnterioresAcervo
+                          versoes={versoesContratos}
+                          slotLabel="Item II — Contratos de Serviço"
+                        />
+                      </div>
                     </div>
                   )
                 }

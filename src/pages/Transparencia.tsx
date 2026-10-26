@@ -18,6 +18,10 @@ import BoletimEletronico from '@/components/BoletimEletronicoOficial'
 import PlataformaEletronica from '@/components/PlataformaEletronicaOficial'
 import BlocoMonitoramentoOficial from '@/components/BlocoMonitoramentoOficial'
 
+export interface TransparenciaProps {
+  onNavegarParaPlataformaSecao?: (secaoId: string) => void
+}
+
 export default function Transparencia() {
   const { toast } = useToast()
 
@@ -217,6 +221,17 @@ export default function Transparencia() {
           setFiltroAnoMensal={setFiltroAnoMensal}
           filtroMesMensal={filtroMesMensal}
           setFiltroMesMensal={setFiltroMesMensal}
+          onNavegarParaPlataformaSecao={(secaoId) => {
+            setActivePilar('plataforma')
+            setSubAbaPlataforma('i_vi')
+            // Programmatic smooth scroll to target element after tab switch
+            setTimeout(() => {
+              const el = document.getElementById(secaoId)
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            }, 120)
+          }}
         />
       )}
 

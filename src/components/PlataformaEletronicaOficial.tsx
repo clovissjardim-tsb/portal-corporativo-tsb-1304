@@ -586,13 +586,13 @@ export default function PlataformaEletronica({
                 const isOpen = incisosAbertos.has('IV')
                 const doc = resolverUrlDocumento(
                   item,
-                  'https://www.tsb.com.br/wp-content/uploads/2023/08/Capacidade-gasoduto-A.pdf',
+                  'https://tsb.com.br/wp-content/uploads/2023/04/capacidade_contratada.pdf',
                 )
                 const tituloTexto = metaIncisos.IV.tituloCurto
                 const labelDoc =
                   doc.nomeExibicao && doc.nomeExibicao !== '- Baixar Arquivo'
                     ? doc.nomeExibicao
-                    : 'Relação de Capacidades Contratadas por Contrato Celebrado'
+                    : 'Relatório de Capacidade Contratada por Ponto e Trecho'
 
                 return (
                   <div className="transition-colors">
@@ -625,71 +625,6 @@ export default function PlataformaEletronica({
                   </div>
                 )
               })()}
-
-              {/* INCISO V */}
-              {(() => {
-                const item = incisosBdMap.get('inciso_v')
-                if (item && item.ativo === false) return null
-                const isOpen = incisosAbertos.has('V')
-                const doc1 = resolverUrlDocumento(
-                  item,
-                  'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-1.pdf',
-                )
-                const doc2 = resolverUrlSecundaria(
-                  item,
-                  'https://tsb.com.br/wp-content/uploads/2023/04/RSTH-Trecho-3.pdf',
-                )
-                const tituloTexto = metaIncisos.V.tituloCurto
-
-                return (
-                  <div className="transition-colors">
-                    <button
-                      type="button"
-                      onClick={() => toggleInciso('V')}
-                      aria-expanded={isOpen}
-                      className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
-                    >
-                      <span className="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
-                        <span className="font-bold text-[#0a2540] mr-2">V.</span>
-                        {tituloTexto}
-                      </span>
-                      <ChevronDown
-                        className={`h-4 w-4 text-slate-500 shrink-0 transition-transform duration-200 ${
-                          isOpen ? 'rotate-180 text-[#0284c7]' : 'rotate-0'
-                        }`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div className="px-5 pb-4 pt-1 space-y-3 bg-slate-50/40 border-t border-slate-100 animate-fade-in">
-                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl">
-                          {item?.descricao || metaIncisos.V.descricaoPadrao}
-                        </p>
-                        <div className="space-y-2 pt-1">
-                          <DocumentLinkRow
-                            url={doc1.url}
-                            label={
-                              doc1.nomeExibicao && doc1.nomeExibicao !== '- Baixar Arquivo'
-                                ? doc1.nomeExibicao
-                                : 'Simulação Termo-Hidráulica — Trecho 1 (Uruguaiana-Triunfo)'
-                            }
-                          />
-                          {doc2.url && (
-                            <DocumentLinkRow
-                              url={doc2.url}
-                              label={
-                                doc2.nomeExibicao && doc2.nomeExibicao !== 'Arquivo Secundário'
-                                  ? doc2.nomeExibicao
-                                  : 'Simulação Termo-Hidráulica — Trecho 3 (Polo Petroquímico)'
-                              }
-                            />
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })()}
-
               {/* INCISO VI */}
               {(() => {
                 const item = incisosBdMap.get('inciso_vi')
