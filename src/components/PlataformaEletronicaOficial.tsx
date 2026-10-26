@@ -725,7 +725,7 @@ export default function PlataformaEletronica({
                           </div>
 
                           {/* 1. Resumo das Solicitações de Acesso Efetuadas (Pontos Relevantes) */}
-                          {docResumoPontos.url ? (
+                          {docResumoPontos.url && (
                             <DocumentLinkRow
                               url={docResumoPontos.url}
                               label={
@@ -735,24 +735,10 @@ export default function PlataformaEletronica({
                                   : 'Resumo das Solicitações de Acesso Efetuadas por Ponto Relevante (PDF)'
                               }
                             />
-                          ) : (
-                            <DocumentLinkRow
-                              url="#secao-resumos-oficiais-vii"
-                              onClick={() => {
-                                setSubAba('vii')
-                                setTimeout(() => {
-                                  document
-                                    .getElementById('secao-resumos-oficiais-vii')
-                                    ?.scrollIntoView({ behavior: 'smooth' })
-                                }, 100)
-                              }}
-                              label="Resumo das Solicitações de Acesso Efetuadas por Ponto Relevante (PDF)"
-                              sublabel="Consultar card regulatório de publicação do resumo"
-                            />
                           )}
 
                           {/* 2. Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (Documento Oficial) */}
-                          {docResumoTrechos.url ? (
+                          {docResumoTrechos.url && (
                             <DocumentLinkRow
                               url={docResumoTrechos.url}
                               label={
@@ -763,40 +749,7 @@ export default function PlataformaEletronica({
                                   : 'Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (Documento Oficial)'
                               }
                             />
-                          ) : (
-                            <DocumentLinkRow
-                              url="#secao-resumos-oficiais-vii"
-                              onClick={() => {
-                                setSubAba('vii')
-                                setTimeout(() => {
-                                  document
-                                    .getElementById('secao-resumos-oficiais-vii')
-                                    ?.scrollIntoView({ behavior: 'smooth' })
-                                }, 100)
-                              }}
-                              label="Resumo da Demanda por Instalação de Transporte — Trechos 1 e 3 (Documento Oficial)"
-                              sublabel="Consultar card regulatório de publicação do resumo"
-                            />
                           )}
-                        </div>
-
-                        {/* ATALHOS PARA AS SEÇÕES RICAS PRESERVADAS */}
-                        <div className="pt-2 border-t border-slate-200/80 flex flex-wrap items-center gap-3 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSubAba('vii')
-                              setTimeout(() => {
-                                document
-                                  .getElementById('secao-resumos-oficiais-vii')
-                                  ?.scrollIntoView({ behavior: 'smooth' })
-                              }, 100)
-                            }}
-                            className="text-[#0284c7] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            Ver Resumos Oficiais por Ponto e Instalação &rarr;
-                          </button>
                         </div>
                       </div>
                     )}
@@ -873,192 +826,6 @@ export default function PlataformaEletronica({
               })()}
             </div>
           </section>
-
-          {/* ========================================================
-              SUB-ABA 2: INCISO VII (RESUMOS OFICIAIS EM PDF)
-              ======================================================== */}
-          {subAba === 'vii' && (
-            <div className="space-y-8">
-              {/* =====================================================================
-                  PADRÃO TBG: RESUMOS DO INCISO VII PUBLICADOS EM PDF ESTÁTICO
-                  SUBSTITUIÇÃO DAS TABELAS VIVAS PÚBLICAS POR CARDS DE DOCUMENTO OFICIAL
-                  ===================================================================== */}
-              <div id="secao-resumos-oficiais-vii" className="space-y-4">
-                <div className="space-y-1 pb-2 border-b border-slate-200">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 uppercase tracking-wider font-display">
-                      Art. 9º, VII • Resolução ANP nº 11/2016
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      Padrão TBG • Publicação em Documento Estático (PDF)
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2 font-display">
-                    <ShieldCheck className="h-4 w-4 text-[#0284c7]" />
-                    Resumos Oficiais de Solicitações e Demanda por Instalação (PDF)
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify">
-                    Em conformidade com a prática regulatória do setor e o Art. 9º, VII da Resolução
-                    ANP nº 11/2016, a TSB consolida periodicamente as solicitações de acesso e a
-                    demanda por trecho dutoviário em relatórios oficiais estáticos, garantindo a
-                    transparência pública e a confidencialidade preconizada pela LGPD.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* CARD 1: RESUMO DAS SOLICITAÇÕES POR PONTO RELEVANTE EM PDF */}
-                  {(() => {
-                    const itemDoc = incisosBdMap.get('resumo_solicitacoes_vii_pdf')
-                    const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
-                    const dataAtualizacao = itemDoc?.updated
-                      ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
-                      : null
-                    const dataReferencia = itemDoc?.periodo || null
-
-                    return (
-                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col justify-between space-y-3">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
-                              Art. 9º, VII • Pontos Relevantes
-                            </span>
-                            {dataReferencia && (
-                              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                                Ref.: {dataReferencia}
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="font-bold text-sm text-[#0a2540]">
-                            {itemDoc?.titulo ||
-                              'Resumo Público das Solicitações por Ponto Relevante'}
-                          </h4>
-                          <p className="text-xs text-slate-600 leading-relaxed text-justify">
-                            {itemDoc?.descricao ||
-                              'Documento consolidado com a relação anônima e agregada das solicitações de acesso por ponto relevante de recebimento e entrega, em conformidade com o Art. 9º, VII da Resolução ANP nº 11/2016 e as diretrizes da LGPD.'}
-                          </p>
-                          <div className="text-[11px] text-slate-500 pt-1">
-                            {dataAtualizacao ? (
-                              <span>Última atualização: {dataAtualizacao}</span>
-                            ) : (
-                              <span className="italic">
-                                Atualização periódica pela equipe da TSB
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100">
-                          {doc.url ? (
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
-                            >
-                              <FileDown className="h-4 w-4 text-slate-300" />
-                              {doc.nomeExibicao || 'Baixar Resumo em PDF'}
-                            </a>
-                          ) : (
-                            <div className="p-3 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
-                              <span className="font-semibold block text-slate-700">
-                                Ainda não há documento publicado.
-                              </span>
-                              <span>
-                                O demonstrativo de solicitações em PDF será publicado pela equipe da
-                                TSB.
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  {/* CARD 2: RESUMO DA DEMANDA POR INSTALAÇÃO DE TRANSPORTE (TRECHOS 1 E 3) */}
-                  {(() => {
-                    const itemDoc = incisosBdMap.get('resumo_demandas_trechos_vii_pdf')
-                    const doc = resolverUrlDocumento(itemDoc, itemDoc?.url_externa || '')
-                    const dataAtualizacao = itemDoc?.updated
-                      ? new Date(itemDoc.updated).toLocaleDateString('pt-BR')
-                      : null
-                    const dataReferencia = itemDoc?.periodo || null
-
-                    return (
-                      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col justify-between space-y-3">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white">
-                              Art. 9º, VII • Trechos 1 e 3
-                            </span>
-                            {dataReferencia && (
-                              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                                Ref.: {dataReferencia}
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="font-bold text-sm text-[#0a2540]">
-                            {itemDoc?.titulo || 'Resumo da Demanda por Instalação de Transporte'}
-                          </h4>
-                          <p className="text-xs text-slate-600 leading-relaxed text-justify">
-                            {itemDoc?.descricao ||
-                              'Demonstrativo consolidado em PDF da capacidade demandada por instalação dutoviária (Trecho 1: Uruguaiana-Triunfo e Trecho 3: Polo Petroquímico), atualizado pela equipe técnica da TSB.'}
-                          </p>
-                          <div className="text-[11px] text-slate-500 pt-1">
-                            {dataAtualizacao ? (
-                              <span>Última atualização: {dataAtualizacao}</span>
-                            ) : (
-                              <span className="italic">
-                                Atualização periódica pela equipe da TSB
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100">
-                          {doc.url ? (
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-medium transition-colors shadow-xs"
-                            >
-                              <FileDown className="h-4 w-4 text-slate-300" />
-                              {doc.nomeExibicao || 'Baixar Demanda Trechos 1 e 3 (PDF)'}
-                            </a>
-                          ) : (
-                            <div className="p-3 text-center bg-slate-50 border border-slate-200 rounded text-xs text-slate-500">
-                              <span className="font-semibold block text-slate-700">
-                                Ainda não há documento publicado.
-                              </span>
-                              <span>O relatório por trecho será publicado pela equipe da TSB.</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-              </div>
-
-              {/* NAVEGAÇÃO DO INCISO VII */}
-              <div className="pt-2 flex items-center justify-between border-t border-slate-200 text-xs text-slate-600">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSubAba('i_vi')
-                    setTimeout(() => {
-                      document
-                        .getElementById('bloco-incisos-acordeao')
-                        ?.scrollIntoView({ behavior: 'smooth' })
-                    }, 100)
-                  }}
-                  className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors cursor-pointer"
-                >
-                  &larr; Voltar para os Incisos I a VIII
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </Card>
     </div>
