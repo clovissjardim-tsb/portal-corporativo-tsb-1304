@@ -599,7 +599,7 @@ export default function Poc() {
               </div>
               <div>
                 <CardTitle className="text-base sm:text-lg font-bold font-display">
-                  Participação no Processo de Oferta de Capacidade
+                  Manifestação de Interesse
                 </CardTitle>
                 <p className="text-xs text-slate-500 font-normal mt-0.5">
                   Regras de habilitação prévia e acesso às etapas restritas aos carregadores
