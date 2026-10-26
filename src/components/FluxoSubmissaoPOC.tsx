@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,12 @@ import {
   Plus,
   Trash2,
   FileCheck2,
+  Info,
+  HelpCircle,
+  FileSignature,
+  Send,
+  Building2,
+  Award,
 } from 'lucide-react'
 import { pocService, gerarProtocoloPOC, SubmissaoCompletaPOC, GarantiaTipo } from '@/services/poc'
 import {
@@ -49,105 +55,263 @@ interface FluxoSubmissaoPOCProps {
 
 type EtapaFluxo = 1 | 2 | 3
 
+const STORAGE_KEY_FORM_POC = 'tsb_poc_form_draft_v2'
+
 export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSubmissaoPOCProps) {
   // Protocolo Único da Submissão Completa (ex: POC-2026-XXXX)
-  const [protocolo] = useState<string>(() => gerarProtocoloPOC('POC'))
+  const [protocolo] = useState<string>(() => {
+    const saved = sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_protocolo`)
+    if (saved) return saved
+    const novo = gerarProtocoloPOC('POC')
+    sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_protocolo`, novo)
+    return novo
+  })
 
-  // Etapa corrente: 1 = Manifestação, 2 = Proposta Garantida, 3 = Revisão e Envio
+  // Etapa aberta (1, 2 ou 3) - O usuário pode alternar livremente entre elas
   const [etapa, setEtapa] = useState<EtapaFluxo>(1)
+
+  // Status de conclusão/download das etapas independentes
+  const [etapa1Concluida, setEtapa1Concluida] = useState<boolean>(() => {
+    return sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_etapa1_ok`) === 'true'
+  })
+  const [etapa2Concluida, setEtapa2Concluida] = useState<boolean>(() => {
+    return sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_etapa2_ok`) === 'true'
+  })
 
   // -------------------------------------------------------------
   // DADOS GERAIS DO CARREGADOR
   // -------------------------------------------------------------
-  const [razaoSocial, setRazaoSocial] = useState(dadosPadrao?.razaoSocial || '')
-  const [sedeEndereco, setSedeEndereco] = useState('')
-  const [inscricaoEstadual, setInscricaoEstadual] = useState('')
-  const [cnpj, setCnpj] = useState(dadosPadrao?.cnpj || '')
-  const [atividadePrincipal, setAtividadePrincipal] = useState('Comercialização de Gás Natural')
-  const [codigoCnae, setCodigoCnae] = useState('35.20-4-02')
-  const [atividadeSecundariaCnae, setAtividadeSecundariaCnae] = useState('')
-  const [autorizacaoAnp, setAutorizacaoAnp] = useState(dadosPadrao?.autorizacaoAnp || '')
-  const [sitioEletronico, setSitioEletronico] = useState('')
-  const [telefone, setTelefone] = useState(dadosPadrao?.telefone || '')
+  const [razaoSocial, setRazaoSocial] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_razaoSocial`) ||
+      dadosPadrao?.razaoSocial ||
+      '',
+  )
+  const [sedeEndereco, setSedeEndereco] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_sedeEndereco`) || '',
+  )
+  const [inscricaoEstadual, setInscricaoEstadual] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_inscricaoEstadual`) || '',
+  )
+  const [cnpj, setCnpj] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_cnpj`) || dadosPadrao?.cnpj || '',
+  )
+  const [atividadePrincipal, setAtividadePrincipal] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_atividadePrincipal`) ||
+      'Comercialização de Gás Natural',
+  )
+  const [codigoCnae, setCodigoCnae] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_codigoCnae`) || '35.20-4-02',
+  )
+  const [atividadeSecundariaCnae, setAtividadeSecundariaCnae] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_atividadeSecundariaCnae`) || '',
+  )
+  const [autorizacaoAnp, setAutorizacaoAnp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_autorizacaoAnp`) ||
+      dadosPadrao?.autorizacaoAnp ||
+      '',
+  )
+  const [sitioEletronico, setSitioEletronico] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_sitioEletronico`) || '',
+  )
+  const [telefone, setTelefone] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_telefone`) || dadosPadrao?.telefone || '',
+  )
 
   // Contato geral
-  const [contatoNome, setContatoNome] = useState(dadosPadrao?.responsavel || '')
-  const [contatoTelefone, setContatoTelefone] = useState(dadosPadrao?.telefone || '')
-  const [contatoEmail, setContatoEmail] = useState(dadosPadrao?.email || '')
-  const [contatoEndereco, setContatoEndereco] = useState('')
+  const [contatoNome, setContatoNome] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_contatoNome`) ||
+      dadosPadrao?.responsavel ||
+      '',
+  )
+  const [contatoTelefone, setContatoTelefone] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_contatoTelefone`) ||
+      dadosPadrao?.telefone ||
+      '',
+  )
+  const [contatoEmail, setContatoEmail] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_contatoEmail`) || dadosPadrao?.email || '',
+  )
+  const [contatoEndereco, setContatoEndereco] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_contatoEndereco`) || '',
+  )
 
   // -------------------------------------------------------------
   // ETAPA 1: MANIFESTAÇÃO DE INTERESSE
   // -------------------------------------------------------------
-  const [repNomeManif, setRepNomeManif] = useState(dadosPadrao?.responsavel || '')
-  const [repNacionalidadeManif, setRepNacionalidadeManif] = useState('Brasileira')
-  const [repEstadoCivilManif, setRepEstadoCivilManif] = useState('Casado(a)')
-  const [repDataNascimentoManif, setRepDataNascimentoManif] = useState('')
-  const [repProfissaoManif, setRepProfissaoManif] = useState('Diretor de Regulação')
-  const [repCargoManif, setRepCargoManif] = useState('Diretor Estatutário')
-  const [repCredenciamentoManif, setRepCredenciamentoManif] = useState('OAB/RS ou CRA/RS')
-  const [repRgManif, setRepRgManif] = useState('')
-  const [repOrgaoEmissorManif, setRepOrgaoEmissorManif] = useState('SSP/RS')
-  const [repCpfManif, setRepCpfManif] = useState('')
-  const [repEmailManif, setRepEmailManif] = useState(dadosPadrao?.email || '')
-  const [repEnderecoManif, setRepEnderecoManif] = useState('')
+  const [repNomeManif, setRepNomeManif] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repNomeManif`) ||
+      dadosPadrao?.responsavel ||
+      '',
+  )
+  const [repNacionalidadeManif, setRepNacionalidadeManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repNacionalidadeManif`) || 'Brasileira',
+  )
+  const [repEstadoCivilManif, setRepEstadoCivilManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEstadoCivilManif`) || 'Casado(a)',
+  )
+  const [repDataNascimentoManif, setRepDataNascimentoManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repDataNascimentoManif`) || '',
+  )
+  const [repProfissaoManif, setRepProfissaoManif] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repProfissaoManif`) || 'Diretor de Regulação',
+  )
+  const [repCargoManif, setRepCargoManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCargoManif`) || 'Diretor Estatutário',
+  )
+  const [repCredenciamentoManif, setRepCredenciamentoManif] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCredenciamentoManif`) ||
+      'OAB/RS ou CRA/RS',
+  )
+  const [repRgManif, setRepRgManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repRgManif`) || '',
+  )
+  const [repOrgaoEmissorManif, setRepOrgaoEmissorManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repOrgaoEmissorManif`) || 'SSP/RS',
+  )
+  const [repCpfManif, setRepCpfManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCpfManif`) || '',
+  )
+  const [repEmailManif, setRepEmailManif] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEmailManif`) || dadosPadrao?.email || '',
+  )
+  const [repEnderecoManif, setRepEnderecoManif] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEnderecoManif`) || '',
+  )
 
-  const [itensInteresse, setItensInteresse] = useState<ItemTabelaInteresse[]>([
-    {
-      pontoZona: 'Ponto de Entrada Paso de Los Libres (Fronteira)',
-      produto: 'Produto Anual 2026/2027 (Firme)',
-      capacidade: 150.0,
-    },
-  ])
+  const [itensInteresse, setItensInteresse] = useState<ItemTabelaInteresse[]>(() => {
+    const salvo = sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_itensInteresse`)
+    if (salvo) {
+      try {
+        return JSON.parse(salvo)
+      } catch {
+        /* fallback */
+      }
+    }
+    return [
+      {
+        pontoZona: 'Ponto de Entrada Paso de Los Libres (Fronteira)',
+        produto: 'Produto Anual 2026/2027 (Firme)',
+        capacidade: 150.0,
+      },
+    ]
+  })
 
-  const [decRegrasMasterManif, setDecRegrasMasterManif] = useState(false)
-  const [decCamposObrigatoriosManif, setDecCamposObrigatoriosManif] = useState(false)
-  const [decCapacidadeMaiorZeroManif, setDecCapacidadeMaiorZeroManif] = useState(false)
-  const [decCronogramaManif, setDecCronogramaManif] = useState(false)
-  const [decAssinaturaRepManif, setDecAssinaturaRepManif] = useState(false)
+  const [decRegrasMasterManif, setDecRegrasMasterManif] = useState(true)
+  const [decCamposObrigatoriosManif, setDecCamposObrigatoriosManif] = useState(true)
+  const [decCapacidadeMaiorZeroManif, setDecCapacidadeMaiorZeroManif] = useState(true)
+  const [decCronogramaManif, setDecCronogramaManif] = useState(true)
+  const [decAssinaturaRepManif, setDecAssinaturaRepManif] = useState(true)
 
   const [gerandoPdfManif, setGerandoPdfManif] = useState(false)
-  const [pdfManifGerado, setPdfManifGerado] = useState(false)
-  const [arquivoManifAssinado, setArquivoManifAssinado] = useState<File | null>(null)
 
   // -------------------------------------------------------------
   // ETAPA 2: PROPOSTA GARANTIDA VINCULANTE
   // -------------------------------------------------------------
-  const [repNomeProp, setRepNomeProp] = useState(dadosPadrao?.responsavel || '')
-  const [repNacionalidadeProp, setRepNacionalidadeProp] = useState('Brasileira')
-  const [repEstadoCivilProp, setRepEstadoCivilProp] = useState('Casado(a)')
-  const [repDataNascimentoProp, setRepDataNascimentoProp] = useState('')
-  const [repProfissaoProp, setRepProfissaoProp] = useState('Diretor Executivo')
-  const [repCargoProp, setRepCargoProp] = useState('Diretor-Presidente')
-  const [repCredenciamentoProp, setRepCredenciamentoProp] = useState('OAB/RS ou CRA/RS')
-  const [repRgProp, setRepRgProp] = useState('')
-  const [repOrgaoEmissorProp, setRepOrgaoEmissorProp] = useState('SSP/RS')
-  const [repCpfProp, setRepCpfProp] = useState('')
-  const [repEmailProp, setRepEmailProp] = useState(dadosPadrao?.email || '')
-  const [repEnderecoProp, setRepEnderecoProp] = useState('')
-
-  const [produtoProp, setProdutoProp] = useState('Produto Anual 2026/2027 (Firme)')
-  const [pontoZonaProp, setPontoZonaProp] = useState('Zona de Saída Triunfo (Polo Petroquímico)')
-  const [capacidadeProp, setCapacidadeProp] = useState<number | string>(150.0)
-  const [tarifaTransporteProp, setTarifaTransporteProp] = useState<number | string>(4.8521)
-  const [criterioLeilaoProp, setCriterioLeilaoProp] = useState<CriterioLeilaoTipo>('parcialmente')
-  const [capacidadeMinimaProp, setCapacidadeMinimaProp] = useState<number | string>(100.0)
-
-  const [garantiaTipo, setGarantiaTipo] = useState<GarantiaTipo>('Fiança Bancária')
-  const [garantiaValor, setGarantiaValor] = useState<number | string>(500000.0)
-  const [garantiaInstituicao, setGarantiaInstituicao] = useState(
-    'Banco do Brasil S.A. / Carta de Fiança',
+  const [repNomeProp, setRepNomeProp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repNomeProp`) ||
+      dadosPadrao?.responsavel ||
+      '',
   )
-  const [arquivoGarantia, setArquivoGarantia] = useState<File | null>(null)
+  const [repNacionalidadeProp, setRepNacionalidadeProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repNacionalidadeProp`) || 'Brasileira',
+  )
+  const [repEstadoCivilProp, setRepEstadoCivilProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEstadoCivilProp`) || 'Casado(a)',
+  )
+  const [repDataNascimentoProp, setRepDataNascimentoProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repDataNascimentoProp`) || '',
+  )
+  const [repProfissaoProp, setRepProfissaoProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repProfissaoProp`) || 'Diretor Executivo',
+  )
+  const [repCargoProp, setRepCargoProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCargoProp`) || 'Diretor-Presidente',
+  )
+  const [repCredenciamentoProp, setRepCredenciamentoProp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCredenciamentoProp`) || 'OAB/RS ou CRA/RS',
+  )
+  const [repRgProp, setRepRgProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repRgProp`) || '',
+  )
+  const [repOrgaoEmissorProp, setRepOrgaoEmissorProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repOrgaoEmissorProp`) || 'SSP/RS',
+  )
+  const [repCpfProp, setRepCpfProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repCpfProp`) || '',
+  )
+  const [repEmailProp, setRepEmailProp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEmailProp`) || dadosPadrao?.email || '',
+  )
+  const [repEnderecoProp, setRepEnderecoProp] = useState(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_repEnderecoProp`) || '',
+  )
 
-  const [decCelebrarContrato, setDecCelebrarContrato] = useState(false)
-  const [decExecucaoDesistencia, setDecExecucaoDesistencia] = useState(false)
-  const [decExecucaoNaoAssinatura, setDecExecucaoNaoAssinatura] = useState(false)
-  const [decRegrasMasterProp, setDecRegrasMasterProp] = useState(false)
+  const [produtoProp, setProdutoProp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_produtoProp`) ||
+      'Produto Anual 2026/2027 (Firme)',
+  )
+  const [pontoZonaProp, setPontoZonaProp] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_pontoZonaProp`) ||
+      'Zona de Saída Triunfo (Polo Petroquímico)',
+  )
+  const [capacidadeProp, setCapacidadeProp] = useState<number | string>(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_capacidadeProp`) || 150.0,
+  )
+  const [tarifaTransporteProp, setTarifaTransporteProp] = useState<number | string>(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_tarifaTransporteProp`) || 4.8521,
+  )
+  const [criterioLeilaoProp, setCriterioLeilaoProp] = useState<CriterioLeilaoTipo>(
+    () =>
+      (sessionStorage.getItem(
+        `${STORAGE_KEY_FORM_POC}_criterioLeilaoProp`,
+      ) as CriterioLeilaoTipo) || 'parcialmente',
+  )
+  const [capacidadeMinimaProp, setCapacidadeMinimaProp] = useState<number | string>(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_capacidadeMinimaProp`) || 100.0,
+  )
+
+  const [garantiaTipo, setGarantiaTipo] = useState<GarantiaTipo>(
+    () =>
+      (sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_garantiaTipo`) as GarantiaTipo) ||
+      'Fiança Bancária',
+  )
+  const [garantiaValor, setGarantiaValor] = useState<number | string>(
+    () => sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_garantiaValor`) || 500000.0,
+  )
+  const [garantiaInstituicao, setGarantiaInstituicao] = useState(
+    () =>
+      sessionStorage.getItem(`${STORAGE_KEY_FORM_POC}_garantiaInstituicao`) ||
+      'Banco do Brasil S.A. / Carta de Fiança',
+  )
+
+  const [decCelebrarContrato, setDecCelebrarContrato] = useState(true)
+  const [decExecucaoDesistencia, setDecExecucaoDesistencia] = useState(true)
+  const [decExecucaoNaoAssinatura, setDecExecucaoNaoAssinatura] = useState(true)
+  const [decRegrasMasterProp, setDecRegrasMasterProp] = useState(true)
 
   const [gerandoPdfProp, setGerandoPdfProp] = useState(false)
-  const [pdfPropGerado, setPdfPropGerado] = useState(false)
+
+  // -------------------------------------------------------------
+  // ETAPA 3: ANEXOS E ENVIO DEFINITIVO (3 ARQUIVOS)
+  // -------------------------------------------------------------
+  const [arquivoManifAssinado, setArquivoManifAssinado] = useState<File | null>(null)
   const [arquivoPropAssinado, setArquivoPropAssinado] = useState<File | null>(null)
+  const [arquivoGarantia, setArquivoGarantia] = useState<File | null>(null)
 
   // -------------------------------------------------------------
   // CONTROLE DE ERROS E SUBMISSÃO FINAL
@@ -155,7 +319,92 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  // Handlers para Tabela de Interesse
+  // Salvar no sessionStorage para preservar o rascunho durante a navegação
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_razaoSocial`, razaoSocial)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_sedeEndereco`, sedeEndereco)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_inscricaoEstadual`, inscricaoEstadual)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_cnpj`, cnpj)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_atividadePrincipal`, atividadePrincipal)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_codigoCnae`, codigoCnae)
+      sessionStorage.setItem(
+        `${STORAGE_KEY_FORM_POC}_atividadeSecundariaCnae`,
+        atividadeSecundariaCnae,
+      )
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_autorizacaoAnp`, autorizacaoAnp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_sitioEletronico`, sitioEletronico)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_telefone`, telefone)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_contatoNome`, contatoNome)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_contatoTelefone`, contatoTelefone)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_contatoEmail`, contatoEmail)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_contatoEndereco`, contatoEndereco)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repNomeManif`, repNomeManif)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repCpfManif`, repCpfManif)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repCargoManif`, repCargoManif)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repEmailManif`, repEmailManif)
+      sessionStorage.setItem(
+        `${STORAGE_KEY_FORM_POC}_itensInteresse`,
+        JSON.stringify(itensInteresse),
+      )
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repNomeProp`, repNomeProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repCpfProp`, repCpfProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repCargoProp`, repCargoProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_repEmailProp`, repEmailProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_produtoProp`, produtoProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_pontoZonaProp`, pontoZonaProp)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_capacidadeProp`, String(capacidadeProp))
+      sessionStorage.setItem(
+        `${STORAGE_KEY_FORM_POC}_tarifaTransporteProp`,
+        String(tarifaTransporteProp),
+      )
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_criterioLeilaoProp`, criterioLeilaoProp)
+      sessionStorage.setItem(
+        `${STORAGE_KEY_FORM_POC}_capacidadeMinimaProp`,
+        String(capacidadeMinimaProp),
+      )
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_garantiaTipo`, garantiaTipo)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_garantiaValor`, String(garantiaValor))
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_garantiaInstituicao`, garantiaInstituicao)
+    } catch {
+      /* ignore */
+    }
+  }, [
+    razaoSocial,
+    sedeEndereco,
+    inscricaoEstadual,
+    cnpj,
+    atividadePrincipal,
+    codigoCnae,
+    atividadeSecundariaCnae,
+    autorizacaoAnp,
+    sitioEletronico,
+    telefone,
+    contatoNome,
+    contatoTelefone,
+    contatoEmail,
+    contatoEndereco,
+    repNomeManif,
+    repCpfManif,
+    repCargoManif,
+    repEmailManif,
+    itensInteresse,
+    repNomeProp,
+    repCpfProp,
+    repCargoProp,
+    repEmailProp,
+    produtoProp,
+    pontoZonaProp,
+    capacidadeProp,
+    tarifaTransporteProp,
+    criterioLeilaoProp,
+    capacidadeMinimaProp,
+    garantiaTipo,
+    garantiaValor,
+    garantiaInstituicao,
+  ])
+
+  // Handlers para Tabela de Interesse da Etapa 1
   const adicionarLinhaInteresse = () => {
     setItensInteresse((prev) => [
       ...prev,
@@ -221,7 +470,7 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
     }
   }
 
-  const validarEtapa1 = (): string | null => {
+  const validarFormularioEtapa1 = (): string | null => {
     if (!razaoSocial.trim()) return 'Preencha a Razão Social do Carregador.'
     if (!cnpj.trim()) return 'Preencha o CNPJ do Carregador.'
     if (!contatoEmail.trim()) return 'Preencha o e-mail de contato corporativo.'
@@ -243,24 +492,22 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       !decCronogramaManif ||
       !decAssinaturaRepManif
     ) {
-      return 'É obrigatório assinalar todas as declarações regulatórias da Manifestação de Interesse.'
-    }
-
-    if (!arquivoManifAssinado) {
-      return 'Obrigatório: baixe o formulário em PDF, assine eletronicamente e anexe o PDF assinado da Manifestação de Interesse para avançar.'
+      return 'É obrigatório declarar a concordância regulatória na Manifestação de Interesse.'
     }
 
     return null
   }
 
-  const handleBaixarPdfManifestacao = async () => {
+  const handleDownloadPdfEtapa1 = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setErro(null)
-    if (!razaoSocial.trim() || !cnpj.trim() || !repNomeManif.trim() || !repCpfManif.trim()) {
-      setErro('Preencha ao menos Razão Social, CNPJ, Representante e CPF antes de gerar o PDF.')
+
+    const val = validarFormularioEtapa1()
+    if (val) {
+      setErro(val)
       toast({
-        title: 'Dados preliminares incompletos',
-        description:
-          'Preencha os campos da empresa e do representante para gerar o documento oficial.',
+        title: 'Formulário da Etapa 1 Incompleto',
+        description: val,
         variant: 'destructive',
       })
       return
@@ -270,10 +517,18 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       setGerandoPdfManif(true)
       const dados = obterDadosManifestacaoPdf()
       await gerarManifestacaoInteressePdf(dados)
-      setPdfManifGerado(true)
+      setEtapa1Concluida(true)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_etapa1_ok`, 'true')
+
+      // Sincroniza representante na etapa 2 se ainda estiver em branco
+      if (!repNomeProp.trim()) setRepNomeProp(repNomeManif)
+      if (!repCpfProp.trim()) setRepCpfProp(repCpfManif)
+      if (!repEmailProp.trim()) setRepEmailProp(repEmailManif)
+      if (!repCargoProp.trim()) setRepCargoProp(repCargoManif)
+
       toast({
-        title: 'PDF da Manifestação Gerado',
-        description: `O arquivo Manifestacao-Interesse-POC-${protocolo}.pdf foi baixado. Assine e anexe abaixo.`,
+        title: 'Etapa 1 Concluída! PDF baixado',
+        description: `O arquivo Manifestacao-Interesse-POC-${protocolo}.pdf foi baixado com sucesso. Assine digitalmente e anexe-o na Etapa 3.`,
       })
     } catch (err: any) {
       console.error('Erro ao gerar PDF da manifestação:', err)
@@ -281,27 +536,6 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
     } finally {
       setGerandoPdfManif(false)
     }
-  }
-
-  const handleAvancarParaEtapa2 = (e: React.FormEvent) => {
-    e.preventDefault()
-    setErro(null)
-    const val = validarEtapa1()
-    if (val) {
-      setErro(val)
-      toast({ title: 'Atenção', description: val, variant: 'destructive' })
-      return
-    }
-
-    // Se representante da etapa 2 estiver vazio, copia da etapa 1 por conveniência
-    if (!repNomeProp) setRepNomeProp(repNomeManif)
-    if (!repCpfProp) setRepCpfProp(repCpfManif)
-    if (!repEmailProp) setRepEmailProp(repEmailManif)
-    if (!repRgProp) setRepRgProp(repRgManif)
-    if (!repEnderecoProp) setRepEnderecoProp(repEnderecoManif)
-
-    setEtapa(2)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // -------------------------------------------------------------
@@ -320,7 +554,7 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       autorizacaoAnp: autorizacaoAnp.trim(),
       sitioEletronico: sitioEletronico.trim(),
       telefone: telefone.trim(),
-      repNome: repNomeProp.trim(),
+      repNome: repNomeProp.trim() || repNomeManif.trim(),
       repNacionalidade: repNacionalidadeProp.trim(),
       repEstadoCivil: repEstadoCivilProp.trim(),
       repDataNascimento: repDataNascimentoProp.trim(),
@@ -329,8 +563,8 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       repCredenciamento: repCredenciamentoProp.trim(),
       repRg: repRgProp.trim(),
       repOrgaoEmissor: repOrgaoEmissorProp.trim(),
-      repCpf: repCpfProp.trim(),
-      repEmail: repEmailProp.trim(),
+      repCpf: repCpfProp.trim() || repCpfManif.trim(),
+      repEmail: repEmailProp.trim() || repEmailManif.trim(),
       repEndereco: repEnderecoProp.trim() || sedeEndereco.trim(),
       contatoNome: contatoNome.trim(),
       contatoTelefone: contatoTelefone.trim(),
@@ -345,15 +579,19 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       garantiaTipo,
       garantiaValor,
       garantiaInstituicao: garantiaInstituicao.trim(),
-      garantiaArquivoNome: arquivoGarantia?.name || 'Comprovante anexo',
+      garantiaArquivoNome: arquivoGarantia?.name || 'Comprovante a anexar na Etapa 3',
       dataDocumento: new Date().toLocaleDateString('pt-BR'),
       local: 'Porto Alegre / RS',
     }
   }
 
-  const validarEtapa2 = (): string | null => {
-    if (!repNomeProp.trim()) return 'Preencha o nome do Representante Legal da Proposta.'
-    if (!repCpfProp.trim()) return 'Preencha o CPF do Representante Legal da Proposta.'
+  const validarFormularioEtapa2 = (): string | null => {
+    if (!razaoSocial.trim()) return 'Preencha a Razão Social do Carregador (na Etapa 1 ou 2).'
+    if (!cnpj.trim()) return 'Preencha o CNPJ do Carregador (na Etapa 1 ou 2).'
+    if (!repNomeProp.trim() && !repNomeManif.trim())
+      return 'Preencha o nome do Representante Legal da Proposta.'
+    if (!repCpfProp.trim() && !repCpfManif.trim())
+      return 'Preencha o CPF do Representante Legal da Proposta.'
     if (!produtoProp.trim()) return 'Informe o produto da proposta.'
     if (!pontoZonaProp.trim()) return 'Informe a Zona de Saída ou Ponto de Entrada.'
 
@@ -385,27 +623,22 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       !decExecucaoNaoAssinatura ||
       !decRegrasMasterProp
     ) {
-      return 'É obrigatório assinalar todas as declarações de compromisso vinculante e garantia financeira.'
-    }
-
-    if (!arquivoGarantia) {
-      return 'Obrigatório: anexe o Comprovante de Emissão da Garantia Financeira da Proposta (fiança, seguro ou caução).'
-    }
-
-    if (!arquivoPropAssinado) {
-      return 'Obrigatório: baixe o formulário em PDF, assine eletronicamente e anexe o PDF assinado da Proposta Garantida para avançar.'
+      return 'É obrigatório assinalar todas as declarações de compromisso vinculante.'
     }
 
     return null
   }
 
-  const handleBaixarPdfProposta = async () => {
+  const handleDownloadPdfEtapa2 = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setErro(null)
-    if (!repNomeProp.trim() || !repCpfProp.trim() || !produtoProp.trim() || !pontoZonaProp.trim()) {
-      setErro('Preencha os dados da proposta e do representante legal para gerar o PDF.')
+
+    const val = validarFormularioEtapa2()
+    if (val) {
+      setErro(val)
       toast({
-        title: 'Dados incompletos',
-        description: 'Preencha os campos obrigatórios da proposta para gerar o documento.',
+        title: 'Formulário da Etapa 2 Incompleto',
+        description: val,
         variant: 'destructive',
       })
       return
@@ -415,10 +648,12 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
       setGerandoPdfProp(true)
       const dados = obterDadosPropostaPdf()
       await gerarPropostaGarantidaPdf(dados)
-      setPdfPropGerado(true)
+      setEtapa2Concluida(true)
+      sessionStorage.setItem(`${STORAGE_KEY_FORM_POC}_etapa2_ok`, 'true')
+
       toast({
-        title: 'PDF da Proposta Gerado',
-        description: `O arquivo Proposta-Garantida-POC-${protocolo}.pdf foi baixado. Assine e anexe abaixo.`,
+        title: 'Etapa 2 Concluída! PDF baixado',
+        description: `O arquivo Proposta-Garantida-POC-${protocolo}.pdf foi baixado com sucesso. Assine digitalmente e anexe-o na Etapa 3.`,
       })
     } catch (err: any) {
       console.error('Erro ao gerar PDF da proposta:', err)
@@ -428,42 +663,49 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
     }
   }
 
-  const handleAvancarParaEtapa3 = (e: React.FormEvent) => {
+  // -------------------------------------------------------------
+  // ETAPA 3: ANEXOS E ENVIO DEFINITIVO
+  // -------------------------------------------------------------
+  const handleSubmeterDefinitivo = async (e: React.FormEvent) => {
     e.preventDefault()
     setErro(null)
-    const val = validarEtapa2()
-    if (val) {
-      setErro(val)
-      toast({ title: 'Atenção', description: val, variant: 'destructive' })
-      return
-    }
 
-    setEtapa(3)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  // -------------------------------------------------------------
-  // ETAPA 3: REVISÃO E ENVIO DEFINITIVO (SÓ DEPOIS ENVIA)
-  // -------------------------------------------------------------
-  const handleSubmeterDefinitivo = async () => {
-    setErro(null)
-
-    // Validações de integridade completas antes do envio
-    const val1 = validarEtapa1()
+    // Validações básicas de dados dos formulários
+    const val1 = validarFormularioEtapa1()
     if (val1) {
-      setEtapa(1)
-      setErro(`Etapa 1 pendente: ${val1}`)
-      return
-    }
-    const val2 = validarEtapa2()
-    if (val2) {
-      setEtapa(2)
-      setErro(`Etapa 2 pendente: ${val2}`)
+      setErro(`Formulário da Etapa 1 pendente: ${val1}`)
+      toast({ title: 'Atenção', description: `Dados da Etapa 1: ${val1}`, variant: 'destructive' })
       return
     }
 
-    if (!arquivoManifAssinado || !arquivoPropAssinado || !arquivoGarantia) {
-      setErro('Arquivos obrigatórios ausentes. Verifique os anexos das Etapas 1 e 2.')
+    const val2 = validarFormularioEtapa2()
+    if (val2) {
+      setErro(`Formulário da Etapa 2 pendente: ${val2}`)
+      toast({ title: 'Atenção', description: `Dados da Etapa 2: ${val2}`, variant: 'destructive' })
+      return
+    }
+
+    // Validação estrita dos 3 anexos na Etapa 3
+    if (!arquivoManifAssinado) {
+      const msg =
+        'Anexo Obrigatório (a): Faça o upload do PDF da Manifestação de Interesse assinado digitalmente.'
+      setErro(msg)
+      toast({ title: 'Anexo Pendente', description: msg, variant: 'destructive' })
+      return
+    }
+
+    if (!arquivoPropAssinado) {
+      const msg =
+        'Anexo Obrigatório (b): Faça o upload do PDF da Proposta Garantida assinado digitalmente.'
+      setErro(msg)
+      toast({ title: 'Anexo Pendente', description: msg, variant: 'destructive' })
+      return
+    }
+
+    if (!arquivoGarantia) {
+      const msg = `Anexo Obrigatório (c): Faça o upload do Comprovante da Garantia Financeira (${garantiaTipo}).`
+      setErro(msg)
+      toast({ title: 'Comprovante Pendente', description: msg, variant: 'destructive' })
       return
     }
 
@@ -492,8 +734,8 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
         arquivo_manifestacao_assinada: arquivoManifAssinado,
         dados_manifestacao: dadosManifJson,
         // Etapa 2
-        rep_legal_nome: repNomeProp.trim(),
-        rep_legal_cpf: repCpfProp.trim(),
+        rep_legal_nome: repNomeProp.trim() || repNomeManif.trim(),
+        rep_legal_cpf: repCpfProp.trim() || repCpfManif.trim(),
         produto_proposta: produtoProp.trim(),
         ponto_zona_proposta: pontoZonaProp.trim(),
         capacidade_proposta: Number(capacidadeProp) || 0,
@@ -510,9 +752,18 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
         origem: 'area_carregador',
       })
 
+      // Limpar rascunho da sessão
+      try {
+        sessionStorage.removeItem(`${STORAGE_KEY_FORM_POC}_protocolo`)
+        sessionStorage.removeItem(`${STORAGE_KEY_FORM_POC}_etapa1_ok`)
+        sessionStorage.removeItem(`${STORAGE_KEY_FORM_POC}_etapa2_ok`)
+      } catch {
+        /* intentionally ignored */
+      }
+
       toast({
-        title: 'Submissão Concluída com Sucesso!',
-        description: `Protocolo único gerado: ${novaSubmissao.protocolo}. Comprovante enviado ao seu e-mail corporativo.`,
+        title: 'Processo Concluído com Sucesso!',
+        description: `Protocolo único gerado: ${novaSubmissao.protocolo}. O comprovante foi enviado ao seu e-mail corporativo.`,
       })
 
       onSucesso(novaSubmissao)
@@ -527,7 +778,6 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
     }
   }
 
-  // Capacidade total manifestada para resumo
   const capacidadeTotalManifestada = itensInteresse.reduce(
     (acc, it) => acc + (Number(it.capacidade) || 0),
     0,
@@ -545,658 +795,1146 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
           className="w-fit text-xs text-slate-600 hover:text-[#0a2540] border-slate-300"
         >
           <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-          Voltar para Visão Geral do POC
+          Voltar para Visão Geral e Meus Protocolos
         </Button>
         <div className="flex items-center gap-2">
           <Badge className="bg-[#0a2540] text-white text-xs font-mono px-3 py-1 tracking-wide">
-            Protocolo da Submissão: {protocolo}
+            Protocolo do Processo: {protocolo}
           </Badge>
-          <span className="text-[11px] px-2.5 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-200 font-semibold uppercase">
-            Fluxo Único Sequencial
+          <span className="text-[11px] px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold uppercase">
+            3 Etapas Independentes
           </span>
         </div>
       </div>
 
-      {/* CABEÇALHO DO PROCESSO */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
-            Processo Sequencial POC · Art. 37-A
-          </span>
-          <span className="text-[11px] font-semibold text-slate-500">
-            Resolução ANP nº 961/2023 · Ciclo 2026/2027
-          </span>
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display">
-          Submissão Integrada de Capacidade de Transporte
-        </h2>
-        <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
-          Processo guiado e unificado em 3 etapas sequenciais: primeiro preencha e anexe o PDF
-          assinado de <strong>Manifestação de Interesse</strong> (Etapa 1), depois preencha e anexe
-          a <strong>Proposta Garantida</strong> com o comprovante de garantia (Etapa 2), e na
-          revisão final confirme o envio para geração e expedição imediata do seu{' '}
-          <strong>protocolo por e-mail</strong>.
-        </p>
-      </div>
+      {/* 1. BLOCO DO TOPO: EXPLICAÇÃO DO FLUXO DO PROCESSO (CLARO E SUCINTO) */}
+      <Card className="border border-slate-200 bg-white shadow-xs">
+        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/70">
+          <div className="flex items-center gap-2 text-[#0a2540]">
+            <HelpCircle className="h-4 w-4 text-[#0284c7]" />
+            <CardTitle className="text-sm font-bold font-display uppercase tracking-wider text-[#0a2540]">
+              Explicação do Fluxo do Processo (POC · Res. ANP nº 961/2023)
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs text-slate-600">
+            Cada etapa é independente para seu preenchimento e download. O envio definitivo acontece
+            apenas na Etapa 3.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                  <span className="h-5 w-5 rounded-full bg-[#0a2540] text-white text-[10px] flex items-center justify-center font-bold">
+                    1
+                  </span>
+                  Etapa 1: Manifestação
+                </span>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] border-sky-300 text-sky-800 bg-sky-50"
+                >
+                  Preencher + Baixar PDF
+                </Badge>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Preencha os dados do Carregador e a Tabela de Interesse em Capacidade Firme. Faça o
+                download do PDF oficial preenchido. <strong>A etapa se encerra no download</strong>.
+              </p>
+            </div>
 
-      {/* INDICADOR VISUAL DAS 3 ETAPAS SEQUENCIAIS */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                  <span className="h-5 w-5 rounded-full bg-[#0a2540] text-white text-[10px] flex items-center justify-center font-bold">
+                    2
+                  </span>
+                  Etapa 2: Proposta Garantida
+                </span>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] border-amber-300 text-amber-800 bg-amber-50"
+                >
+                  Preencher + Baixar PDF
+                </Badge>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Preencha a proposta com critério de leilão ascendente e dados da Garantia
+                Financeira. Faça o download do PDF preenchido. <strong>Também independente</strong>.
+              </p>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#0a2540] flex items-center gap-1.5">
+                  <span className="h-5 w-5 rounded-full bg-emerald-700 text-white text-[10px] flex items-center justify-center font-bold">
+                    3
+                  </span>
+                  Etapa 3: Anexos e Envio
+                </span>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] border-emerald-300 text-emerald-800 bg-emerald-50"
+                >
+                  Envio e Protocolo
+                </Badge>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Anexe os dois PDFs assinados digitalmente e o comprovante da Garantia (fiança,
+                seguro ou caução).{' '}
+                <strong>O processo encerra aqui e você recebe o protocolo por e-mail</strong>.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SELETOR DAS 3 ETAPAS INDEPENDENTES */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* ETAPA 1 */}
-        <div
+        <button
+          type="button"
           onClick={() => setEtapa(1)}
-          className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${
+          className={`text-left p-3.5 rounded-lg border transition-all flex items-start gap-3 cursor-pointer ${
             etapa === 1
-              ? 'bg-sky-50/70 border-[#0284c7] ring-1 ring-[#0284c7]'
-              : arquivoManifAssinado
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-white border-slate-200 opacity-80'
+              ? 'bg-sky-50/80 border-[#0284c7] ring-1 ring-[#0284c7]'
+              : 'bg-white hover:bg-slate-50 border-slate-200'
           }`}
         >
           <div
-            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-              arquivoManifAssinado
+            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+              etapa1Concluida
                 ? 'bg-emerald-600 text-white'
                 : etapa === 1
                   ? 'bg-[#0284c7] text-white'
                   : 'bg-slate-200 text-slate-700'
             }`}
           >
-            {arquivoManifAssinado ? <Check className="h-4 w-4" /> : '1'}
+            {etapa1Concluida ? <Check className="h-4 w-4" /> : '1'}
           </div>
           <div className="space-y-0.5 min-w-0">
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
-              Etapa 1
+              Etapa 1 (Independente)
             </span>
             <strong className="text-xs text-[#0a2540] block truncate">
               Manifestação de Interesse
             </strong>
             <span className="text-[10px] text-slate-500 block">
-              {arquivoManifAssinado ? '✓ PDF assinado anexado' : 'Formulário + Anexo'}
+              {etapa1Concluida ? '✓ PDF preenchido e baixado' : 'Formulário + Download PDF'}
             </span>
           </div>
-        </div>
+        </button>
 
         {/* ETAPA 2 */}
-        <div
-          onClick={() => {
-            const val1 = validarEtapa1()
-            if (!val1) setEtapa(2)
-            else {
-              setErro('Conclua e anexe a Manifestação de Interesse (Etapa 1) para avançar.')
-              setEtapa(1)
-            }
-          }}
-          className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${
+        <button
+          type="button"
+          onClick={() => setEtapa(2)}
+          className={`text-left p-3.5 rounded-lg border transition-all flex items-start gap-3 cursor-pointer ${
             etapa === 2
-              ? 'bg-sky-50/70 border-[#0284c7] ring-1 ring-[#0284c7]'
-              : arquivoPropAssinado && arquivoGarantia
-                ? 'bg-emerald-50/50 border-emerald-200'
-                : 'bg-white border-slate-200 opacity-80'
+              ? 'bg-sky-50/80 border-[#0284c7] ring-1 ring-[#0284c7]'
+              : 'bg-white hover:bg-slate-50 border-slate-200'
           }`}
         >
           <div
-            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-              arquivoPropAssinado && arquivoGarantia
+            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+              etapa2Concluida
                 ? 'bg-emerald-600 text-white'
                 : etapa === 2
                   ? 'bg-[#0284c7] text-white'
                   : 'bg-slate-200 text-slate-700'
             }`}
           >
-            {arquivoPropAssinado && arquivoGarantia ? <Check className="h-4 w-4" /> : '2'}
+            {etapa2Concluida ? <Check className="h-4 w-4" /> : '2'}
           </div>
           <div className="space-y-0.5 min-w-0">
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
-              Etapa 2
+              Etapa 2 (Independente)
             </span>
             <strong className="text-xs text-[#0a2540] block truncate">Proposta Garantida</strong>
             <span className="text-[10px] text-slate-500 block">
-              {arquivoPropAssinado && arquivoGarantia
-                ? '✓ Proposta + Garantia anexadas'
-                : 'Garantia + PDF assinado'}
+              {etapa2Concluida ? '✓ PDF preenchido e baixado' : 'Formulário + Download PDF'}
             </span>
           </div>
-        </div>
+        </button>
 
         {/* ETAPA 3 */}
-        <div
-          onClick={() => {
-            const val1 = validarEtapa1()
-            const val2 = validarEtapa2()
-            if (!val1 && !val2) setEtapa(3)
-            else if (val1) {
-              setErro('Conclua e anexe a Manifestação de Interesse (Etapa 1).')
-              setEtapa(1)
-            } else {
-              setErro('Conclua e anexe a Proposta e Comprovante de Garantia (Etapa 2).')
-              setEtapa(2)
-            }
-          }}
-          className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${
+        <button
+          type="button"
+          onClick={() => setEtapa(3)}
+          className={`text-left p-3.5 rounded-lg border transition-all flex items-start gap-3 cursor-pointer ${
             etapa === 3
-              ? 'bg-sky-50/70 border-[#0284c7] ring-1 ring-[#0284c7]'
-              : 'bg-white border-slate-200 opacity-80'
+              ? 'bg-sky-50/80 border-[#0284c7] ring-1 ring-[#0284c7]'
+              : 'bg-white hover:bg-slate-50 border-slate-200'
           }`}
         >
           <div
-            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-              etapa === 3 ? 'bg-[#0284c7] text-white' : 'bg-slate-200 text-slate-700'
+            className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+              etapa === 3 ? 'bg-[#0a2540] text-white' : 'bg-slate-200 text-slate-700'
             }`}
           >
             3
           </div>
           <div className="space-y-0.5 min-w-0">
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 block">
-              Etapa 3
+              Etapa 3 (Final)
             </span>
-            <strong className="text-xs text-[#0a2540] block truncate">Revisão e Envio</strong>
-            <span className="text-[10px] text-slate-500 block">Protocolo na tela e e-mail</span>
+            <strong className="text-xs text-[#0a2540] block truncate">
+              Anexos e Envio Definitivo
+            </strong>
+            <span className="text-[10px] text-slate-500 block">PDFs assinados + Comprovante</span>
           </div>
-        </div>
+        </button>
       </div>
 
       {erro && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-xs text-red-900 flex items-start gap-2.5 animate-shake">
           <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <strong className="font-semibold block">Pendência para prosseguir:</strong>
+            <strong className="font-semibold block">Pendência identificada:</strong>
             <span>{erro}</span>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* ETAPA 1: MANIFESTAÇÃO DE INTERESSE */}
+      {/* ETAPA 1 — MANIFESTAÇÃO DE INTERESSE (INDEPENDENTE) */}
       {/* ========================================================================= */}
       {etapa === 1 && (
-        <form onSubmit={handleAvancarParaEtapa2} className="space-y-6">
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                  1.1 Identificação do Interessado (Carregador Habilitado)
-                </CardTitle>
-                <span className="text-[11px] text-slate-500">Campos obrigatórios (*)</span>
-              </div>
-              <CardDescription className="text-xs text-slate-500">
-                Dados cadastrais da pessoa jurídica requerente do ciclo POC
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Razão Social *</Label>
-                  <Input
-                    value={razaoSocial}
-                    onChange={(e) => setRazaoSocial(e.target.value)}
-                    placeholder="Nome empresarial completo"
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">CNPJ / MF *</Label>
-                  <Input
-                    value={cnpj}
-                    onChange={(e) => setCnpj(e.target.value)}
-                    placeholder="00.000.000/0000-00"
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Sede / Endereço *</Label>
-                  <Input
-                    value={sedeEndereco}
-                    onChange={(e) => setSedeEndereco(e.target.value)}
-                    placeholder="Logradouro, número, complemento, bairro, cidade - UF, CEP"
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Inscrição Estadual</Label>
-                  <Input
-                    value={inscricaoEstadual}
-                    onChange={(e) => setInscricaoEstadual(e.target.value)}
-                    placeholder="Inscrição Estadual"
-                    className="text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Atividade Principal
-                  </Label>
-                  <Input
-                    value={atividadePrincipal}
-                    onChange={(e) => setAtividadePrincipal(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">CNAE Principal</Label>
-                  <Input
-                    value={codigoCnae}
-                    onChange={(e) => setCodigoCnae(e.target.value)}
-                    className="text-xs font-mono"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Registro / Aut. ANP
-                  </Label>
-                  <Input
-                    value={autorizacaoAnp}
-                    onChange={(e) => setAutorizacaoAnp(e.target.value)}
-                    placeholder="Nº da Autorização ANP"
-                    className="text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Telefone</Label>
-                  <Input
-                    value={telefone}
-                    onChange={(e) => setTelefone(e.target.value)}
-                    placeholder="(00) 0000-0000"
-                    className="text-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Website Oficial</Label>
-                  <Input
-                    value={sitioEletronico}
-                    onChange={(e) => setSitioEletronico(e.target.value)}
-                    placeholder="https://..."
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* REPRESENTANTE AUTORIZADO - ETAPA 1 */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                1.2 Representante Autorizado da Manifestação
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Pessoa física investida de poderes para subscrever a Manifestação de Interesse
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Nome Completo *</Label>
-                  <Input
-                    value={repNomeManif}
-                    onChange={(e) => setRepNomeManif(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">CPF *</Label>
-                  <Input
-                    value={repCpfManif}
-                    onChange={(e) => setRepCpfManif(e.target.value)}
-                    placeholder="000.000.000-00"
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Cargo / Função *</Label>
-                  <Input
-                    value={repCargoManif}
-                    onChange={(e) => setRepCargoManif(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Profissão</Label>
-                  <Input
-                    value={repProfissaoManif}
-                    onChange={(e) => setRepProfissaoManif(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    E-mail do Representante *
-                  </Label>
-                  <Input
-                    type="email"
-                    value={repEmailManif}
-                    onChange={(e) => setRepEmailManif(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">RG</Label>
-                  <Input
-                    value={repRgManif}
-                    onChange={(e) => setRepRgManif(e.target.value)}
-                    className="text-xs font-mono"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Órgão Emissor</Label>
-                  <Input
-                    value={repOrgaoEmissorManif}
-                    onChange={(e) => setRepOrgaoEmissorManif(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Nacionalidade / Estado Civil
-                  </Label>
-                  <Input
-                    value={`${repNacionalidadeManif}, ${repEstadoCivilManif}`}
-                    onChange={(e) => setRepNacionalidadeManif(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">
-                  Endereço Comercial do Representante
-                </Label>
-                <Input
-                  value={repEnderecoManif}
-                  onChange={(e) => setRepEnderecoManif(e.target.value)}
-                  placeholder="Se diferente da sede do carregador"
-                  className="text-xs"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* INFORMAÇÕES DE CONTATO GERAL */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                1.3 Canal de Notificações Oficiais da Submissão
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Endereço de e-mail corporativo para onde será expedido o protocolo formal
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Pessoa de Contato *
-                  </Label>
-                  <Input
-                    value={contatoNome}
-                    onChange={(e) => setContatoNome(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    E-mail para Protocolo *
-                  </Label>
-                  <Input
-                    type="email"
-                    value={contatoEmail}
-                    onChange={(e) => setContatoEmail(e.target.value)}
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Telefone de Contato
-                  </Label>
-                  <Input
-                    value={contatoTelefone}
-                    onChange={(e) => setContatoTelefone(e.target.value)}
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* TABELA DE INTERESSE */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60 flex flex-row items-center justify-between">
+        <div className="space-y-6">
+          <div className="p-4 bg-sky-50 border border-sky-200 rounded-lg flex items-start justify-between gap-3 text-xs">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
               <div>
+                <strong className="font-semibold text-slate-900 block">
+                  Etapa 1: Preencha o Formulário e Baixe o PDF
+                </strong>
+                <span className="text-slate-600">
+                  Preencha os campos abaixo com os dados cadastrais da empresa e a estimativa de
+                  demanda por capacidade firme. Ao clicar em "Baixar PDF da Manifestação de
+                  Interesse", o arquivo preenchido será baixado e esta etapa se encerra. Não é
+                  necessário anexar nada aqui.
+                </span>
+              </div>
+            </div>
+            {etapa1Concluida && (
+              <Badge className="bg-emerald-600 text-white shrink-0 text-[10px]">PDF Baixado</Badge>
+            )}
+          </div>
+
+          <form onSubmit={handleDownloadPdfEtapa1} className="space-y-6">
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                    1.1 Identificação do Carregador Habilitado
+                  </CardTitle>
+                  <span className="text-[11px] text-slate-500">Campos obrigatórios (*)</span>
+                </div>
+                <CardDescription className="text-xs text-slate-500">
+                  Dados societários e cadastrais do agente requerente
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Razão Social *</Label>
+                    <Input
+                      value={razaoSocial}
+                      onChange={(e) => setRazaoSocial(e.target.value)}
+                      placeholder="Nome empresarial completo"
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">CNPJ / MF *</Label>
+                    <Input
+                      value={cnpj}
+                      onChange={(e) => setCnpj(e.target.value)}
+                      placeholder="00.000.000/0000-00"
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Sede / Endereço *
+                    </Label>
+                    <Input
+                      value={sedeEndereco}
+                      onChange={(e) => setSedeEndereco(e.target.value)}
+                      placeholder="Logradouro, número, complemento, bairro, cidade - UF, CEP"
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Inscrição Estadual
+                    </Label>
+                    <Input
+                      value={inscricaoEstadual}
+                      onChange={(e) => setInscricaoEstadual(e.target.value)}
+                      placeholder="Inscrição Estadual"
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Atividade Principal
+                    </Label>
+                    <Input
+                      value={atividadePrincipal}
+                      onChange={(e) => setAtividadePrincipal(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">CNAE Principal</Label>
+                    <Input
+                      value={codigoCnae}
+                      onChange={(e) => setCodigoCnae(e.target.value)}
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Registro / Aut. ANP
+                    </Label>
+                    <Input
+                      value={autorizacaoAnp}
+                      onChange={(e) => setAutorizacaoAnp(e.target.value)}
+                      placeholder="Nº da Autorização ANP"
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Telefone Corporativo
+                    </Label>
+                    <Input
+                      value={telefone}
+                      onChange={(e) => setTelefone(e.target.value)}
+                      placeholder="(00) 0000-0000"
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Website Oficial</Label>
+                    <Input
+                      value={sitioEletronico}
+                      onChange={(e) => setSitioEletronico(e.target.value)}
+                      placeholder="https://..."
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* REPRESENTANTE AUTORIZADO - ETAPA 1 */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
                 <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                  1.4 Tabela de Interesse em Capacidade Firme
+                  1.2 Representante Autorizado da Manifestação
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500">
-                  Pontos de entrada ou zonas de saída pretendidos no gasoduto TSB
+                  Pessoa física investida de poderes para subscrever a Manifestação de Interesse
                 </CardDescription>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={adicionarLinhaInteresse}
-                className="text-xs h-7 border-slate-300"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Adicionar Ponto/Zona
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              <div className="space-y-3">
-                {itensInteresse.map((it, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-700">Item #{idx + 1}</span>
-                      {itensInteresse.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removerLinhaInteresse(idx)}
-                          className="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px]"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Remover
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      <div className="space-y-1 sm:col-span-1">
-                        <Label className="text-[11px] font-semibold text-slate-700">
-                          Ponto / Zona de Transporte *
-                        </Label>
-                        <Input
-                          value={it.pontoZona}
-                          onChange={(e) => atualizarItemInteresse(idx, 'pontoZona', e.target.value)}
-                          className="text-xs bg-white"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-1 sm:col-span-1">
-                        <Label className="text-[11px] font-semibold text-slate-700">
-                          Produto *
-                        </Label>
-                        <Input
-                          value={it.produto}
-                          onChange={(e) => atualizarItemInteresse(idx, 'produto', e.target.value)}
-                          className="text-xs bg-white"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-1 sm:col-span-1">
-                        <Label className="text-[11px] font-semibold text-slate-700">
-                          Capacidade (mil m³/dia) *
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0.1"
-                          value={it.capacidade}
-                          onChange={(e) =>
-                            atualizarItemInteresse(
-                              idx,
-                              'capacidade',
-                              parseFloat(e.target.value) || 0,
-                            )
-                          }
-                          className="text-xs font-mono bg-white"
-                          required
-                        />
-                      </div>
-                    </div>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Nome Completo *</Label>
+                    <Input
+                      value={repNomeManif}
+                      onChange={(e) => setRepNomeManif(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
                   </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end pt-2 text-xs font-medium text-slate-700">
-                Capacidade Total Manifestada:{' '}
-                <strong className="text-[#0a2540] ml-1.5 font-mono">
-                  {capacidadeTotalManifestada.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}{' '}
-                  mil m³/dia
-                </strong>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* DECLARAÇÕES DA MANIFESTAÇÃO */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                1.5 Declarações Regulatórias da Manifestação
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              {[
-                {
-                  id: 'decM1',
-                  state: decRegrasMasterManif,
-                  setter: setDecRegrasMasterManif,
-                  text: 'Declara estar ciente e de pleno acordo com as regras apresentadas no Contrato Master e no edital do POC da TSB.',
-                },
-                {
-                  id: 'decM2',
-                  state: decCamposObrigatoriosManif,
-                  setter: setDecCamposObrigatoriosManif,
-                  text: 'Declara que preencherá os campos obrigatórios de solicitação de capacidade no POC, inclusive quanto aos diferentes níveis tarifários.',
-                },
-                {
-                  id: 'decM3',
-                  state: decCapacidadeMaiorZeroManif,
-                  setter: setDecCapacidadeMaiorZeroManif,
-                  text: 'Declara que a capacidade solicitada é estritamente superior a zero e reflete a demanda estimada da sociedade.',
-                },
-                {
-                  id: 'decM4',
-                  state: decCronogramaManif,
-                  setter: setDecCronogramaManif,
-                  text: 'Declara compromisso com o cumprimento integral das datas e prazos estabelecidos no cronograma oficial homologado pela ANP.',
-                },
-                {
-                  id: 'decM5',
-                  state: decAssinaturaRepManif,
-                  setter: setDecAssinaturaRepManif,
-                  text: 'Declara que o formulário foi subscrito por representante autorizado com poderes societários válidos e vigentes.',
-                },
-              ].map((dec) => (
-                <div key={dec.id} className="flex items-start gap-2.5">
-                  <Checkbox
-                    id={dec.id}
-                    checked={dec.state}
-                    onCheckedChange={(v) => dec.setter(Boolean(v))}
-                    className="mt-0.5"
-                  />
-                  <label
-                    htmlFor={dec.id}
-                    className="text-xs text-slate-700 leading-relaxed cursor-pointer select-none"
-                  >
-                    {dec.text}
-                  </label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">CPF *</Label>
+                    <Input
+                      value={repCpfManif}
+                      onChange={(e) => setRepCpfManif(e.target.value)}
+                      placeholder="000.000.000-00"
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
 
-          {/* GERAÇÃO E ANEXO DO PDF DA MANIFESTAÇÃO */}
-          <Card className="border-2 border-[#0284c7]/40 bg-sky-50/30 shadow-xs">
-            <CardHeader className="pb-3 border-b border-sky-100 bg-white">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
-                <FileText className="h-4 w-4 text-[#0284c7]" />
-                1.6 Geração, Assinatura e Anexo do PDF da Manifestação
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-600">
-                Baixe o formulário oficial preenchido, assine eletronicamente fora do sistema e
-                anexe o PDF assinado. O envio final acontecerá na Etapa 3.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="p-4 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Cargo / Função *</Label>
+                    <Input
+                      value={repCargoManif}
+                      onChange={(e) => setRepCargoManif(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Profissão</Label>
+                    <Input
+                      value={repProfissaoManif}
+                      onChange={(e) => setRepProfissaoManif(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      E-mail Corporativo *
+                    </Label>
+                    <Input
+                      type="email"
+                      value={repEmailManif}
+                      onChange={(e) => setRepEmailManif(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">RG</Label>
+                    <Input
+                      value={repRgManif}
+                      onChange={(e) => setRepRgManif(e.target.value)}
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Órgão Emissor</Label>
+                    <Input
+                      value={repOrgaoEmissorManif}
+                      onChange={(e) => setRepOrgaoEmissorManif(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Nacionalidade / Estado Civil
+                    </Label>
+                    <Input
+                      value={`${repNacionalidadeManif}, ${repEstadoCivilManif}`}
+                      onChange={(e) => setRepNacionalidadeManif(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* CONTATO GERAL */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                  1.3 Canal de Notificações Oficiais
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Endereço corporativo que receberá o protocolo oficial da submissão
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Pessoa de Contato *
+                    </Label>
+                    <Input
+                      value={contatoNome}
+                      onChange={(e) => setContatoNome(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      E-mail para Protocolo *
+                    </Label>
+                    <Input
+                      type="email"
+                      value={contatoEmail}
+                      onChange={(e) => setContatoEmail(e.target.value)}
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Telefone de Contato
+                    </Label>
+                    <Input
+                      value={contatoTelefone}
+                      onChange={(e) => setContatoTelefone(e.target.value)}
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* TABELA DE INTERESSE */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60 flex flex-row items-center justify-between">
                 <div>
-                  <strong className="text-xs font-bold text-[#0a2540] block">
-                    Passo A: Baixar o Formulário Oficial Preenchido
-                  </strong>
-                  <span className="text-[11px] text-slate-500">
-                    Gera o modelo oficial com protocolo provisório {protocolo}
-                  </span>
+                  <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                    1.4 Tabela de Demanda por Capacidade Firme
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500">
+                    Pontos de entrada ou zonas de saída pretendidos no gasoduto TSB
+                  </CardDescription>
                 </div>
                 <Button
                   type="button"
-                  onClick={handleBaixarPdfManifestacao}
+                  variant="outline"
+                  size="sm"
+                  onClick={adicionarLinhaInteresse}
+                  className="text-xs h-7 border-slate-300"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Adicionar Linha
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <div className="space-y-3">
+                  {itensInteresse.map((it, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-700">Item #{idx + 1}</span>
+                        {itensInteresse.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removerLinhaInteresse(idx)}
+                            className="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px]"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Remover
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-semibold text-slate-700">
+                            Ponto / Zona *
+                          </Label>
+                          <Input
+                            value={it.pontoZona}
+                            onChange={(e) =>
+                              atualizarItemInteresse(idx, 'pontoZona', e.target.value)
+                            }
+                            className="text-xs bg-white"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-semibold text-slate-700">
+                            Produto *
+                          </Label>
+                          <Input
+                            value={it.produto}
+                            onChange={(e) => atualizarItemInteresse(idx, 'produto', e.target.value)}
+                            className="text-xs bg-white"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] font-semibold text-slate-700">
+                            Capacidade (mil m³/dia) *
+                          </Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            value={it.capacidade}
+                            onChange={(e) =>
+                              atualizarItemInteresse(
+                                idx,
+                                'capacidade',
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            className="text-xs font-mono bg-white"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end pt-2 text-xs font-medium text-slate-700">
+                  Capacidade Total Manifestada:{' '}
+                  <strong className="text-[#0a2540] ml-1.5 font-mono">
+                    {capacidadeTotalManifestada.toLocaleString('pt-BR', {
+                      minimumFractionDigits: 1,
+                    })}{' '}
+                    mil m³/dia
+                  </strong>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DECLARAÇÕES */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                  1.5 Declarações Regulatórias
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                {[
+                  {
+                    id: 'decM1',
+                    state: decRegrasMasterManif,
+                    setter: setDecRegrasMasterManif,
+                    text: 'Declara estar ciente e de pleno acordo com as regras apresentadas no Contrato Master e no edital do POC da TSB.',
+                  },
+                  {
+                    id: 'decM2',
+                    state: decCamposObrigatoriosManif,
+                    setter: setDecCamposObrigatoriosManif,
+                    text: 'Declara que preencherá os campos obrigatórios de solicitação de capacidade no POC, inclusive quanto aos diferentes níveis tarifários.',
+                  },
+                  {
+                    id: 'decM3',
+                    state: decCapacidadeMaiorZeroManif,
+                    setter: setDecCapacidadeMaiorZeroManif,
+                    text: 'Declara que a capacidade solicitada é estritamente superior a zero e reflete a demanda estimada.',
+                  },
+                  {
+                    id: 'decM4',
+                    state: decCronogramaManif,
+                    setter: setDecCronogramaManif,
+                    text: 'Declara compromisso com o cumprimento dos prazos estabelecidos no cronograma oficial do POC.',
+                  },
+                  {
+                    id: 'decM5',
+                    state: decAssinaturaRepManif,
+                    setter: setDecAssinaturaRepManif,
+                    text: 'Declara que o documento será subscrito por representante com poderes societários válidos.',
+                  },
+                ].map((dec) => (
+                  <div key={dec.id} className="flex items-start gap-2.5">
+                    <Checkbox
+                      id={dec.id}
+                      checked={dec.state}
+                      onCheckedChange={(v) => dec.setter(Boolean(v))}
+                      className="mt-0.5"
+                    />
+                    <label
+                      htmlFor={dec.id}
+                      className="text-xs text-slate-700 leading-relaxed cursor-pointer select-none"
+                    >
+                      {dec.text}
+                    </label>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* BOTÃO DE CONCLUSÃO DA ETAPA 1 (DOWNLOAD EM PDF) */}
+            <div className="p-5 bg-sky-50 border-2 border-sky-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div>
+                <strong className="text-sm font-bold text-[#0a2540] block">
+                  Conclusão da Etapa 1: Download do PDF Oficial
+                </strong>
+                <p className="text-xs text-slate-600">
+                  A Etapa 1 encerra com o download do documento gerado. Você deverá assiná-lo
+                  digitalmente e anexá-lo na Etapa 3.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="submit"
                   disabled={gerandoPdfManif}
-                  className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0"
+                  className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-6 py-2.5 h-auto shrink-0 shadow-sm cursor-pointer"
                 >
                   {gerandoPdfManif ? (
                     <>
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Gerando...
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando PDF...
                     </>
                   ) : (
                     <>
-                      <Download className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
-                      Baixar PDF Preenchido
+                      <Download className="h-4 w-4 mr-2 text-sky-300" />
+                      Baixar PDF da Manifestação de Interesse
                     </>
                   )}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEtapa(2)}
+                  className="text-xs h-auto py-2.5 border-slate-300"
+                >
+                  Ir para Etapa 2
+                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
               </div>
+            </div>
+          </form>
+        </div>
+      )}
 
-              <div className="p-4 bg-white border border-slate-200 rounded-lg space-y-2">
+      {/* ========================================================================= */}
+      {/* ETAPA 2 — PROPOSTA GARANTIDA (INDEPENDENTE) */}
+      {/* ========================================================================= */}
+      {etapa === 2 && (
+        <div className="space-y-6">
+          <div className="p-4 bg-sky-50 border border-sky-200 rounded-lg flex items-start justify-between gap-3 text-xs">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-semibold text-slate-900 block">
+                  Etapa 2: Preencha a Proposta Garantida e Baixe o PDF
+                </strong>
+                <span className="text-slate-600">
+                  Defina os parâmetros de capacidade, regra de leilão ascendente e modalidade de
+                  garantia financeira. Ao clicar em "Baixar PDF da Proposta Garantida", o documento
+                  oficial será gerado e esta etapa se encerra. O comprovante e os PDFs serão
+                  anexados juntos na Etapa 3.
+                </span>
+              </div>
+            </div>
+            {etapa2Concluida && (
+              <Badge className="bg-emerald-600 text-white shrink-0 text-[10px]">PDF Baixado</Badge>
+            )}
+          </div>
+
+          <form onSubmit={handleDownloadPdfEtapa2} className="space-y-6">
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
                 <div className="flex items-center justify-between">
-                  <strong className="text-xs font-bold text-[#0a2540] block">
-                    Passo B: Anexar o PDF da Manifestação Assinado *
-                  </strong>
+                  <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                    2.1 Representante Legal para Obrigações Vinculantes
+                  </CardTitle>
+                  <span className="text-[11px] text-red-800 bg-red-50 px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-red-200">
+                    Compromisso Vinculante
+                  </span>
+                </div>
+                <CardDescription className="text-xs text-slate-500">
+                  Representante com poderes societários ou procuração expressa para aporte de
+                  garantias
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Nome do Representante Legal *
+                    </Label>
+                    <Input
+                      value={repNomeProp}
+                      onChange={(e) => setRepNomeProp(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">CPF *</Label>
+                    <Input
+                      value={repCpfProp}
+                      onChange={(e) => setRepCpfProp(e.target.value)}
+                      placeholder="000.000.000-00"
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Cargo / Função *</Label>
+                    <Input
+                      value={repCargoProp}
+                      onChange={(e) => setRepCargoProp(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      RG / Órgão Emissor
+                    </Label>
+                    <Input
+                      value={`${repRgProp} ${repOrgaoEmissorProp}`}
+                      onChange={(e) => setRepRgProp(e.target.value)}
+                      className="text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      E-mail Corporativo *
+                    </Label>
+                    <Input
+                      type="email"
+                      value={repEmailProp}
+                      onChange={(e) => setRepEmailProp(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DADOS DA PROPOSTA FIRME */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                  2.2 Parâmetros da Proposta e Critério de Leilão Ascendente
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Produto, capacidade diária solicitada e regra em caso de leilão ascendente (Art.
+                  37-A, §5º, III)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Produto da Proposta *
+                    </Label>
+                    <Input
+                      value={produtoProp}
+                      onChange={(e) => setProdutoProp(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">Ponto / Zona *</Label>
+                    <Input
+                      value={pontoZonaProp}
+                      onChange={(e) => setPontoZonaProp(e.target.value)}
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Capacidade Firme Proposta (mil m³/dia) *
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={capacidadeProp}
+                      onChange={(e) => setCapacidadeProp(e.target.value)}
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Tarifa de Referência Aceita (R$/MMBtu) *
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      value={tarifaTransporteProp}
+                      onChange={(e) => setTarifaTransporteProp(e.target.value)}
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* CRITÉRIO DE LEILÃO ASCENDENTE */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                  <Label className="text-xs font-semibold text-slate-800 block">
+                    Regra em Caso de Rateio / Leilão Ascendente (Art. 37-A, § 5º, III):
+                  </Label>
+                  <RadioGroup
+                    value={criterioLeilaoProp}
+                    onValueChange={(v) => setCriterioLeilaoProp(v as CriterioLeilaoTipo)}
+                    className="space-y-2 text-xs"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="parcialmente" id="crit1" />
+                      <Label htmlFor="crit1" className="cursor-pointer text-xs font-normal">
+                        Aceita alocação proporcional / parcial da capacidade proposta
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="minima" id="crit2" />
+                      <Label htmlFor="crit2" className="cursor-pointer text-xs font-normal">
+                        Aceita alocação parcial desde que superior à Capacidade Mínima
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="totalmente" id="crit3" />
+                      <Label htmlFor="crit3" className="cursor-pointer text-xs font-normal">
+                        Condiciona a proposta à alocação 100% integral (tudo ou nada)
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {criterioLeilaoProp === 'minima' && (
+                    <div className="pt-2 max-w-xs space-y-1">
+                      <Label className="text-[11px] font-semibold text-slate-700">
+                        Capacidade Mínima Aceita (mil m³/dia) *
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        value={capacidadeMinimaProp}
+                        onChange={(e) => setCapacidadeMinimaProp(e.target.value)}
+                        className="text-xs font-mono bg-white"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DADOS DA GARANTIA FINANCEIRA */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                  2.3 Definição da Garantia Financeira da Proposta
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Selecione a modalidade e informe o valor caucionado da garantia (o upload do
+                  comprovante será feito na Etapa 3)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Modalidade de Garantia *
+                    </Label>
+                    <select
+                      value={garantiaTipo}
+                      onChange={(e) => setGarantiaTipo(e.target.value as GarantiaTipo)}
+                      className="w-full h-9 rounded-md border border-slate-300 bg-white px-3 py-1 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0284c7]"
+                      required
+                    >
+                      <option value="Fiança Bancária">Fiança Bancária</option>
+                      <option value="Seguro Garantia">Seguro Garantia</option>
+                      <option value="Depósito Caução">Depósito Caução</option>
+                      <option value="Carta de Crédito">Carta de Crédito</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Valor da Garantia (R$) *
+                    </Label>
+                    <Input
+                      type="number"
+                      step="1000"
+                      min="1"
+                      value={garantiaValor}
+                      onChange={(e) => setGarantiaValor(e.target.value)}
+                      className="text-xs font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Instituição Emissora / Apólice *
+                    </Label>
+                    <Input
+                      value={garantiaInstituicao}
+                      onChange={(e) => setGarantiaInstituicao(e.target.value)}
+                      placeholder="Ex: Banco do Brasil / Carta de Fiança"
+                      className="text-xs"
+                      required
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DECLARAÇÕES VINCULANTES */}
+            <Card className="border border-slate-200 bg-white shadow-xs">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
+                  2.4 Declarações e Compromisso Irrevogável
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                {[
+                  {
+                    id: 'decP1',
+                    state: decCelebrarContrato,
+                    setter: setDecCelebrarContrato,
+                    text: 'Caso a presente Proposta Garantida seja vencedora, o Carregador Habilitado compromete-se, de forma irrevogável e irretratável, a celebrar Contrato de Transporte com a TSB.',
+                  },
+                  {
+                    id: 'decP2',
+                    state: decExecucaoDesistencia,
+                    setter: setDecExecucaoDesistencia,
+                    text: 'Declara plena ciência de que a desistência do POC após a submissão desta proposta implicará a execução integral da Garantia Financeira aportada.',
+                  },
+                  {
+                    id: 'decP3',
+                    state: decExecucaoNaoAssinatura,
+                    setter: setDecExecucaoNaoAssinatura,
+                    text: 'Declara plena ciência de que a não assinatura do Contrato de Transporte no prazo do cronograma implicará a execução da Garantia Financeira.',
+                  },
+                  {
+                    id: 'decP4',
+                    state: decRegrasMasterProp,
+                    setter: setDecRegrasMasterProp,
+                    text: 'Declara estar ciente e de acordo com todas as regras do Contrato Master e da Resolução ANP nº 961/2023.',
+                  },
+                ].map((dec) => (
+                  <div key={dec.id} className="flex items-start gap-2.5">
+                    <Checkbox
+                      id={dec.id}
+                      checked={dec.state}
+                      onCheckedChange={(v) => dec.setter(Boolean(v))}
+                      className="mt-0.5"
+                    />
+                    <label
+                      htmlFor={dec.id}
+                      className="text-xs text-slate-700 leading-relaxed cursor-pointer select-none"
+                    >
+                      {dec.text}
+                    </label>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* BOTÃO DE CONCLUSÃO DA ETAPA 2 (DOWNLOAD EM PDF) */}
+            <div className="p-5 bg-sky-50 border-2 border-sky-300 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div>
+                <strong className="text-sm font-bold text-[#0a2540] block">
+                  Conclusão da Etapa 2: Download do PDF Oficial
+                </strong>
+                <p className="text-xs text-slate-600">
+                  A Etapa 2 encerra com o download da proposta preenchida. Você deverá assiná-la e
+                  anexá-la na Etapa 3 juntamente com a garantia.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEtapa(1)}
+                  className="text-xs h-auto py-2.5 border-slate-300"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  Voltar à Etapa 1
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={gerandoPdfProp}
+                  className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-6 py-2.5 h-auto shrink-0 shadow-sm cursor-pointer"
+                >
+                  {gerandoPdfProp ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2 text-sky-300" />
+                      Baixar PDF da Proposta Garantida
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEtapa(3)}
+                  className="text-xs h-auto py-2.5 border-slate-300 bg-white"
+                >
+                  Ir para Etapa 3
+                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ETAPA 3 — ANEXOS E ENVIO DEFINITIVO (PROCESSO ENCERRA AQUI) */}
+      {/* ========================================================================= */}
+      {etapa === 3 && (
+        <form onSubmit={handleSubmeterDefinitivo} className="space-y-6">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3 text-xs">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold text-emerald-950 block">
+                Etapa 3: Upload dos Arquivos e Envio Definitivo
+              </strong>
+              <span className="text-emerald-900 leading-relaxed">
+                Aqui você anexa: (a) o PDF da Manifestação de Interesse assinado digitalmente, (b) o
+                PDF da Proposta Garantida assinado digitalmente e (c) o comprovante da Garantia
+                Financeira (fiança bancária, seguro garantia ou depósito caução). Após o envio, o
+                processo se encerra definitivamente e você receberá o protocolo por e-mail.
+              </span>
+            </div>
+          </div>
+
+          {/* CARD DE UPLOADS DOS 3 ARQUIVOS */}
+          <Card className="border-2 border-[#0a2540]/30 bg-white shadow-xs">
+            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-[#0284c7]" />
+                  Upload dos 3 Arquivos Obrigatórios
+                </CardTitle>
+                <Badge className="bg-[#0a2540] text-white text-xs font-mono">
+                  Protocolo: {protocolo}
+                </Badge>
+              </div>
+              <CardDescription className="text-xs text-slate-500">
+                Os arquivos serão validados e armazenados de forma unificada no banco corporativo da
+                TSB
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-5 space-y-5">
+              {/* ARQUIVO 1: MANIFESTAÇÃO ASSINADA */}
+              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <Label className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                    <span className="h-4 w-4 rounded-full bg-[#0a2540] text-white text-[10px] flex items-center justify-center font-bold">
+                      a
+                    </span>
+                    PDF da Manifestação de Interesse (Assinado Digitalmente) *
+                  </Label>
                   {arquivoManifAssinado && (
                     <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1 font-mono">
                       <CheckCircle2 className="h-3 w-3" />
-                      Anexado: {arquivoManifAssinado.name}
+                      Anexado: {arquivoManifAssinado.name} (
+                      {(arquivoManifAssinado.size / 1024).toFixed(1)} KB)
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Faça o upload do PDF assinado pelo Representante Autorizado (Gov.br, ICP-Brasil ou
-                  assinatura eletrônica qualificada).
+                  Upload do PDF obtido na Etapa 1, devidamente assinado eletronicamente pelo
+                  Representante Autorizado (Gov.br, ICP-Brasil ou equivalente).
                 </p>
                 <Input
                   type="file"
@@ -1205,294 +1943,82 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
                     const f = e.target.files?.[0]
                     if (f) setArquivoManifAssinado(f)
                   }}
-                  className="text-xs cursor-pointer bg-slate-50"
+                  className="text-xs cursor-pointer bg-white"
                   required
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-sky-100">
-                <span className="text-[11px] text-slate-500">
-                  Após anexar o PDF assinado, avance para a Etapa 2 (Proposta Garantida).
-                </span>
-                <Button
-                  type="submit"
-                  disabled={!arquivoManifAssinado}
-                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-6"
-                >
-                  Avançar para Etapa 2: Proposta Garantida
-                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-      )}
-
-      {/* ========================================================================= */}
-      {/* ETAPA 2: PROPOSTA GARANTIDA VINCULANTE */}
-      {/* ========================================================================= */}
-      {etapa === 2 && (
-        <form onSubmit={handleAvancarParaEtapa3} className="space-y-6">
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                  2.1 Representante Legal para Assunção de Obrigações Vinculantes
-                </CardTitle>
-                <span className="text-[11px] text-red-800 bg-red-50 px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-red-200">
-                  Vinculante com Garantia
-                </span>
-              </div>
-              <CardDescription className="text-xs text-slate-500">
-                Representante com poderes societários ou procuração com cláusula expressa para
-                aporte de garantias e celebração de contrato
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Nome do Representante Legal *
+              {/* ARQUIVO 2: PROPOSTA GARANTIDA ASSINADA */}
+              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <Label className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                    <span className="h-4 w-4 rounded-full bg-[#0a2540] text-white text-[10px] flex items-center justify-center font-bold">
+                      b
+                    </span>
+                    PDF da Proposta Garantida (Assinado Digitalmente) *
                   </Label>
-                  <Input
-                    value={repNomeProp}
-                    onChange={(e) => setRepNomeProp(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
+                  {arquivoPropAssinado && (
+                    <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1 font-mono">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Anexado: {arquivoPropAssinado.name} (
+                      {(arquivoPropAssinado.size / 1024).toFixed(1)} KB)
+                    </span>
+                  )}
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">CPF *</Label>
-                  <Input
-                    value={repCpfProp}
-                    onChange={(e) => setRepCpfProp(e.target.value)}
-                    placeholder="000.000.000-00"
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
+                <p className="text-[11px] text-slate-500">
+                  Upload do PDF obtido na Etapa 2, assinado eletronicamente pelo Representante
+                  Legal.
+                </p>
+                <Input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) setArquivoPropAssinado(f)
+                  }}
+                  className="text-xs cursor-pointer bg-white"
+                  required
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Cargo / Função *</Label>
-                  <Input
-                    value={repCargoProp}
-                    onChange={(e) => setRepCargoProp(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">RG / Órgão Emissor</Label>
-                  <Input
-                    value={`${repRgProp} ${repOrgaoEmissorProp}`}
-                    onChange={(e) => setRepRgProp(e.target.value)}
-                    className="text-xs font-mono"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    E-mail Corporativo *
+              {/* ARQUIVO 3: COMPROVANTE DA GARANTIA FINANCEIRA */}
+              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <Label className="text-xs font-bold text-[#0a2540] flex items-center gap-1.5">
+                    <span className="h-4 w-4 rounded-full bg-[#0a2540] text-white text-[10px] flex items-center justify-center font-bold">
+                      c
+                    </span>
+                    Comprovante da Garantia Financeira ({garantiaTipo}) *
                   </Label>
-                  <Input
-                    type="email"
-                    value={repEmailProp}
-                    onChange={(e) => setRepEmailProp(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
+                  {arquivoGarantia && (
+                    <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1 font-mono">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Anexado: {arquivoGarantia.name} ({(arquivoGarantia.size / 1024).toFixed(1)}{' '}
+                      KB)
+                    </span>
+                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* DADOS DA PROPOSTA FIRME */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                2.2 Parâmetros da Proposta Firme e Critério de Leilão
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Produto, capacidade diária solicitada e regra para leilão ascendente de capacidade
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Produto da Proposta *
-                  </Label>
-                  <Input
-                    value={produtoProp}
-                    onChange={(e) => setProdutoProp(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Ponto / Zona *</Label>
-                  <Input
-                    value={pontoZonaProp}
-                    onChange={(e) => setPontoZonaProp(e.target.value)}
-                    className="text-xs"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Capacidade Firme Proposta (mil m³/dia) *
-                  </Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={capacidadeProp}
-                    onChange={(e) => setCapacidadeProp(e.target.value)}
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Tarifa de Referência Aceita (R$/MMBtu) *
-                  </Label>
-                  <Input
-                    type="number"
-                    step="0.0001"
-                    min="0.0001"
-                    value={tarifaTransporteProp}
-                    onChange={(e) => setTarifaTransporteProp(e.target.value)}
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* CRITÉRIO DE LEILÃO ASCENDENTE */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                <Label className="text-xs font-semibold text-slate-800 block">
-                  Regra em Caso de Rateio / Leilão Ascendente (Art. 37-A, § 5º, III):
-                </Label>
-                <RadioGroup
-                  value={criterioLeilaoProp}
-                  onValueChange={(v) => setCriterioLeilaoProp(v as CriterioLeilaoTipo)}
-                  className="space-y-2 text-xs"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="parcialmente" id="crit1" />
-                    <Label htmlFor="crit1" className="cursor-pointer text-xs font-normal">
-                      Aceita alocação proporcional / parcial da capacidade proposta
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="minima" id="crit2" />
-                    <Label htmlFor="crit2" className="cursor-pointer text-xs font-normal">
-                      Aceita alocação parcial desde que superior à Capacidade Mínima
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="integral" id="crit3" />
-                    <Label htmlFor="crit3" className="cursor-pointer text-xs font-normal">
-                      Condiciona a proposta à alocação 100% integral (tudo ou nada)
-                    </Label>
-                  </div>
-                </RadioGroup>
-
-                {criterioLeilaoProp === 'minima' && (
-                  <div className="pt-2 max-w-xs space-y-1">
-                    <Label className="text-[11px] font-semibold text-slate-700">
-                      Capacidade Mínima Aceita (mil m³/dia) *
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      value={capacidadeMinimaProp}
-                      onChange={(e) => setCapacidadeMinimaProp(e.target.value)}
-                      className="text-xs font-mono bg-white"
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* GARANTIA FINANCEIRA DA PROPOSTA */}
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                2.3 Garantia Financeira da Proposta (Obrigatória)
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Instrumento financeiro idôneo que cauciona a formalização do contrato
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Modalidade de Garantia *
-                  </Label>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-[11px] text-slate-500">Tipo de Garantia:</span>
                   <select
                     value={garantiaTipo}
                     onChange={(e) => setGarantiaTipo(e.target.value as GarantiaTipo)}
-                    className="w-full h-9 rounded-md border border-slate-300 bg-white px-3 py-1 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0284c7]"
-                    required
+                    className="h-7 text-xs rounded border border-slate-300 bg-white px-2 text-slate-800"
                   >
                     <option value="Fiança Bancária">Fiança Bancária</option>
                     <option value="Seguro Garantia">Seguro Garantia</option>
                     <option value="Depósito Caução">Depósito Caução</option>
                     <option value="Carta de Crédito">Carta de Crédito</option>
                   </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Valor da Garantia (R$) *
-                  </Label>
-                  <Input
-                    type="number"
-                    step="1000"
-                    min="1"
-                    value={garantiaValor}
-                    onChange={(e) => setGarantiaValor(e.target.value)}
-                    className="text-xs font-mono"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Instituição Emissora *
-                  </Label>
-                  <Input
-                    value={garantiaInstituicao}
-                    onChange={(e) => setGarantiaInstituicao(e.target.value)}
-                    placeholder="Ex: Banco Santander / Apólice Porto Seguro"
-                    className="text-xs"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* UPLOAD DO COMPROVANTE DE GARANTIA */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-bold text-slate-800">
-                    Comprovante / Instrumento de Garantia Financeira (Anexo Obrigatório) *
-                  </Label>
-                  {arquivoGarantia && (
-                    <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
-                      ✓ {arquivoGarantia.name}
-                    </span>
-                  )}
+                  <span className="text-[11px] text-slate-500">
+                    Valor: <strong>R$ {Number(garantiaValor || 0).toLocaleString('pt-BR')}</strong>{' '}
+                    ({garantiaInstituicao})
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Anexe o documento comprobatório da emissão da garantia (fiança bancária, apólice
-                  do seguro ou comprovante de caução). Formatos: PDF, ZIP, JPG ou PNG.
+                  Anexe o documento probatório do instrumento financeiro (fiança bancária, apólice
+                  de seguro garantia ou comprovante de depósito caução). Formatos aceitos: PDF, ZIP,
+                  JPG ou PNG.
                 </p>
                 <Input
                   type="file"
@@ -1508,367 +2034,110 @@ export function FluxoSubmissaoPOC({ onVoltar, onSucesso, dadosPadrao }: FluxoSub
             </CardContent>
           </Card>
 
-          {/* DECLARAÇÕES VINCULANTES */}
+          {/* RESUMO DOS DADOS GERAIS ANTES DO ENVIO */}
           <Card className="border border-slate-200 bg-white shadow-xs">
             <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
               <CardTitle className="text-sm font-bold text-[#0a2540] font-display">
-                2.4 Compromisso Irrevogável e Declarações Vinculantes
+                Resumo Consolidado dos Dados Cadastrais e Técnicos
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              {[
-                {
-                  id: 'decP1',
-                  state: decCelebrarContrato,
-                  setter: setDecCelebrarContrato,
-                  text: 'Caso a presente Proposta Garantida seja vencedora, o Carregador Habilitado compromete-se, de forma irrevogável e irretratável, a celebrar Contrato de Transporte com a TSB.',
-                },
-                {
-                  id: 'decP2',
-                  state: decExecucaoDesistencia,
-                  setter: setDecExecucaoDesistencia,
-                  text: 'Declara plena ciência de que a desistência do POC após a submissão desta proposta implicará a execução integral da Garantia Financeira aportada.',
-                },
-                {
-                  id: 'decP3',
-                  state: decExecucaoNaoAssinatura,
-                  setter: setDecExecucaoNaoAssinatura,
-                  text: 'Declara plena ciência de que a não assinatura do Contrato de Transporte no prazo do cronograma oficial implicará a execução imediata da Garantia Financeira.',
-                },
-                {
-                  id: 'decP4',
-                  state: decRegrasMasterProp,
-                  setter: setDecRegrasMasterProp,
-                  text: 'Declara estar ciente e de acordo com todas as regras do Contrato Master e da Resolução ANP nº 961/2023.',
-                },
-              ].map((dec) => (
-                <div key={dec.id} className="flex items-start gap-2.5">
-                  <Checkbox
-                    id={dec.id}
-                    checked={dec.state}
-                    onCheckedChange={(v) => dec.setter(Boolean(v))}
-                    className="mt-0.5"
-                  />
-                  <label
-                    htmlFor={dec.id}
-                    className="text-xs text-slate-700 leading-relaxed cursor-pointer select-none"
-                  >
-                    {dec.text}
-                  </label>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* GERAÇÃO E ANEXO DO PDF DA PROPOSTA GARANTIDA */}
-          <Card className="border-2 border-red-200 bg-red-50/20 shadow-xs">
-            <CardHeader className="pb-3 border-b border-red-100 bg-white">
-              <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
-                <FileText className="h-4 w-4 text-red-600" />
-                2.5 Geração, Assinatura e Anexo do PDF da Proposta Garantida
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-600">
-                Baixe a Proposta em PDF com o protocolo {protocolo}, realize a assinatura fora do
-                sistema e anexe o arquivo assinado.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-              <div className="p-4 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardContent className="pt-4 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
                 <div>
-                  <strong className="text-xs font-bold text-[#0a2540] block">
-                    Passo A: Baixar a Proposta Garantida Preenchida
+                  <span className="text-slate-500 block text-[11px]">Carregador:</span>
+                  <strong className="text-slate-900">{razaoSocial || '—'}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">CNPJ:</span>
+                  <strong className="text-slate-900 font-mono">{cnpj || '—'}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">E-mail para Protocolo:</span>
+                  <strong className="text-slate-900 font-mono text-[#0284c7]">
+                    {contatoEmail || '—'}
                   </strong>
-                  <span className="text-[11px] text-slate-500">
-                    Documento formal de proposta com protocolo {protocolo}
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Representante:</span>
+                  <strong className="text-slate-900">{repNomeProp || repNomeManif || '—'}</strong>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Manifestação (Etapa 1):</span>
+                  <strong className="text-slate-900 font-mono">
+                    {capacidadeTotalManifestada.toLocaleString('pt-BR')} mil m³/dia
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">
+                    Proposta Firme (Etapa 2):
                   </span>
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleBaixarPdfProposta}
-                  disabled={gerandoPdfProp}
-                  className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0"
-                >
-                  {gerandoPdfProp ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
-                      Baixar Proposta em PDF
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <div className="p-4 bg-white border border-slate-200 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <strong className="text-xs font-bold text-[#0a2540] block">
-                    Passo B: Anexar o PDF da Proposta Assinado *
+                  <strong className="text-slate-900 font-mono">
+                    {Number(capacidadeProp || 0).toLocaleString('pt-BR')} mil m³/dia (R${' '}
+                    {Number(tarifaTransporteProp || 0).toFixed(4)}/MMBtu)
                   </strong>
-                  {arquivoPropAssinado && (
-                    <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1 font-mono">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Anexado: {arquivoPropAssinado.name}
-                    </span>
-                  )}
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Faça o upload do documento assinado pelo Representante Legal.
-                </p>
-                <Input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) setArquivoPropAssinado(f)
-                  }}
-                  className="text-xs cursor-pointer bg-slate-50"
-                  required
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-red-100">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEtapa(1)}
-                  className="text-xs text-slate-600"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-                  Voltar para Etapa 1
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!arquivoPropAssinado || !arquivoGarantia}
-                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-6"
-                >
-                  Avançar para Etapa 3: Revisão e Envio
-                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                </Button>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Garantia Financeira:</span>
+                  <strong className="text-slate-900">
+                    {garantiaTipo} &bull; R$ {Number(garantiaValor || 0).toLocaleString('pt-BR')}
+                  </strong>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* AVISO DO DISPARO DE E-MAIL E PROTOCOLO */}
+          <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-lg text-xs text-emerald-950 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <strong className="font-semibold text-emerald-950">
+                Expedição Imediata do Protocolo por E-mail Corporativo:
+              </strong>
+            </div>
+            <p className="text-emerald-900 leading-relaxed text-[11px]">
+              Ao clicar em <strong>"Confirmar e Enviar Submissão Completa"</strong>, o processo se
+              encerra definitivamente. O número de protocolo <strong>{protocolo}</strong> e os
+              arquivos serão persistidos na base oficial da TSB e o e-mail formal com o protocolo e
+              o resumo será disparado via SMTP oficial para <strong>{contatoEmail}</strong>.
+            </p>
+          </div>
+
+          {/* BOTÕES DE NAVEGAÇÃO E ENVIO */}
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEtapa(2)}
+              disabled={enviando}
+              className="text-xs text-slate-600"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+              Voltar para Etapa 2
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                enviando || !arquivoManifAssinado || !arquivoPropAssinado || !arquivoGarantia
+              }
+              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-8 py-2.5 h-auto cursor-pointer shadow-sm"
+            >
+              {enviando ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Persistindo dados e enviando protocolo por e-mail...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2 text-sky-300" />
+                  Confirmar e Enviar Submissão Completa (Encerra o Processo)
+                </>
+              )}
+            </Button>
+          </div>
         </form>
-      )}
-
-      {/* ========================================================================= */}
-      {/* ETAPA 3: REVISÃO E ENVIO DEFINITIVO */}
-      {/* ========================================================================= */}
-      {etapa === 3 && (
-        <div className="space-y-6">
-          <Card className="border border-slate-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-[#0284c7]" />
-                  Revisão Integrada da Submissão (Art. 37-A, §5º)
-                </CardTitle>
-                <Badge className="bg-[#0a2540] text-white text-xs font-mono">
-                  Protocolo: {protocolo}
-                </Badge>
-              </div>
-              <CardDescription className="text-xs text-slate-500">
-                Confira o resumo geral antes de efetivar o envio. Ao submeter, os dados e os 3
-                arquivos serão persistidos de forma única e o comprovante será enviado ao seu
-                e-mail.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-5 space-y-6">
-              {/* DADOS DA EMPRESA */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-[#0a2540] block uppercase tracking-wider">
-                  Carregador Habilitado e Contato
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs">
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Razão Social:</span>
-                    <strong className="text-slate-900">{razaoSocial}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">CNPJ:</span>
-                    <strong className="text-slate-900 font-mono">{cnpj}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">E-mail para Protocolo:</span>
-                    <strong className="text-slate-900 font-mono text-[#0284c7]">
-                      {contatoEmail}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[11px]">Pessoa de Contato:</span>
-                    <strong className="text-slate-900">{contatoNome}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* RESUMO ETAPA 1 */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#0a2540] block uppercase tracking-wider">
-                    Etapa 1 · Manifestação de Interesse
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEtapa(1)}
-                    className="text-[11px] text-[#0284c7] hover:underline h-auto p-0"
-                  >
-                    Editar dados da Etapa 1
-                  </Button>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">
-                        Representante Autorizado:
-                      </span>
-                      <strong className="text-slate-900">
-                        {repNomeManif} (CPF: {repCpfManif})
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">
-                        Capacidade Total Manifestada:
-                      </span>
-                      <strong className="text-slate-900 font-mono">
-                        {capacidadeTotalManifestada.toLocaleString('pt-BR')} mil m³/dia
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">
-                        Pontos/Zonas Demandados:
-                      </span>
-                      <span className="text-slate-800">
-                        {itensInteresse.map((it) => it.pontoZona).join('; ')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200/60 flex items-center gap-2 text-[11px] text-emerald-800 font-medium">
-                    <FileCheck2 className="h-4 w-4 text-emerald-600" />
-                    <span>
-                      Anexo da Etapa 1: <strong>{arquivoManifAssinado?.name}</strong> (
-                      {((arquivoManifAssinado?.size || 0) / 1024).toFixed(1)} KB)
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* RESUMO ETAPA 2 */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#0a2540] block uppercase tracking-wider">
-                    Etapa 2 · Proposta Garantida Vinculante
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEtapa(2)}
-                    className="text-[11px] text-[#0284c7] hover:underline h-auto p-0"
-                  >
-                    Editar dados da Etapa 2
-                  </Button>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Representante Legal:</span>
-                      <strong className="text-slate-900">
-                        {repNomeProp} (CPF: {repCpfProp})
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Capacidade Proposta:</span>
-                      <strong className="text-slate-900 font-mono">
-                        {Number(capacidadeProp).toLocaleString('pt-BR')} mil m³/dia
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Tarifa Aceita:</span>
-                      <strong className="text-slate-900 font-mono">
-                        R$ {Number(tarifaTransporteProp).toFixed(4)} / MMBtu
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Garantia Aportada:</span>
-                      <strong className="text-slate-900">
-                        {garantiaTipo} &bull; R$ {Number(garantiaValor).toLocaleString('pt-BR')}
-                      </strong>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200/60 space-y-1 text-[11px] text-emerald-800 font-medium">
-                    <div className="flex items-center gap-2">
-                      <FileCheck2 className="h-4 w-4 text-emerald-600" />
-                      <span>
-                        Anexo da Proposta: <strong>{arquivoPropAssinado?.name}</strong> (
-                        {((arquivoPropAssinado?.size || 0) / 1024).toFixed(1)} KB)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FileCheck2 className="h-4 w-4 text-emerald-600" />
-                      <span>
-                        Comprovante da Garantia: <strong>{arquivoGarantia?.name}</strong> (
-                        {((arquivoGarantia?.size || 0) / 1024).toFixed(1)} KB) &bull;{' '}
-                        {garantiaInstituicao}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* AVISO DO DISPARO DE E-MAIL E PROTOCOLO */}
-              <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg text-xs text-emerald-950 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <strong className="font-semibold text-emerald-950">
-                    Expedição Automática de Protocolo por E-mail:
-                  </strong>
-                </div>
-                <p className="text-emerald-900 leading-relaxed text-[11px]">
-                  Ao clicar em <strong>"Confirmar e Enviar Submissão"</strong>, o registro formal
-                  será gravado com o protocolo <strong>{protocolo}</strong> e um e-mail oficial será
-                  automaticamente enviado para <strong>{contatoEmail}</strong> através do servidor
-                  corporativo da TSB com o comprovante em anexo e o resumo regulatório.
-                </p>
-              </div>
-
-              {/* BOTÕES FINAIS */}
-              <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-200">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEtapa(2)}
-                  disabled={enviando}
-                  className="text-xs text-slate-600"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-                  Voltar para Etapa 2
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSubmeterDefinitivo}
-                  disabled={enviando}
-                  className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-8 py-2.5 h-auto cursor-pointer shadow-sm"
-                >
-                  {enviando ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Persistindo e Enviando E-mail...
-                    </>
-                  ) : (
-                    <>
-                      <FileCheck2 className="h-4 w-4 mr-2 text-sky-300" />
-                      Confirmar e Enviar Submissão Completa
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       )}
     </div>
   )

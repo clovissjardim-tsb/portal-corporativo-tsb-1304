@@ -453,16 +453,16 @@ export default function PoccAcesso() {
             </CardContent>
           </Card>
 
-          {/* CARD CENTRAL: NOVO FLUXO ÚNICO SEQUENCIAL */}
+          {/* CARD CENTRAL: FLUXO EM 3 ETAPAS INDEPENDENTES */}
           <Card className="border-2 border-[#0284c7]/30 bg-gradient-to-br from-white to-sky-50/30 shadow-sm">
             <CardHeader className="pb-3 border-b border-slate-100">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
-                    Fluxo Único Integrado
+                    3 Etapas Independentes
                   </span>
                   <span className="text-[11px] font-semibold text-[#0284c7]">
-                    Etapa 1 ➔ Etapa 2 ➔ Etapa 3 (Envio)
+                    Etapa 1 &bull; Etapa 2 &bull; Etapa 3 (Envio Definitivo)
                   </span>
                 </div>
                 {ultimaSubmissaoCompleta && (
@@ -473,36 +473,50 @@ export default function PoccAcesso() {
                 )}
               </div>
               <CardTitle className="text-lg font-bold text-[#0a2540] font-display pt-2">
-                Submissão Sequencial do POC (Manifestação + Proposta Garantida)
+                Fluxo de Submissão do POC (3 Etapas Independentes)
               </CardTitle>
               <CardDescription className="text-xs text-slate-600">
-                Processo sequencial estruturado: preenche e anexa o PDF assinado da Manifestação,
-                preenche e anexa a Proposta com comprovante de garantia, e envia tudo de forma
-                unificada com protocolo por e-mail.
+                Preencha os formulários e baixe os PDFs de forma independente. Na Etapa 3, anexe os
+                PDFs preenchidos e assinados digitalmente mais o comprovante da Garantia Financeira
+                para encerrar o processo e receber o protocolo oficial por e-mail.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                  <span className="font-bold text-[#0a2540] block">
-                    Etapa 1: Manifestação de Interesse
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#0a2540] block">Etapa 1: Manifestação</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-50 text-sky-800 border border-sky-200">
+                      Independente
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500">
-                    Preencha os dados, gere o PDF, assine eletronicamente e anexe o PDF assinado.
+                    Preencha o formulário e faça o download em PDF. A etapa se encerra no download.
                   </p>
                 </div>
                 <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                  <span className="font-bold text-[#0a2540] block">
-                    Etapa 2: Proposta Garantida
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#0a2540] block">
+                      Etapa 2: Proposta Garantida
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                      Independente
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500">
-                    Defina critério de leilão, anexe comprovante de garantia e o PDF assinado.
+                    Preencha o formulário (leilão ascendente + garantia) e faça o download em PDF.
                   </p>
                 </div>
                 <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
-                  <span className="font-bold text-[#0a2540] block">Etapa 3: Revisão e Envio</span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#0a2540] block">Etapa 3: Anexos e Envio</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Encerra o Processo
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500">
-                    Confira os dados, confirme o envio definitivo e receba o protocolo por e-mail.
+                    Anexe os 2 PDFs assinados + comprovante de garantia. O processo encerra e gera
+                    protocolo por e-mail.
                   </p>
                 </div>
               </div>
@@ -550,7 +564,8 @@ export default function PoccAcesso() {
 
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <span className="text-[11px] text-slate-500">
-                  Os formulários anteriores foram unificados neste fluxo contínuo.
+                  Cada etapa funciona de forma autônoma. O preenchimento fica salvo no rascunho de
+                  sessão.
                 </span>
                 <Button
                   type="button"
@@ -559,8 +574,8 @@ export default function PoccAcesso() {
                 >
                   <PlusCircle className="h-4 w-4 mr-2 text-sky-300" />
                   {ultimaSubmissaoCompleta
-                    ? 'Iniciar Nova Submissão no POC'
-                    : 'Iniciar Submissão Sequencial do POC'}
+                    ? 'Acessar Fluxo de Submissão do POC'
+                    : 'Iniciar Fluxo de Submissão (3 Etapas)'}
                 </Button>
               </div>
             </CardContent>
@@ -677,91 +692,181 @@ export default function PoccAcesso() {
             </CardContent>
           </Card>
 
-          {/* HISTÓRICO CONSOLIDADO DE SUBMISSÕES */}
-          {(submissoesCompletas.length > 0 ||
-            manifestacoesLegadas.length > 0 ||
-            propostasLegadas.length > 0) && (
-            <Card className="border border-slate-200 shadow-xs bg-white">
-              <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-[#0284c7]" />
-                    Histórico de Submissões Desta Conta no POC
-                  </CardTitle>
-                  <CardDescription className="text-xs text-slate-500">
-                    Registros integrados da nova submissão e submissões legadas anteriores
-                  </CardDescription>
+          {/* SEÇÃO "MEUS PROTOCOLOS": EXIBIÇÃO DE PROTOCOLOS E SEUS STATUS */}
+          <Card className="border border-slate-200 shadow-xs bg-white">
+            <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#0284c7]" />
+                  Meus Protocolos · POC
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Listagem completa de protocolos e status da conta autenticada, com detalhes
+                  sensíveis e downloads dos PDFs anexados
+                </CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={carregarHistorico}
+                disabled={carregandoHistorico}
+                className="text-xs h-7 text-slate-600 border-slate-300"
+              >
+                <RefreshCw
+                  className={`h-3 w-3 mr-1 ${carregandoHistorico ? 'animate-spin' : ''}`}
+                />
+                Atualizar
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {submissoesCompletas.length === 0 &&
+              manifestacoesLegadas.length === 0 &&
+              propostasLegadas.length === 0 ? (
+                <div className="py-8 text-center space-y-2">
+                  <Clock className="h-8 w-8 text-slate-300 mx-auto" />
+                  <p className="text-xs font-medium text-slate-600">
+                    Nenhum protocolo submetido por esta conta até o momento.
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Inicie o fluxo de 3 etapas no botão acima para submeter a Manifestação e a
+                    Proposta Garantida.
+                  </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={carregarHistorico}
-                  disabled={carregandoHistorico}
-                  className="text-xs h-7 text-slate-600 border-slate-300"
-                >
-                  <RefreshCw
-                    className={`h-3 w-3 mr-1 ${carregandoHistorico ? 'animate-spin' : ''}`}
-                  />
-                  Atualizar
-                </Button>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="divide-y divide-slate-100 text-xs">
-                  {/* SUBMISSÕES COMPLETAS (NOVO FORMATO) */}
+              ) : (
+                <div className="space-y-4 text-xs">
+                  {/* SUBMISSÕES COMPLETAS (FLUXO ATUAL) */}
                   {submissoesCompletas.map((sub) => (
                     <div
                       key={sub.id}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-sky-50/20 px-2 rounded-md my-1"
+                      className="p-4 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3"
                     >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[#0a2540]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono font-bold text-sm text-[#0a2540]">
                             {sub.protocolo}
                           </span>
-                          <span className="text-[10px] px-2 py-0.2 rounded bg-sky-100 text-sky-900 border border-sky-300 font-semibold uppercase">
-                            Submissão Integrada
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-sky-100 text-sky-900 border border-sky-300 font-semibold uppercase">
+                            Submissão Completa (3 Etapas)
                           </span>
-                          <span className="text-[10px] px-2 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold">
                             {sub.status || 'Submetida'}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-600">
-                          {sub.razao_social} &bull; Proposta:{' '}
-                          <span className="font-mono font-medium text-slate-900">
+                        <div className="text-[11px] text-slate-500 font-mono">
+                          {new Date(sub.created).toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+
+                      {/* DADOS SENSÍVEIS E CADASTRAIS (LGPD OK NA ÁREA AUTENTICADA) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] bg-white p-3 rounded border border-slate-200">
+                        <div>
+                          <span className="text-slate-500 block">Razão Social:</span>
+                          <strong className="text-slate-900 font-medium">{sub.razao_social}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">CNPJ / MF:</span>
+                          <strong className="text-slate-900 font-mono">{sub.cnpj}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">E-mail Cadastrado:</span>
+                          <span className="text-[#0284c7] font-mono">{sub.email}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">Representante Legal:</span>
+                          <strong className="text-slate-900">
+                            {sub.rep_legal_nome || sub.responsavel_nome || '—'}{' '}
+                            {sub.rep_legal_cpf ? `(${sub.rep_legal_cpf})` : ''}
+                          </strong>
+                        </div>
+                      </div>
+
+                      {/* DETALHAMENTO TÉCNICO, CAPACIDADE E GARANTIA */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] bg-white p-3 rounded border border-slate-200">
+                        <div>
+                          <span className="text-slate-500 block">
+                            Demanda Manifestada (Etapa 1):
+                          </span>
+                          <strong className="text-slate-900 font-mono">
+                            {Number(sub.capacidade_solicitada_manif || 0).toLocaleString('pt-BR')}{' '}
+                            mil m³/d
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {sub.ponto_zona_manif || 'Gasoduto TSB'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">
+                            Proposta Garantida (Etapa 2):
+                          </span>
+                          <strong className="text-slate-900 font-mono">
                             {Number(sub.capacidade_proposta || 0).toLocaleString('pt-BR')} mil m³/d
-                          </span>{' '}
-                          &bull; Garantia:{' '}
-                          <span className="text-slate-800 font-medium">
-                            {sub.garantia_tipo} (R${' '}
-                            {Number(sub.garantia_valor || 0).toLocaleString('pt-BR')})
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block">
+                            Tarifa: R$ {Number(sub.tarifa_aceita || 0).toFixed(4)}/MMBtu &bull;{' '}
+                            {sub.criterio_leilao || 'parcialmente'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">
+                            Garantia Financeira Aportada:
+                          </span>
+                          <strong className="text-slate-900">
+                            {sub.garantia_tipo || 'Fiança'} &bull; R${' '}
+                            {Number(sub.garantia_valor || 0).toLocaleString('pt-BR')}
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {sub.garantia_instituicao || 'Instituição Emissora'}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 self-start sm:self-center">
-                        <span className="text-[11px] text-slate-400">
-                          {new Date(sub.created).toLocaleDateString('pt-BR')}
+
+                      {/* PARECER TÉCNICO */}
+                      {sub.parecer_fundamentado && (
+                        <div className="p-2.5 bg-blue-50/70 rounded border border-blue-200 text-[11px] text-slate-700 space-y-1">
+                          <strong className="text-[#0a2540] block uppercase tracking-wider text-[10px]">
+                            Parecer Regulatório TSB:
+                          </strong>
+                          <p>{sub.parecer_fundamentado}</p>
+                        </div>
+                      )}
+
+                      {/* ARQUIVOS ANEXADOS (DOWNLOADS) */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200">
+                        <span className="text-[11px] font-semibold text-slate-600 mr-2">
+                          Documentos Anexados:
                         </span>
-                        {sub.arquivo_proposta_assinada && (
-                          <a
-                            href={pb.files.getURL(sub, sub.arquivo_proposta_assinada)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-[#0284c7] hover:underline font-medium ml-2"
-                          >
-                            <Download className="h-3 w-3" />
-                            PDF Proposta
-                          </a>
-                        )}
                         {sub.arquivo_manifestacao_assinada && (
                           <a
                             href={pb.files.getURL(sub, sub.arquivo_manifestacao_assinada)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-[#0284c7] hover:underline font-medium ml-2"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white hover:bg-slate-100 border border-slate-300 text-[11px] text-[#0a2540] font-medium transition-colors"
                           >
-                            <Download className="h-3 w-3" />
-                            PDF Manif
+                            <Download className="h-3 w-3 text-[#0284c7]" />
+                            (a) Manifestação Assinada (PDF)
+                          </a>
+                        )}
+                        {sub.arquivo_proposta_assinada && (
+                          <a
+                            href={pb.files.getURL(sub, sub.arquivo_proposta_assinada)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white hover:bg-slate-100 border border-slate-300 text-[11px] text-[#0a2540] font-medium transition-colors"
+                          >
+                            <Download className="h-3 w-3 text-[#0284c7]" />
+                            (b) Proposta Assinada (PDF)
+                          </a>
+                        )}
+                        {sub.arquivo_garantia && (
+                          <a
+                            href={pb.files.getURL(sub, sub.arquivo_garantia)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white hover:bg-slate-100 border border-slate-300 text-[11px] text-[#0a2540] font-medium transition-colors"
+                          >
+                            <Download className="h-3 w-3 text-emerald-600" />
+                            (c) Comprovante Garantia ({sub.garantia_tipo || 'Documento'})
                           </a>
                         )}
                       </div>
@@ -772,7 +877,7 @@ export default function PoccAcesso() {
                   {manifestacoesLegadas.map((m) => (
                     <div
                       key={m.id}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-slate-200 pt-3"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
@@ -816,7 +921,7 @@ export default function PoccAcesso() {
                   {propostasLegadas.map((p) => (
                     <div
                       key={p.id}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-slate-200 pt-3"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
@@ -857,9 +962,9 @@ export default function PoccAcesso() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
 
           {/* AVISO REGULATÓRIO */}
           <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600 flex items-start gap-3">
