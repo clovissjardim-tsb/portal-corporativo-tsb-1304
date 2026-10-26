@@ -2,15 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Building2,
-  Network,
-  Headphones,
-  Shield,
-  ArrowRight,
-  ShieldAlert,
-  FileDown,
-} from 'lucide-react'
+import { Building2, Network, Headphones, ShieldAlert, FileDown } from 'lucide-react'
 import { QuadroTarifaDestaque } from '@/components/QuadroTarifaDestaque'
 import { tarifaService, type QuadroTarifa, TARIFA_SEED_FALLBACK } from '@/services/tarifa'
 import {
@@ -68,46 +60,6 @@ export default function Index() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* HERO INSTITUCIONAL SÓBRIO — MESMO PADRÃO DA TRANSPARÊNCIA */}
-      <section className="bg-white border border-slate-200 rounded-xl p-6 sm:p-10 shadow-xs relative">
-        <div className="max-w-4xl space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#143b73] tracking-wide uppercase font-display">
-            <span>Infraestrutura Dutoviária Estratégica</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-500 font-normal normal-case">
-              Cone Sul &amp; Rio Grande do Sul
-            </span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#0a2540] font-display">
-            Transportadora Sulbrasileira de Gás — TSB
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-            A TSB opera a infraestrutura de transporte dutoviário de gás natural no estado do Rio
-            Grande do Sul, assegurando integração energética regional, confiabilidade operacional e
-            plena conformidade com as diretrizes regulatórias da Agência Nacional do Petróleo, Gás
-            Natural e Biocombustíveis (ANP).
-          </p>
-
-          <div className="pt-2 flex flex-wrap gap-3">
-            <Link
-              to="/transparencia"
-              className="inline-flex items-center gap-2 bg-[#0a2540] hover:bg-[#0c2e4e] text-white font-bold px-4 py-2.5 rounded-md text-xs transition-colors shadow-xs font-display tracking-wide uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
-            >
-              Consultar Transparência Regulatória
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/poc"
-              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0284c7] font-semibold px-4 py-2.5 rounded-md text-xs transition-colors border border-slate-300 hover:border-slate-400 font-display tracking-wide uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
-            >
-              Oferta de Capacidade (POC)
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* BLOCO DE TARIFA EM DESTAQUE (REPRODUÇÃO FIEL AO QUADRO CONTRATO EXTRAORDINÁRIO) */}
       {!carregandoTarifa && tarifa && tarifa.ativo && (
         <section aria-label="Quadro de Tarifa em Destaque">
