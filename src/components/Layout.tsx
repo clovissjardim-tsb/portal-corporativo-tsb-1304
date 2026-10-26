@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Menu, X, LogIn, LogOut, ShieldCheck } from 'lucide-react'
-import logoTsb from '@/assets/image-ee90b.png'
 
 interface LayoutProps {
   children?: React.ReactNode
@@ -25,33 +24,6 @@ export default function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 bg-[#0a2540] text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
         {/* MAIN NAV BAR */}
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          {/* LOGO OFICIAL TSB */}
-          <Link
-            to="/"
-            className="flex items-center gap-3 text-decoration-none group py-1"
-            title="TSB — Transportadora Sulbrasileira de Gás S.A."
-          >
-            {/* Box com fundo branco translúcido/limpo para destaque de alto contraste do logo TSB sobre o header escuro */}
-            <div className="bg-white/95 hover:bg-white transition-all duration-200 px-3 py-1.5 rounded-md shadow-sm border border-white/20 flex items-center">
-              <img
-                src={logoTsb}
-                alt="TSB — Transportadora Sulbrasileira de Gás S.A."
-                className="h-8 sm:h-9 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-              />
-            </div>
-            <div className="hidden xl:flex flex-col">
-              <span className="text-[11px] font-bold tracking-wider uppercase text-slate-200 font-display leading-tight">
-                Portal Regulatório
-              </span>
-              <span className="text-[9px] font-semibold text-slate-400 tracking-wider uppercase">
-                Acesso Aberto
-              </span>
-            </div>
-            <span className="hidden sm:inline-flex items-center text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#e30613] text-white shadow-xs font-display">
-              REGULAÇÃO ANP
-            </span>
-          </Link>
-
           {/* DESKTOP NAV LINKS */}
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((item) => (
