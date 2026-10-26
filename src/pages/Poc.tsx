@@ -3,24 +3,13 @@ import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  FileText,
-  Lock,
-  ArrowRight,
-  ShieldCheck,
-  Info,
-  ChevronRight,
-  Search,
-  RefreshCw,
-  AlertCircle,
-} from 'lucide-react'
+import { FileText, Lock, ArrowRight, ShieldCheck, Info } from 'lucide-react'
 import {
   transparenciaService,
   resolverUrlDocumento,
   type ItemTransparencia,
 } from '@/services/transparencia'
-import { pocService, type DocumentoPOCItem, type ResumoPublicoProtocoloPOC } from '@/services/poc'
-import { Input } from '@/components/ui/input'
+import { pocService, type DocumentoPOCItem } from '@/services/poc'
 
 // Ícone de documento PDF estilo NTS/Boletim (glifo discreto de 16-18px com canto dobrado e contorno refinado)
 function PdfIcon({ className = 'w-4 h-4' }: { className?: string }) {
@@ -399,40 +388,6 @@ export default function Poc() {
   const [itensTransparencia, setItensTransparencia] = useState<ItemTransparencia[]>([])
   const [docsPocBd, setDocsPocBd] = useState<DocumentoPOCItem[]>([])
 
-  // Consulta Pública por Protocolo POC (Idêntica ao padrão do Inciso VII)
-  const [protocoloBusca, setProtocoloBusca] = useState<string>('')
-  const [consultandoProtocolo, setConsultandoProtocolo] = useState<boolean>(false)
-  const [resultadoProtocolo, setResultadoProtocolo] = useState<ResumoPublicoProtocoloPOC | null>(
-    null,
-  )
-  const [erroProtocolo, setErroProtocolo] = useState<string | null>(null)
-
-  const handleConsultarProtocolo = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const limpo = protocoloBusca.trim()
-    if (!limpo) {
-      setErroProtocolo('Digite o número do protocolo.')
-      return
-    }
-
-    setConsultandoProtocolo(true)
-    setErroProtocolo(null)
-    setResultadoProtocolo(null)
-
-    try {
-      const res = await pocService.consultarProtocoloPublico(limpo)
-      if (res) {
-        setResultadoProtocolo(res)
-      } else {
-        setErroProtocolo('Protocolo não localizado nos registros do POC.')
-      }
-    } catch (err: any) {
-      setErroProtocolo('Erro ao consultar protocolo: ' + (err?.message || 'tente novamente.'))
-    } finally {
-      setConsultandoProtocolo(false)
-    }
-  }
-
   const carregarDados = useCallback(async () => {
     try {
       const [todosTransp, docsPoc] = await Promise.all([
@@ -634,126 +589,6 @@ export default function Poc() {
           ))}
         </div>
       </section>
-
-      {/* CONSULTA PÚBLICA POR PROTOCOLO POC (PADRÃO INCISO VII - LGPD COMPLIANT) */}
-      <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2.5 text-[#0a2540]">
-              <div className="p-2 rounded-md bg-sky-50 text-[#0284c7]">
-                <Search className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-base sm:text-lg font-bold font-display">
-                  Consulta Pública de Protocolo · POC
-                </CardTitle>
-                <p className="text-xs text-slate-500 font-normal mt-0.5">
-                  Acompanhe a tramitação, parecer e status regulatório da sua submissão
-                </p>
-              </div>
-            </div>
-            <span className="text-[10px] text-slate-600 bg-white border border-slate-200 px-2.5 py-0.5 rounded-full font-mono">
-              Res. ANP nº 961/2023 · Sigilo LGPD
-            </span>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-5 space-y-4">
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Informe o número de protocolo recebido por e-mail ou na tela de submissão (ex:{' '}
-            <strong className="font-mono text-slate-800">POC-2026-XXXX</strong>) para verificar o
-            andamento e a fase de análise da sua solicitação de capacidade de transporte firme. Em
-            respeito à LGPD, dados concorrenciais e pessoais sensíveis não são expostos.
-          </p>
-
-          <form
-            onSubmit={handleConsultarProtocolo}
-            className="flex flex-col sm:flex-row gap-2 max-w-xl"
-          >
-            <Input
-              type="text"
-              placeholder="Digite o número de protocolo (ex: POC-2026-1234)"
-              value={protocoloBusca}
-              onChange={(e) => setProtocoloBusca(e.target.value)}
-              className="text-xs font-mono uppercase bg-white border-slate-300"
-            />
-            <Button
-              type="submit"
-              disabled={consultandoProtocolo}
-              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold shrink-0 cursor-pointer"
-            >
-              {consultandoProtocolo ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Pesquisando...
-                </>
-              ) : (
-                <>
-                  <Search className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
-                  Consultar Protocolo
-                </>
-              )}
-            </Button>
-          </form>
-
-          {erroProtocolo && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2 max-w-xl">
-              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>{erroProtocolo}</span>
-            </div>
-          )}
-
-          {resultadoProtocolo && (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3 text-xs animate-fade-in max-w-2xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                <div>
-                  <span className="text-[11px] text-slate-500 block">Protocolo Oficial:</span>
-                  <strong className="text-sm font-bold text-[#0284c7] font-mono">
-                    {resultadoProtocolo.protocolo}
-                  </strong>
-                </div>
-                <Badge className="bg-[#0a2540] text-white text-xs">
-                  {resultadoProtocolo.status}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <span className="text-slate-500 block text-[11px]">Processo:</span>
-                  <span className="text-slate-800 font-medium">
-                    POC Ciclo {resultadoProtocolo.ciclo}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[11px]">Data de Recepção:</span>
-                  <span className="text-slate-800">
-                    {new Date(resultadoProtocolo.created).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[11px]">Capacidade Proposta:</span>
-                  <span className="text-slate-800 font-mono font-medium">
-                    {resultadoProtocolo.capacidade_proposta
-                      ? `${Number(resultadoProtocolo.capacidade_proposta).toLocaleString('pt-BR')} mil m³/d`
-                      : resultadoProtocolo.capacidade_solicitada_manif
-                        ? `${Number(resultadoProtocolo.capacidade_solicitada_manif).toLocaleString('pt-BR')} mil m³/d`
-                        : '—'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-white rounded border border-slate-200 space-y-1">
-                <span className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">
-                  Parecer Técnico-Regulatório:
-                </span>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  {resultadoProtocolo.parecer_fundamentado ||
-                    'Submissão registrada formalmente e em processo de averiguação pela comissão do POC.'}
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* SEÇÃO PÚBLICA: PARTICIPAÇÃO NO PROCESSO (INFORMATIVA, SEM FORMULÁRIOS) COM BOTÃO ACESSAR POC */}
       <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
