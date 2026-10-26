@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
@@ -21,12 +21,36 @@ import {
   CheckCircle2,
   Info,
   UserCheck,
+  Download,
+  ExternalLink,
+  PlusCircle,
+  CheckCircle,
 } from 'lucide-react'
+import { pocService, ManifestacaoInteressePOC, PropostaVinculantePOC } from '@/services/poc'
+import { FormularioManifestacao } from '@/components/FormularioManifestacao'
+import { FormularioProposta } from '@/components/FormularioProposta'
+
+type ModoVisualizacao = 'dashboard' | 'formulario_manifestacao' | 'formulario_proposta'
 
 export default function PoccAcesso() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAuthenticated, isLoading } = useAuth()
+
+  // Modo de visualização: dashboard ou formulários
+  const [modo, setModo] = useState<ModoVisualizacao>('dashboard')
+
+  // Submissão recém-concluída para destaque em modal / banner
+  const [submissaoRecente, setSubmissaoRecente] = useState<{
+    tipo: 'manifestacao' | 'proposta'
+    protocolo: string
+    data: string
+  } | null>(null)
+
+  // Histórico de submissões do usuário
+  const [manifestacoes, setManifestacoes] = useState<ManifestacaoInteressePOC[]>([])
+  const [propostas, setPropostas] = useState<PropostaVinculantePOC[]>([])
+  const [carregandoHistorico, setCarregandoHistorico] = useState<boolean>(false)
 
   // Estado da Tela de Autenticação Fictícia / Simulada (idêntica ao padrão de /solicitacao-acesso)
   const [loginSimuladoLiberado, setLoginSimuladoLiberado] = useState<boolean>(false)
@@ -61,12 +85,40 @@ export default function PoccAcesso() {
     }, 800)
   }
 
+  // Carregar submissões quando liberado
+  const carregarSubmissoes = useCallback(async () => {
+    setCarregandoHistorico(true)
+    try {
+      const [manifs, props] = await Promise.all([
+        pocService.listarManifestacoesDoUsuario(),
+        pocService.listarPropostasDoUsuario(),
+      ])
+      setManifestacoes(manifs)
+      setPropostas(props)
+    } catch (err) {
+      console.warn('Erro ao carregar histórico POC:', err)
+    } finally {
+      setCarregandoHistorico(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (loginSimuladoLiberado) {
+      carregarSubmissoes()
+    }
+  }, [loginSimuladoLiberado, carregarSubmissoes])
+
   // Dados do usuário autenticado no padrão LGPD
   const userRazaoSocial =
     (user?.razao_social as string) || (user?.name as string) || 'Carregador Cadastrado'
   const userCnpj = (user?.cnpj as string) || 'Não informado no cadastro'
   const userResponsavel = (user?.responsavel as string) || (user?.name as string) || 'Não informado'
   const userEmail = (user?.email as string) || usuarioAutenticadoSimulado || 'Não informado'
+  const userTelefone = (user?.telefone as string) || ''
+  const userAutorizacaoAnp = (user?.autorizacao_anp as string) || ''
+
+  const ultimaManifestacao = manifestacoes[0]
+  const ultimaProposta = propostas[0]
 
   if (isLoading) {
     return (
@@ -202,212 +254,604 @@ export default function PoccAcesso() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Voltar para POC Público (Documentos)
         </Link>
-        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-md font-mono">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-          <span>
-            Sessão autenticada &mdash;{' '}
-            <strong className="text-emerald-950 font-semibold font-sans">
-              {usuarioAutenticadoSimulado || userEmail || 'Carregador'}
-            </strong>
-          </span>
-        </span>
-      </div>
-
-      {/* CABEÇALHO DA PÁGINA AUTENTICADA */}
-      <div className="bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge
-            variant="outline"
-            className="border-blue-200 bg-blue-50/70 text-[#0a2540] text-[10px] font-bold tracking-wider uppercase font-display"
-          >
-            Resolução ANP nº 961/2023 · Art. 37-A
-          </Badge>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            Ambiente Autenticado do Carregador
-          </span>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-            Ciclo POC 2025/2026
-          </span>
-        </div>
-
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0a2540] font-display">
-          Área Restrita do Carregador · POC
-        </h1>
-
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
-          Ambiente restrito e seguro da{' '}
-          <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong> destinado à submissão
-          eletrônica dos atos regulatórios reservados do Processo de Oferta e Contratação de
-          Capacidade (Resolução ANP nº 961/2023, Art. 37-A, §5º). Em conformidade com a LGPD e as
-          normas da ANP, o acesso a estes atos é restrito a carregadores credenciados e seus
-          representantes legais.
-        </p>
-      </div>
-
-      {/* BLOCO MEUS DADOS (LGPD COMPLIANT) */}
-      <Card className="border border-slate-200 shadow-xs bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <UserCheck className="h-4 w-4 text-[#0284c7]" />
-              <CardTitle className="text-sm font-bold font-display">
-                Identificação do Carregador Autenticado (LGPD)
-              </CardTitle>
-            </div>
-            <span className="text-[10px] text-slate-500 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
-              Dados resguardados nos termos da Lei nº 13.709/2018
+        <div className="flex items-center gap-2">
+          {modo !== 'dashboard' && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setModo('dashboard')}
+              className="text-xs h-7 text-slate-600 hover:text-[#0a2540] border-slate-300"
+            >
+              Visão Geral do POC
+            </Button>
+          )}
+          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-md font-mono">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+            <span>
+              Sessão autenticada &mdash;{' '}
+              <strong className="text-emerald-950 font-semibold font-sans">
+                {usuarioAutenticadoSimulado || userEmail || 'Carregador'}
+              </strong>
             </span>
-          </div>
-          <CardDescription className="text-xs text-slate-500">
-            Informações cadastrais vinculadas à sessão autenticada. Os dados dos representantes
-            legais só são exibidos e processados em ambiente protegido.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/70 p-4 rounded-lg border border-slate-200 text-xs">
-            <div>
-              <span className="text-slate-500 block text-[11px]">Razão Social:</span>
-              <strong className="text-slate-900 font-medium">{userRazaoSocial}</strong>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">CNPJ:</span>
-              <strong className="text-slate-900 font-mono font-medium">{userCnpj}</strong>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">E-mail da Sessão:</span>
-              <strong className="text-slate-900 font-mono font-medium">{userEmail}</strong>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Representante Legal:</span>
-              <strong className="text-slate-900 font-medium">{userResponsavel}</strong>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ATOS RESERVADOS DO PROCESSO (ENXUTO E INFORMATIVO) */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-bold text-[#0a2540] font-display flex items-center gap-2">
-            <Layers className="h-5 w-5 text-[#0284c7]" />
-            Atos Regulatórios Reservados (Art. 37-A, § 5º)
-          </h2>
-          <p className="text-xs text-slate-500">
-            Etapas conduzidas sob autenticação conforme o cronograma oficial homologado pela ANP
-          </p>
+          </span>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* CARD 1: MANIFESTAÇÃO DE INTERESSE */}
-          <Card className="border border-slate-200 shadow-xs bg-white flex flex-col justify-between">
-            <CardHeader className="pb-3 border-b border-slate-100">
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
-                  Etapa I · Art. 37-A, § 5º, I
+      {/* BANNER DE SUBMISSÃO RECENTE / PROTOCOLO GERADO */}
+      {submissaoRecente && (
+        <div className="p-5 bg-emerald-50 border-2 border-emerald-300 rounded-xl shadow-xs animate-fade-in space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                  Submissão Registrada com Sucesso
                 </span>
-                <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                  Aguardando Abertura de Fase
+                <h3 className="text-base sm:text-lg font-bold text-emerald-950 font-display">
+                  {submissaoRecente.tipo === 'manifestacao'
+                    ? 'Manifestação de Interesse Recebida'
+                    : 'Proposta Garantida Vinculante Recebida'}
+                </h3>
+                <p className="text-xs text-emerald-900 leading-relaxed max-w-2xl">
+                  Seu documento preenchido e assinado foi devidamente recepcionado pela equipe do
+                  POC da TSB. O protocolo oficial foi gerado e vinculado à sua conta.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setSubmissaoRecente(null)}
+              className="text-xs text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100"
+            >
+              Fechar
+            </Button>
+          </div>
+
+          <div className="bg-white p-3.5 rounded-lg border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div>
+              <span className="text-[11px] text-slate-500 block">Número de Protocolo Oficial:</span>
+              <strong className="text-base font-bold text-[#0a2540] font-mono tracking-wide">
+                {submissaoRecente.protocolo}
+              </strong>
+            </div>
+            <div className="text-left sm:text-right">
+              <span className="text-[11px] text-slate-500 block">Data de Recepção:</span>
+              <span className="font-medium text-slate-800">{submissaoRecente.data}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RENDERIZAÇÃO CONDICIONAL POR MODO */}
+      {modo === 'formulario_manifestacao' ? (
+        <FormularioManifestacao
+          onVoltar={() => setModo('dashboard')}
+          onSucesso={(reg) => {
+            setSubmissaoRecente({
+              tipo: 'manifestacao',
+              protocolo: reg.protocolo,
+              data: new Date().toLocaleDateString('pt-BR'),
+            })
+            setModo('dashboard')
+            carregarSubmissoes()
+          }}
+          dadosPadrao={{
+            razaoSocial: userRazaoSocial,
+            cnpj: userCnpj !== 'Não informado no cadastro' ? userCnpj : '',
+            responsavel: userResponsavel !== 'Não informado' ? userResponsavel : '',
+            email: userEmail !== 'Não informado' ? userEmail : '',
+            telefone: userTelefone,
+            autorizacaoAnp: userAutorizacaoAnp,
+          }}
+        />
+      ) : modo === 'formulario_proposta' ? (
+        <FormularioProposta
+          onVoltar={() => setModo('dashboard')}
+          onSucesso={(reg) => {
+            setSubmissaoRecente({
+              tipo: 'proposta',
+              protocolo: reg.protocolo,
+              data: new Date().toLocaleDateString('pt-BR'),
+            })
+            setModo('dashboard')
+            carregarSubmissoes()
+          }}
+          dadosPadrao={{
+            razaoSocial: userRazaoSocial,
+            cnpj: userCnpj !== 'Não informado no cadastro' ? userCnpj : '',
+            responsavel: userResponsavel !== 'Não informado' ? userResponsavel : '',
+            email: userEmail !== 'Não informado' ? userEmail : '',
+            telefone: userTelefone,
+            autorizacaoAnp: userAutorizacaoAnp,
+          }}
+        />
+      ) : (
+        /* DASHBOARD PRINCIPAL */
+        <>
+          {/* CABEÇALHO DA PÁGINA AUTENTICADA */}
+          <div className="bg-white border border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className="border-blue-200 bg-blue-50/70 text-[#0a2540] text-[10px] font-bold tracking-wider uppercase font-display"
+              >
+                Resolução ANP nº 961/2023 · Art. 37-A
+              </Badge>
+              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Ambiente Autenticado do Carregador
+              </span>
+              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                Ciclo POC 2026/2027
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0a2540] font-display">
+              Área Restrita do Carregador · POC
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
+              Ambiente restrito e seguro da{' '}
+              <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong> destinado à submissão
+              eletrônica dos atos regulatórios reservados do Processo de Oferta e Contratação de
+              Capacidade (Resolução ANP nº 961/2023, Art. 37-A, §5º). Em conformidade com a LGPD e
+              as normas da ANP, o acesso a estes atos é restrito a carregadores credenciados e seus
+              representantes legais.
+            </p>
+          </div>
+
+          {/* BLOCO MEUS DADOS (LGPD COMPLIANT) */}
+          <Card className="border border-slate-200 shadow-xs bg-white">
+            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-[#0a2540]">
+                  <UserCheck className="h-4 w-4 text-[#0284c7]" />
+                  <CardTitle className="text-sm font-bold font-display">
+                    Identificação do Carregador Autenticado (LGPD)
+                  </CardTitle>
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
+                  Dados resguardados nos termos da Lei nº 13.709/2018
                 </span>
               </div>
-              <CardTitle className="text-base font-bold text-[#0a2540] font-display pt-2">
-                Manifestação de Interesse Não Vinculante
-              </CardTitle>
               <CardDescription className="text-xs text-slate-500">
-                Mapeamento preliminar de demanda e identificação dos potenciais carregadores
+                Informações cadastrais vinculadas à sessão autenticada. Os dados dos representantes
+                legais só são exibidos e processados em ambiente protegido.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 text-xs text-slate-600 space-y-3 flex-1 flex flex-col justify-between">
-              <p className="leading-relaxed">
-                Submissão formal dos volumes pretendidos de capacidade de transporte firme nos
-                pontos de entrada e zonas de saída da TSB, sem exigência de garantia financeira e
-                sem vínculo contratual imediato.
-              </p>
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                  <span>Disponível na próxima fase do cronograma oficial</span>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/70 p-4 rounded-lg border border-slate-200 text-xs">
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Razão Social:</span>
+                  <strong className="text-slate-900 font-medium">{userRazaoSocial}</strong>
                 </div>
-                <Button
-                  disabled
-                  variant="outline"
-                  className="w-full text-xs text-slate-400 border-slate-200 cursor-not-allowed bg-slate-50"
-                >
-                  Submeter Manifestação (Disponível em breve)
-                </Button>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">CNPJ:</span>
+                  <strong className="text-slate-900 font-mono font-medium">{userCnpj}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">E-mail da Sessão:</span>
+                  <strong className="text-slate-900 font-mono font-medium">{userEmail}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Representante Legal:</span>
+                  <strong className="text-slate-900 font-medium">{userResponsavel}</strong>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* CARD 2: PROPOSTA GARANTIDA VINCULANTE */}
-          <Card className="border border-slate-200 shadow-xs bg-white flex flex-col justify-between">
-            <CardHeader className="pb-3 border-b border-slate-100">
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
-                  Etapa III · Art. 37-A, § 5º, III
-                </span>
-                <span className="text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                  Fase Futura (Após Aprovação ANP)
-                </span>
+          {/* ATOS RESERVADOS DO PROCESSO — FLUXOS REAIS */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h2 className="text-lg font-bold text-[#0a2540] font-display flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-[#0284c7]" />
+                  Atos Regulatórios Reservados (Art. 37-A, § 5º)
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Fluxo digital completo: preencha o formulário web oficial, baixe o PDF, assine
+                  eletronicamente e reanexe para submissão imediata
+                </p>
               </div>
-              <CardTitle className="text-base font-bold text-[#0a2540] font-display pt-2">
-                Proposta Garantida Vinculante
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Apresentação de propostas firmes com aporte de garantia idônea
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 text-xs text-slate-600 space-y-3 flex-1 flex flex-col justify-between">
-              <p className="leading-relaxed">
-                Apresentação de proposta firme de contratação pelo Carregador após a aprovação da
-                proposta tarifária pela ANP (Etapa II), acompanhada de garantia de proposta conforme
-                previsto no edital/regulamento aprovado.
-              </p>
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                  <span>Disponível após homologação da Etapa II pela ANP</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={carregarSubmissoes}
+                disabled={carregandoHistorico}
+                className="text-xs h-7 text-slate-600 border-slate-300"
+              >
+                <RefreshCw
+                  className={`h-3 w-3 mr-1 ${carregandoHistorico ? 'animate-spin' : ''}`}
+                />
+                Atualizar Status
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* CARD 1: MANIFESTAÇÃO DE INTERESSE */}
+              <Card
+                className={`border shadow-xs bg-white flex flex-col justify-between transition-all ${
+                  ultimaManifestacao
+                    ? 'border-emerald-300 ring-1 ring-emerald-200'
+                    : 'border-slate-200 hover:border-[#0284c7]/40'
+                }`}
+              >
+                <CardHeader className="pb-3 border-b border-slate-100">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
+                      Etapa I · Art. 37-A, § 5º, I
+                    </span>
+                    {ultimaManifestacao ? (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded flex items-center gap-1 font-mono">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        SUBMETIDA
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-sky-800 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded">
+                        Formulário Disponível
+                      </span>
+                    )}
+                  </div>
+                  <CardTitle className="text-base font-bold text-[#0a2540] font-display pt-2">
+                    Manifestação de Interesse Não Vinculante
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500">
+                    Mapeamento preliminar de demanda e identificação dos potenciais carregadores
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4 text-xs text-slate-600 space-y-4 flex-1 flex flex-col justify-between">
+                  <p className="leading-relaxed">
+                    Submissão formal dos volumes pretendidos de capacidade de transporte firme nos
+                    pontos de entrada e zonas de saída da TSB, sem exigência de garantia financeira
+                    e sem vínculo contratual imediato.
+                  </p>
+
+                  {/* Detalhes de submissão existente */}
+                  {ultimaManifestacao ? (
+                    <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-emerald-900 font-semibold text-[11px]">
+                          Protocolo Registrado:
+                        </span>
+                        <strong className="text-[#0a2540] font-mono text-xs">
+                          {ultimaManifestacao.protocolo}
+                        </strong>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span>Data do envio:</span>
+                        <span>
+                          {new Date(ultimaManifestacao.created).toLocaleDateString('pt-BR')} às{' '}
+                          {new Date(ultimaManifestacao.created).toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span>Capacidade total:</span>
+                        <span className="font-mono font-medium">
+                          {Number(ultimaManifestacao.capacidade_solicitada || 0).toLocaleString(
+                            'pt-BR',
+                          )}{' '}
+                          mil m³/dia
+                        </span>
+                      </div>
+                      {ultimaManifestacao.arquivo_formulario && (
+                        <div className="pt-1 flex items-center justify-between text-[11px] border-t border-emerald-200/60">
+                          <span className="text-slate-500">Documento anexado:</span>
+                          <a
+                            href={pb.files.getURL(
+                              ultimaManifestacao,
+                              ultimaManifestacao.arquivo_formulario,
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0284c7] hover:underline font-medium inline-flex items-center gap-1"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Visualizar PDF Assinado
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                      <span className="font-semibold text-slate-800 block">Fluxo em 5 passos:</span>
+                      <span>
+                        1. Preencha online &bull; 2. Baixe o PDF &bull; 3. Assine &bull; 4. Reanexe
+                        o arquivo &bull; 5. Receba o protocolo na tela
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <Button
+                      type="button"
+                      onClick={() => setModo('formulario_manifestacao')}
+                      className="w-full text-xs font-semibold bg-[#0a2540] hover:bg-[#143b73] text-white cursor-pointer shadow-xs"
+                    >
+                      {ultimaManifestacao ? (
+                        <>
+                          <PlusCircle className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
+                          Submeter Nova Manifestação de Interesse
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
+                          Abrir Formulário de Manifestação
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* CARD 2: PROPOSTA GARANTIDA VINCULANTE */}
+              <Card
+                className={`border shadow-xs bg-white flex flex-col justify-between transition-all ${
+                  ultimaProposta
+                    ? 'border-emerald-300 ring-1 ring-emerald-200'
+                    : 'border-slate-200 hover:border-red-300'
+                }`}
+              >
+                <CardHeader className="pb-3 border-b border-slate-100">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-[#0a2540] text-white font-mono">
+                      Etapa III · Art. 37-A, § 5º, III
+                    </span>
+                    {ultimaProposta ? (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded flex items-center gap-1 font-mono">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        SUBMETIDA
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-red-800 bg-red-50 border border-red-200 px-2 py-0.5 rounded font-bold">
+                        Vinculante com Garantia
+                      </span>
+                    )}
+                  </div>
+                  <CardTitle className="text-base font-bold text-[#0a2540] font-display pt-2">
+                    Proposta Garantida Vinculante
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500">
+                    Apresentação de propostas firmes com aporte de garantia financeira idônea
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4 text-xs text-slate-600 space-y-4 flex-1 flex flex-col justify-between">
+                  <p className="leading-relaxed">
+                    Apresentação de proposta firme de contratação pelo Carregador após a homologação
+                    da proposta tarifária pela ANP, acompanhada de garantia da proposta e
+                    compromisso irrevogável de celebração de contrato.
+                  </p>
+
+                  {/* Detalhes de submissão existente */}
+                  {ultimaProposta ? (
+                    <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-lg space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-emerald-900 font-semibold text-[11px]">
+                          Protocolo Registrado:
+                        </span>
+                        <strong className="text-[#0a2540] font-mono text-xs">
+                          {ultimaProposta.protocolo}
+                        </strong>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span>Data do envio:</span>
+                        <span>
+                          {new Date(ultimaProposta.created).toLocaleDateString('pt-BR')} às{' '}
+                          {new Date(ultimaProposta.created).toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span>Capacidade / Tarifa:</span>
+                        <span className="font-mono font-medium">
+                          {Number(ultimaProposta.capacidade_proposta || 0).toLocaleString('pt-BR')}{' '}
+                          mil m³/d · R$ {Number(ultimaProposta.tarifa_aceita || 0).toFixed(4)}/MMBtu
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span>Garantia aportada:</span>
+                        <span className="font-medium text-slate-800">
+                          {ultimaProposta.garantia_tipo} (R${' '}
+                          {Number(ultimaProposta.garantia_valor || 0).toLocaleString('pt-BR')})
+                        </span>
+                      </div>
+                      {ultimaProposta.arquivo_proposta_assinada && (
+                        <div className="pt-1 flex items-center justify-between text-[11px] border-t border-emerald-200/60">
+                          <span className="text-slate-500">Documento anexado:</span>
+                          <a
+                            href={pb.files.getURL(
+                              ultimaProposta,
+                              ultimaProposta.arquivo_proposta_assinada,
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0284c7] hover:underline font-medium inline-flex items-center gap-1"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Visualizar Proposta Assinada
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-red-50/50 rounded border border-red-200 text-[11px] text-slate-600 space-y-1">
+                      <span className="font-semibold text-red-900 block">
+                        Exigência de Garantia:
+                      </span>
+                      <span>
+                        Requer upload obrigatório do comprovante de garantia financeira (fiança
+                        bancária, seguro garantia ou depósito caução) e do PDF assinado.
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <Button
+                      type="button"
+                      onClick={() => setModo('formulario_proposta')}
+                      className="w-full text-xs font-semibold bg-[#0a2540] hover:bg-[#143b73] text-white cursor-pointer shadow-xs"
+                    >
+                      {ultimaProposta ? (
+                        <>
+                          <PlusCircle className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
+                          Submeter Nova Proposta Garantida
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-3.5 w-3.5 mr-1.5 text-sky-300" />
+                          Abrir Formulário de Proposta Garantida
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* HISTÓRICO CONSOLIDADO DE SUBMISSÕES */}
+          {(manifestacoes.length > 0 || propostas.length > 0) && (
+            <Card className="border border-slate-200 shadow-xs bg-white">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#0284c7]" />
+                  Histórico de Submissões Desta Conta no POC
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Protocolos formais registrados no banco da TSB para este Carregador Habilitado
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="divide-y divide-slate-100 text-xs">
+                  {manifestacoes.map((m) => (
+                    <div
+                      key={m.id}
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#0a2540]">{m.protocolo}</span>
+                          <span className="text-[10px] px-2 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-200 font-medium">
+                            Manifestação de Interesse
+                          </span>
+                          <span className="text-[10px] px-2 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {m.status || 'Submetida'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {m.razao_social} &bull; Trecho:{' '}
+                          <span className="text-slate-700">{m.trecho || '—'}</span> &bull;
+                          Capacidade:{' '}
+                          <span className="font-mono font-medium text-slate-900">
+                            {Number(m.capacidade_solicitada || 0).toLocaleString('pt-BR')} mil m³/d
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 self-start sm:self-center">
+                        <span className="text-[11px] text-slate-400">
+                          {new Date(m.created).toLocaleDateString('pt-BR')}
+                        </span>
+                        {m.arquivo_formulario && (
+                          <a
+                            href={pb.files.getURL(m, m.arquivo_formulario)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-[#0284c7] hover:underline font-medium ml-2"
+                          >
+                            <Download className="h-3 w-3" />
+                            PDF
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {propostas.map((p) => (
+                    <div
+                      key={p.id}
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#0a2540]">{p.protocolo}</span>
+                          <span className="text-[10px] px-2 py-0.2 rounded bg-red-50 text-red-900 border border-red-200 font-medium">
+                            Proposta Garantida
+                          </span>
+                          <span className="text-[10px] px-2 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {p.status || 'Submetida'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {p.razao_social} &bull; Trecho/Ponto:{' '}
+                          <span className="text-slate-700">{p.trecho || '—'}</span> &bull;
+                          Capacidade:{' '}
+                          <span className="font-mono font-medium text-slate-900">
+                            {Number(p.capacidade_proposta || 0).toLocaleString('pt-BR')} mil m³/d
+                          </span>{' '}
+                          &bull; Garantia: <span className="text-slate-700">{p.garantia_tipo}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 self-start sm:self-center">
+                        <span className="text-[11px] text-slate-400">
+                          {new Date(p.created).toLocaleDateString('pt-BR')}
+                        </span>
+                        {p.arquivo_proposta_assinada && (
+                          <a
+                            href={pb.files.getURL(p, p.arquivo_proposta_assinada)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-[#0284c7] hover:underline font-medium ml-2"
+                          >
+                            <Download className="h-3 w-3" />
+                            PDF
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <Button
-                  disabled
-                  variant="outline"
-                  className="w-full text-xs text-slate-400 border-slate-200 cursor-not-allowed bg-slate-50"
-                >
-                  Submeter Proposta Vinculante (Fase Futura)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* AVISO REGULATÓRIO */}
-      <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600 flex items-start gap-3">
-        <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-        <div className="leading-relaxed">
-          <span className="font-semibold text-slate-800">Diretrizes da ANP: </span>
-          O cronograma e a liberação das etapas obedecem aos prazos preclusivos fixados pela Agência
-          Nacional do Petróleo, Gás Natural e Biocombustíveis. Novas funcionalidades e formulários
-          serão disponibilizados nesta área restrita conforme as publicações oficiais no Diário
-          Oficial da União.
-        </div>
-      </div>
+          {/* AVISO REGULATÓRIO */}
+          <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-600 flex items-start gap-3">
+            <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-semibold text-slate-800">Diretrizes da ANP: </span>
+              O cronograma e a liberação das etapas obedecem aos prazos preclusivos fixados pela
+              Agência Nacional do Petróleo, Gás Natural e Biocombustíveis. Novas funcionalidades e
+              formulários serão disponibilizados nesta área restrita conforme as publicações
+              oficiais no Diário Oficial da União.
+            </div>
+          </div>
 
-      {/* RODAPÉ */}
-      <div className="text-center text-xs text-slate-500 pt-4 border-t border-slate-200 space-y-1">
-        <p>
-          Transportadora Sulbrasileira de Gás S.A. &bull; Resolução ANP nº 961/2023 &bull; Resolução
-          ANP nº 11/2016
-        </p>
-        <p>
-          Contato do POC:{' '}
-          <a
-            href="mailto:comercial@tsb.com.br"
-            className="text-[#0284c7] hover:underline font-medium"
-          >
-            comercial@tsb.com.br
-          </a>
-        </p>
-      </div>
+          {/* RODAPÉ */}
+          <div className="text-center text-xs text-slate-500 pt-4 border-t border-slate-200 space-y-1">
+            <p>
+              Transportadora Sulbrasileira de Gás S.A. &bull; Resolução ANP nº 961/2023 &bull;
+              Resolução ANP nº 11/2016
+            </p>
+            <p>
+              Contato do POC:{' '}
+              <a
+                href="mailto:comercial@tsb.com.br"
+                className="text-[#0284c7] hover:underline font-medium"
+              >
+                comercial@tsb.com.br
+              </a>
+            </p>
+          </div>
+        </>
+      )}
     </div>
   )
 }

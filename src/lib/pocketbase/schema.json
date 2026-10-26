@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T19:01:42.926Z",
+  "generatedAt": "2026-10-26T19:13:21.167Z",
   "collections": [
     {
       "name": "users",
@@ -1001,7 +1001,8 @@
             "Em Ajuste Cadastral",
             "Indeferida",
             "Manifestação registrada — aguardando conferência da assinatura",
-            "Documento gerado — aguardando assinatura do representante legal"
+            "Documento gerado — aguardando assinatura do representante legal",
+            "Submetida"
           ]
         },
         {
@@ -1042,6 +1043,24 @@
           "required": false,
           "system": false,
           "selectValues": ["area_carregador", "manual_interno", "portal_web"]
+        },
+        {
+          "name": "dados_formulario",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rep_autorizado_nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rep_autorizado_cpf",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1212,7 +1231,8 @@
             "Capacidade Alocada (Art. 37-A, III)",
             "Aguardando Assinatura (Art. 37-A, IV)",
             "Contrato Celebrado e Enviado à ANP (Art. 37-A, V)",
-            "Indeferida"
+            "Indeferida",
+            "Submetida"
           ]
         },
         {
@@ -1240,6 +1260,37 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "dados_formulario",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_proposta_assinada",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "criterio_leilao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_minima_leilao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["area_carregador", "manual_interno", "portal_web"]
         }
       ],
       "indexes": [

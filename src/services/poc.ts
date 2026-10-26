@@ -70,6 +70,7 @@ export interface ManifestacaoInteressePOC extends RecordModel {
   ponto_entrega?: string
   periodo_vigencia?: string
   status:
+    | 'Submetida'
     | 'Documento gerado — aguardando assinatura do representante legal'
     | 'Manifestação registrada — aguardando conferência da assinatura'
     | 'Recebida - Em Análise'
@@ -79,10 +80,14 @@ export interface ManifestacaoInteressePOC extends RecordModel {
   observacoes_internas?: string
   declaracao_anp_aceita?: boolean
   arquivo_formulario?: string
+  dados_formulario?: any
+  rep_autorizado_nome?: string
+  rep_autorizado_cpf?: string
   origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
 }
 
 export interface NovaManifestacaoInput {
+  protocolo?: string
   ciclo?: string
   razao_social: string
   cnpj: string
@@ -91,13 +96,16 @@ export interface NovaManifestacaoInput {
   responsavel_nome: string
   autorizacao_anp?: string
   capacidade_solicitada: number
-  modalidade: 'Firme Ordinário' | 'Extraordinário' | 'Interruptível'
-  trecho: string
+  modalidade?: 'Firme Ordinário' | 'Extraordinário' | 'Interruptível'
+  trecho?: string
   ponto_recebimento?: string
   ponto_entrega?: string
   periodo_vigencia?: string
   declaracao_anp_aceita: boolean
   arquivo_formulario?: File | null
+  dados_formulario?: any
+  rep_autorizado_nome?: string
+  rep_autorizado_cpf?: string
   origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
   status?: ManifestacaoInteressePOC['status']
 }
@@ -109,6 +117,7 @@ export type GarantiaTipo =
   | 'Carta de Crédito'
 
 export type StatusPropostaVinculante =
+  | 'Submetida'
   | 'Proposta Recebida'
   | 'Garantia em Análise'
   | 'Capacidade Alocada (Art. 37-A, III)'
@@ -134,17 +143,23 @@ export interface PropostaVinculantePOC extends RecordModel {
   garantia_vigencia?: string
   garantia_arquivo?: string
   documento_proposta?: string
+  arquivo_proposta_assinada?: string
+  criterio_leilao?: string
+  capacidade_minima_leilao?: number
+  dados_formulario?: any
   capacidade_proposta: number
   tarifa_aceita?: number
   trecho: string
   ponto_recebimento?: string
   ponto_entrega?: string
-  status: StatusPropostaVinculante
+  status: StatusPropostaVinculante | 'Submetida'
   parecer_alocacao?: string
   capacidade_alocada?: number
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
 }
 
 export interface NovaPropostaInput {
+  protocolo?: string
   manifestacao_id?: string
   ciclo?: string
   razao_social: string
@@ -154,26 +169,40 @@ export interface NovaPropostaInput {
   rep_legal_rg: string
   rep_legal_endereco: string
   rep_legal_cargo?: string
-  garantia_tipo: GarantiaTipo
-  garantia_valor: number
+  garantia_tipo?: GarantiaTipo
+  garantia_valor?: number
   garantia_instituicao?: string
   garantia_vigencia?: string
   garantia_arquivo?: File | null
   documento_proposta?: File | null
+  arquivo_proposta_assinada?: File | null
+  criterio_leilao?: string
+  capacidade_minima_leilao?: number
+  dados_formulario?: any
   capacidade_proposta: number
   tarifa_aceita?: number
-  trecho: string
+  trecho?: string
   ponto_recebimento?: string
   ponto_entrega?: string
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
+  status?: PropostaVinculantePOC['status']
 }
 
-export function gerarProtocoloPOC(tipo: 'POCC' | 'PROP' | 'TSB' = 'TSB'): string {
+export function gerarProtocoloPOC(
+  tipo: 'POCC' | 'PROP' | 'TSB' | 'POC-MI' | 'POC-PG' = 'TSB',
+): string {
   const ano = new Date().getFullYear()
-  const random4 = Math.floor(1000 + Math.random() * 9000)
-  if (tipo === 'TSB') {
-    return `TSB-${ano}-${random4}`
+  const seq4 = String(Math.floor(1000 + Math.random() * 9000))
+  if (tipo === 'POC-MI') {
+    return `POC-MI-${ano}-${seq4}`
   }
-  return `${tipo}-TSB-${ano}-${random4}`
+  if (tipo === 'POC-PG') {
+    return `POC-PG-${ano}-${seq4}`
+  }
+  if (tipo === 'TSB') {
+    return `TSB-${ano}-${seq4}`
+  }
+  return `${tipo}-TSB-${ano}-${seq4}`
 }
 
 export function resolverUrlDocPOC(
@@ -304,10 +333,9 @@ export const pocService = {
       throw new Error('Usuário deve estar autenticado para enviar manifestação de interesse.')
     }
 
-    const protocolo = gerarProtocoloPOC('TSB')
+    const protocolo = input.protocolo || gerarProtocoloPOC('POC-MI')
     const ciclo = input.ciclo || '2026/2027'
-    const statusInicial: ManifestacaoInteressePOC['status'] =
-      input.status || 'Manifestação registrada — aguardando conferência da assinatura'
+    const statusInicial: ManifestacaoInteressePOC['status'] = input.status || 'Submetida'
     const origem = input.origem || 'area_carregador'
 
     const formData = new FormData()
@@ -320,9 +348,9 @@ export const pocService = {
     formData.append('telefone', input.telefone?.trim() || '')
     formData.append('responsavel_nome', input.responsavel_nome.trim())
     formData.append('autorizacao_anp', input.autorizacao_anp?.trim() || '')
-    formData.append('capacidade_solicitada', String(input.capacidade_solicitada))
-    formData.append('modalidade', input.modalidade)
-    formData.append('trecho', input.trecho)
+    formData.append('capacidade_solicitada', String(input.capacidade_solicitada || 0))
+    formData.append('modalidade', input.modalidade || 'Firme Ordinário')
+    formData.append('trecho', input.trecho || 'Gasoduto Uruguaiana - Triunfo')
     formData.append('ponto_recebimento', input.ponto_recebimento || 'Paso de Los Libres')
     formData.append('ponto_entrega', input.ponto_entrega || 'Triunfo')
     formData.append('periodo_vigencia', input.periodo_vigencia || '2026/2027')
@@ -330,6 +358,15 @@ export const pocService = {
     formData.append('origem', origem)
     formData.append('declaracao_anp_aceita', input.declaracao_anp_aceita ? 'true' : 'false')
 
+    if (input.rep_autorizado_nome) {
+      formData.append('rep_autorizado_nome', input.rep_autorizado_nome.trim())
+    }
+    if (input.rep_autorizado_cpf) {
+      formData.append('rep_autorizado_cpf', input.rep_autorizado_cpf.trim())
+    }
+    if (input.dados_formulario) {
+      formData.append('dados_formulario', JSON.stringify(input.dados_formulario))
+    }
     if (input.arquivo_formulario instanceof File) {
       formData.append('arquivo_formulario', input.arquivo_formulario)
     }
@@ -399,7 +436,7 @@ export const pocService = {
       throw new Error('Usuário deve estar autenticado para enviar proposta vinculante.')
     }
 
-    const protocolo = gerarProtocoloPOC('PROP')
+    const protocolo = input.protocolo || gerarProtocoloPOC('POC-PG')
     const formData = new FormData()
 
     formData.append('user_id', userId)
@@ -417,8 +454,8 @@ export const pocService = {
     if (input.rep_legal_cargo) {
       formData.append('rep_legal_cargo', input.rep_legal_cargo.trim())
     }
-    formData.append('garantia_tipo', input.garantia_tipo)
-    formData.append('garantia_valor', String(input.garantia_valor))
+    formData.append('garantia_tipo', input.garantia_tipo || 'Fiança Bancária')
+    formData.append('garantia_valor', String(input.garantia_valor || 0))
     if (input.garantia_instituicao) {
       formData.append('garantia_instituicao', input.garantia_instituicao.trim())
     }
@@ -428,19 +465,37 @@ export const pocService = {
     if (input.garantia_arquivo instanceof File) {
       formData.append('garantia_arquivo', input.garantia_arquivo)
     }
+    if (input.arquivo_proposta_assinada instanceof File) {
+      formData.append('arquivo_proposta_assinada', input.arquivo_proposta_assinada)
+    }
     if (input.documento_proposta instanceof File) {
       formData.append('documento_proposta', input.documento_proposta)
     }
-    formData.append('capacidade_proposta', String(input.capacidade_proposta))
-    if (input.tarifa_aceita) {
+    formData.append('capacidade_proposta', String(input.capacidade_proposta || 0))
+    if (input.tarifa_aceita !== undefined) {
       formData.append('tarifa_aceita', String(input.tarifa_aceita))
     }
-    formData.append('trecho', input.trecho)
+    formData.append('trecho', input.trecho || 'Gasoduto Uruguaiana - Triunfo')
     formData.append('ponto_recebimento', input.ponto_recebimento || 'Paso de Los Libres')
     formData.append('ponto_entrega', input.ponto_entrega || 'Triunfo')
-    formData.append('status', 'Proposta Recebida')
+    formData.append('status', input.status || 'Submetida')
+    formData.append('origem', input.origem || 'area_carregador')
 
-    return await pb.collection<PropostaVinculantePOC>('poc_propostas_vinculantes').create(formData)
+    if (input.criterio_leilao) {
+      formData.append('criterio_leilao', input.criterio_leilao)
+    }
+    if (input.capacidade_minima_leilao !== undefined) {
+      formData.append('capacidade_minima_leilao', String(input.capacidade_minima_leilao))
+    }
+    if (input.dados_formulario) {
+      formData.append('dados_formulario', JSON.stringify(input.dados_formulario))
+    }
+
+    return await pb
+      .collection<PropostaVinculantePOC>('poc_propostas_vinculantes')
+      .create(formData, {
+        requestKey: null,
+      })
   },
 
   async listarPropostasDoUsuario(userId?: string): Promise<PropostaVinculantePOC[]> {
