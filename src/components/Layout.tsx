@@ -14,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const navLinks: { label: string; to: string; subtitle?: string }[] = [
     { label: 'Institucional', to: '/' },
     { label: 'Transparência (ANP)', to: '/transparencia' },
-    { label: 'POC — Programa de Oferta de Capacidade', to: '/poc' },
+    { label: 'POC — Plataforma de Oferta de Capacidade', to: '/poc' },
     { label: 'Gestão Interna', to: '/gestao' },
   ]
 
