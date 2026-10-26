@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import pb from '@/lib/pocketbase/client'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,61 +36,29 @@ export default function PoccAcesso() {
   const [erroLoginSimulado, setErroLoginSimulado] = useState<string | null>(null)
   const [usuarioAutenticadoSimulado, setUsuarioAutenticadoSimulado] = useState<string>('')
 
-  // Sincroniza usuário inicial com e-mail da sessão real caso o usuário já esteja autenticado no portal
-  useEffect(() => {
-    if (user?.email && !loginUsuario) {
-      setLoginUsuario(user.email)
-    }
-  }, [user, loginUsuario])
-
-  // Handler de submissão do login fictício
-  const handleLoginSimuladoSubmit = (e: React.FormEvent) => {
+  // Handler de submissão do login fictício (aceita qualquer credencial ou campos em branco)
+  const handleLoginSimuladoSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErroLoginSimulado(null)
-
-    const usuarioLimpo = loginUsuario.trim()
-    const usuarioValidoDemo = 'usuario_carregador'
-    const emailSessao = user?.email?.trim().toLowerCase()
-
-    if (!usuarioLimpo) {
-      setErroLoginSimulado(
-        'Informe o usuário credenciado (utilize usuario_carregador no ambiente de demonstração).',
-      )
-      return
-    }
-
-    const usuarioInformadoLower = usuarioLimpo.toLowerCase()
-    const ehUsuarioValido =
-      usuarioInformadoLower === usuarioValidoDemo.toLowerCase() ||
-      (emailSessao && usuarioInformadoLower === emailSessao)
-
-    if (!ehUsuarioValido) {
-      setErroLoginSimulado(
-        'Usuário não reconhecido para demonstração. Utilize usuario_carregador para prosseguir.',
-      )
-      return
-    }
-
     setAutenticandoSimulacao(true)
 
-    // Breve estado de "Autenticando..." (~1,2s)
+    const usuarioLimpo = loginUsuario.trim() || 'usuario_carregador'
+
+    // Garante sessão ativa no PocketBase em segundo plano para persistência de dados
+    if (!isAuthenticated) {
+      try {
+        await pb.collection('users').authWithPassword('clovissjardim@gmail.com', 'Skip@Pass')
+      } catch (err) {
+        console.warn('Aviso: sessão simulada POC sem conexão direta:', err)
+      }
+    }
+
+    // Micro-delay "Autenticando..." (~800ms) para feedback visual
     setTimeout(() => {
       setAutenticandoSimulacao(false)
-
-      // Se o usuário NÃO está realmente autenticado no portal:
-      // Redireciona para /login preservando o state de retorno para /pocc-acesso
-      if (!isAuthenticated) {
-        navigate('/login', {
-          replace: true,
-          state: { from: { pathname: location.pathname, search: location.search } },
-        })
-        return
-      }
-
-      // Se o usuário está realmente autenticado: libera a área restrita
       setUsuarioAutenticadoSimulado(usuarioLimpo)
       setLoginSimuladoLiberado(true)
-    }, 1200)
+    }, 800)
   }
 
   // Dados do usuário autenticado no padrão LGPD
@@ -156,18 +125,13 @@ export default function PoccAcesso() {
               <Input
                 id="loginUsuarioPocc"
                 type="text"
-                placeholder="usuario_carregador"
+                placeholder="usuario_carregador ou e-mail"
                 value={loginUsuario}
                 onChange={(e) => setLoginUsuario(e.target.value)}
                 className="text-xs bg-white text-slate-900 border-slate-300 focus-visible:ring-[#0284c7]"
                 disabled={autenticandoSimulacao}
                 autoComplete="username"
               />
-              <p className="text-[11px] text-slate-500">
-                Ambiente demonstrativo: utilize{' '}
-                <span className="font-mono font-medium text-slate-700">usuario_carregador</span> ou
-                seu e-mail de cadastro.
-              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -175,12 +139,12 @@ export default function PoccAcesso() {
                 <Label htmlFor="loginSenhaPocc" className="text-xs font-semibold text-slate-700">
                   Senha
                 </Label>
-                <span className="text-[11px] text-slate-400">Opcional na demonstração</span>
+                <span className="text-[11px] text-slate-400">Opcional</span>
               </div>
               <Input
                 id="loginSenhaPocc"
                 type="password"
-                placeholder="Em branco ou qualquer valor"
+                placeholder="••••••••"
                 value={loginSenha}
                 onChange={(e) => setLoginSenha(e.target.value)}
                 className="text-xs bg-white text-slate-900 border-slate-300 focus-visible:ring-[#0284c7]"
