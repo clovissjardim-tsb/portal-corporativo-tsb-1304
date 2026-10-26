@@ -26,7 +26,6 @@ import {
   ChevronRight,
   Info,
   ShieldAlert,
-  ArrowRight,
   History,
 } from 'lucide-react'
 
@@ -35,7 +34,6 @@ export interface BoletimEletronicoProps {
   setFiltroAnoMensal?: (val: string) => void
   filtroMesMensal?: string
   setFiltroMesMensal?: (val: string) => void
-  onNavegarParaPlataformaSecao?: (secaoId: string) => void
 }
 
 export interface RelatorioMensalItem {
@@ -338,7 +336,6 @@ export default function BoletimEletronico({
   setFiltroAnoMensal: _setFiltroAnoMensal,
   filtroMesMensal: _filtroMesMensal,
   setFiltroMesMensal: _setFiltroMesMensal,
-  onNavegarParaPlataformaSecao,
 }: BoletimEletronicoProps = {}) {
   const { toast } = useToast()
 
@@ -1616,35 +1613,6 @@ export default function BoletimEletronico({
                   </div>
                 )
               })()}
-            </div>
-
-            {/* NOTA DISCRETA DE REFERÊNCIA CRUZADA AO ART. 3º DA PORTARIA ANP Nº 1/2003 */}
-            <div className="mt-4 px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start sm:items-center gap-2.5">
-                <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5 sm:mt-0" />
-                <span>
-                  <strong>
-                    Relatório de Simulações Termo-Hidráulicas (Art. 3º da Portaria ANP nº 1/2003):
-                  </strong>{' '}
-                  disponível no pilar Plataforma Eletrônica, seção Simulação Termo-Hidráulica
-                  (Trechos 1 e 3).
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onNavegarParaPlataformaSecao) {
-                    onNavegarParaPlataformaSecao('secao-simulacao-termo-hidraulica')
-                  } else {
-                    const el = document.getElementById('secao-simulacao-termo-hidraulica')
-                    el?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284c7] hover:text-[#0369a1] hover:underline cursor-pointer shrink-0 self-start sm:self-auto"
-              >
-                <span>Acessar Simulação</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
             </div>
           </section>
 

@@ -22,7 +22,9 @@ export interface TransparenciaProps {
   onNavegarParaPlataformaSecao?: (secaoId: string) => void
 }
 
-export default function Transparencia() {
+export default function Transparencia({
+  onNavegarParaPlataformaSecao: _onNavegarParaPlataformaSecao,
+}: TransparenciaProps = {}) {
   const { toast } = useToast()
 
   // Pilar ativo: 'boletim' | 'plataforma' | 'monitoramento'
@@ -221,17 +223,6 @@ export default function Transparencia() {
           setFiltroAnoMensal={setFiltroAnoMensal}
           filtroMesMensal={filtroMesMensal}
           setFiltroMesMensal={setFiltroMesMensal}
-          onNavegarParaPlataformaSecao={(secaoId) => {
-            setActivePilar('plataforma')
-            setSubAbaPlataforma('i_vi')
-            // Programmatic smooth scroll to target element after tab switch
-            setTimeout(() => {
-              const el = document.getElementById(secaoId)
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-            }, 120)
-          }}
         />
       )}
 
