@@ -28,6 +28,10 @@ import {
   HelpCircle,
   FileCheck,
   Copy,
+  Lock,
+  KeyRound,
+  Shield,
+  Fingerprint,
 } from 'lucide-react'
 
 export default function SolicitacaoAcesso() {
@@ -35,6 +39,10 @@ export default function SolicitacaoAcesso() {
   const location = useLocation()
   const { user, isAuthenticated, isLoading } = useAuth()
   const { toast } = useToast()
+
+  // Estado da Tela de Autenticação Fictícia (simulação de checagem segura institucional)
+  const [authStep, setAuthStep] = useState<number>(0)
+  const [authLiberado, setAuthLiberado] = useState<boolean>(false)
 
   // Redirecionamento autenticado: se não estiver logado, redirecionar para /login guardando o retorno
   useEffect(() => {
@@ -45,6 +53,35 @@ export default function SolicitacaoAcesso() {
       })
     }
   }, [isAuthenticated, isLoading, navigate, location])
+
+  // Sequência da Autenticação Fictícia: roda automaticamente ao entrar na página quando autenticado
+  useEffect(() => {
+    if (isAuthenticated && !authLiberado) {
+      // Passo 0: Inicial (0ms) -> "Estabelecendo canal seguro com a infraestrutura TSB..."
+      const timer1 = setTimeout(() => {
+        setAuthStep(1) // "Validando credenciais do Carregador Cadastrado..."
+      }, 700)
+
+      const timer2 = setTimeout(() => {
+        setAuthStep(2) // "Conferindo permissões regulatórias (Res. ANP 11/2016, Art. 10)..."
+      }, 1400)
+
+      const timer3 = setTimeout(() => {
+        setAuthStep(3) // "Acesso autorizado com sucesso. Carregando formulário..."
+      }, 2100)
+
+      const timer4 = setTimeout(() => {
+        setAuthLiberado(true)
+      }, 2700)
+
+      return () => {
+        clearTimeout(timer1)
+        clearTimeout(timer2)
+        clearTimeout(timer3)
+        clearTimeout(timer4)
+      }
+    }
+  }, [isAuthenticated, authLiberado])
 
   // Campos pré-carregados do usuário autenticado (travados na tela)
   const userRazaoSocial =
@@ -216,6 +253,184 @@ export default function SolicitacaoAcesso() {
         <div className="flex items-center gap-2 text-sm text-slate-600">
           <RefreshCw className="h-4 w-4 animate-spin text-[#0a2540]" />
           <span>Verificando credenciais e preparando ambiente seguro...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // TELA DE AUTENTICAÇÃO FICTÍCIA (PORTÃO INTERMEDIÁRIO SEGURO TSB)
+  if (!authLiberado) {
+    const etapas = [
+      {
+        id: 0,
+        titulo: 'Conexão Segura TLS/HTTPS',
+        subtitulo: 'Estabelecendo canal criptografado com o servidor TSB',
+      },
+      {
+        id: 1,
+        titulo: 'Identificação do Carregador',
+        subtitulo: `Validando credenciais de ${userRazaoSocial}`,
+      },
+      {
+        id: 2,
+        titulo: 'Habilitação Regulatória ANP',
+        subtitulo: 'Conferindo enquadramento Art. 10 da Res. ANP nº 11/2016',
+      },
+      {
+        id: 3,
+        titulo: 'Sessão Autenticada',
+        subtitulo: 'Acesso seguro liberado ao formulário de solicitação',
+      },
+    ]
+
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-12 animate-fade-in">
+        <div className="w-full max-w-lg bg-white border border-slate-200 rounded-xl shadow-lg p-6 sm:p-8 space-y-6">
+          {/* TOPO: ÍCONE E CABEÇALHO */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex p-3.5 rounded-full bg-slate-50 border border-slate-200 shadow-2xs text-[#0a2540] mb-1">
+              <ShieldCheck className="h-8 w-8 text-[#0284c7]" />
+            </div>
+            <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white tracking-wider uppercase font-display">
+              Autenticação Segura &bull; Área Restrita TSB
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display">
+              Solicitação de Acesso Dutoviário
+            </h1>
+            <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+              Resolução ANP nº 11/2016, Art. 10 &bull; Canal de autuação eletrônica regulatória
+            </p>
+          </div>
+
+          {/* DADOS DA IDENTIDADE AUTENTICADA RECONHECIDA */}
+          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5">
+            <div className="flex items-center justify-between text-slate-500 text-[11px]">
+              <span className="flex items-center gap-1 font-semibold text-slate-700">
+                <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
+                Carregador Conectado
+              </span>
+              <span className="font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10px] font-semibold">
+                Sessão Ativa
+              </span>
+            </div>
+            <div className="font-semibold text-slate-900 text-sm truncate">{userRazaoSocial}</div>
+            <div className="flex items-center justify-between text-slate-500 font-mono text-[11px] pt-0.5">
+              <span>CNPJ: {userCnpj}</span>
+              <span className="truncate max-w-[200px]">{userEmailInicial}</span>
+            </div>
+          </div>
+
+          {/* SIMULAÇÃO DE VERIFICAÇÃO PASSO A PASSO */}
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-700 pb-1 border-b border-slate-100">
+              <span className="flex items-center gap-1.5">
+                <Fingerprint className="h-4 w-4 text-[#0284c7]" />
+                Verificação de Integridade da Sessão
+              </span>
+              <span className="font-mono text-[11px] text-slate-500">
+                {Math.min(authStep + 1, 4)}/4
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {etapas.map((etapa) => {
+                const concluido = authStep > etapa.id
+                const emAndamento = authStep === etapa.id
+
+                return (
+                  <div
+                    key={etapa.id}
+                    className={`flex items-start gap-3 p-2.5 rounded-lg border text-xs transition-all duration-300 ${
+                      concluido
+                        ? 'bg-emerald-50/60 border-emerald-200 text-slate-800'
+                        : emAndamento
+                          ? 'bg-sky-50 border-sky-300 text-slate-900 shadow-2xs'
+                          : 'bg-slate-50/40 border-slate-200/60 text-slate-400 opacity-60'
+                    }`}
+                  >
+                    <div className="shrink-0 mt-0.5">
+                      {concluido ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      ) : emAndamento ? (
+                        <RefreshCw className="h-4 w-4 text-[#0284c7] animate-spin" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-slate-400" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`font-semibold ${concluido ? 'text-emerald-950' : emAndamento ? 'text-[#0a2540]' : 'text-slate-500'}`}
+                        >
+                          {etapa.titulo}
+                        </span>
+                        {concluido && (
+                          <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider font-mono">
+                            OK
+                          </span>
+                        )}
+                        {emAndamento && (
+                          <span className="text-[10px] text-[#0284c7] font-semibold animate-pulse">
+                            Validando...
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                        {etapa.subtitulo}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* BARRA DE PROGRESSO VISUAL */}
+          <div className="space-y-1.5 pt-1">
+            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-[#0284c7] h-full transition-all duration-500 ease-out rounded-full"
+                style={{ width: `${((authStep + 1) / 4) * 100}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span className="flex items-center gap-1">
+                <Shield className="h-3 w-3 text-slate-400" />
+                Certificado Digital SHA-256
+              </span>
+              <span>Conexão Segura Ponta a Ponta</span>
+            </div>
+          </div>
+
+          {/* BOTÃO MANUAL PARA CASO O USUÁRIO NÃO QUEIRA AGUARDAR O AUTO-AVANÇO */}
+          <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-200">
+            <Link
+              to="/transparencia"
+              className="text-xs text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Cancelar
+            </Link>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setAuthLiberado(true)}
+              className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-4 cursor-pointer"
+            >
+              {authStep >= 3 ? (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                  Acessar Formulário
+                </>
+              ) : (
+                <>
+                  <span>Prosseguir Direto</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     )
