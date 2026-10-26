@@ -189,33 +189,14 @@ export function POC() {
     declaracao_nao_vinculante: true,
   })
 
-  // =========================================================================
-  // NOVO: FORMULÁRIO DE SOLICITAÇÃO DE ACESSO — INCISO VII (ART. 10)
-  // Requisitos mínimos literais do Art. 10, caput da Res. ANP nº 11/2016:
-  // (I) modalidade pretendida (firme ou interruptível);
-  // (II) período de contratação (datas início/fim);
-  // (III) capacidade pretendida em m³/dia por Ponto Relevante;
-  // (IV) pontos de recebimento e entrega (Trechos 1 e 3 da malha TSB).
-  // =========================================================================
-  const [formVII, setFormVII] = useState({
-    modalidade: 'Firme Ordinário' as 'Firme Ordinário' | 'Interruptível',
-    data_inicio: '2026-01-01',
-    data_fim: '2026-12-31',
-    capacidade: 150000,
-    ponto_relevante_id: 'libres_uruguaiana',
-    observacoes: '',
-  })
-  const [enviandoVII, setEnviandoVII] = useState(false)
-  const [protocoloGeradoVII, setProtocoloGeradoVII] = useState<{
-    protocolo: string
-    registro: SolicitacaoIncisoVII
-  } | null>(null)
-
-  // Efeito para rolar suavemente até o card do Inciso VII se houver hash na URL
+  // Efeito para rolar suavemente até a consulta do Inciso VII se houver hash na URL
   useEffect(() => {
-    if (location.hash === '#solicitacao-acesso-inciso-vii') {
+    if (
+      location.hash === '#consulta-protocolo-vii' ||
+      location.hash === '#solicitacao-acesso-inciso-vii'
+    ) {
       setTimeout(() => {
-        const el = document.getElementById('solicitacao-acesso-inciso-vii')
+        const el = document.getElementById('consulta-protocolo-vii')
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
@@ -567,85 +548,6 @@ export function POC() {
       })
     } finally {
       setEnviandoAssinadoManif(false)
-    }
-  }
-
-  // Submissão da Solicitação de Acesso à Malha (Inciso VII — Art. 10 da Res. ANP 11/2016)
-  const handleEnviarSolicitacaoVII = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isAuthenticated) {
-      toast({
-        title: 'Autenticação necessária',
-        description:
-          'Faça login com a conta da sua empresa para protocolar a solicitação de acesso.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const pontoSel =
-      PONTOS_RELEVANTES_TSB.find((p) => p.id === formVII.ponto_relevante_id) ||
-      PONTOS_RELEVANTES_TSB[0]
-
-    if (!formVII.capacidade || formVII.capacidade <= 0) {
-      toast({
-        title: 'Capacidade inválida',
-        description: 'Informe uma capacidade pretendida maior que zero (m³/dia).',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (!formVII.data_inicio || !formVII.data_fim) {
-      toast({
-        title: 'Período obrigatório',
-        description: 'Preencha as datas de início e término do período pretendido (Art. 10, II).',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setEnviandoVII(true)
-    try {
-      const registro = await solicitacoesService.submeterPoc({
-        modalidade: formVII.modalidade,
-        data_inicio: formVII.data_inicio,
-        data_fim: formVII.data_fim,
-        capacidade: Number(formVII.capacidade),
-        ponto_relevante_id: formVII.ponto_relevante_id,
-        ponto_recebimento: pontoSel.ponto_recebimento,
-        ponto_entrega: pontoSel.ponto_entrega,
-        trecho: pontoSel.trecho,
-        observacoes: formVII.observacoes,
-      })
-
-      setProtocoloGeradoVII({
-        protocolo: registro.protocolo,
-        registro,
-      })
-
-      // Atualiza automaticamente o campo de consulta para permitir verificação imediata
-      setConsultaProtocolo(registro.protocolo)
-      setResultadoConsulta({
-        buscado: true,
-        encontrado: true,
-        protocoloPesquisado: registro.protocolo,
-        dados: registro,
-      })
-
-      toast({
-        title: 'Solicitação de Acesso Protocolada!',
-        description: `Protocolo ${registro.protocolo} gerado com sucesso. SLA regulatório de 20 dias úteis em andamento.`,
-      })
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha ao registrar solicitação de acesso.'
-      toast({
-        title: 'Erro na submissão',
-        description: msg,
-        variant: 'destructive',
-      })
-    } finally {
-      setEnviandoVII(false)
     }
   }
 
@@ -2001,20 +1903,9 @@ export function POC() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto text-left pt-2">
+            <div className="grid grid-cols-1 gap-3 max-w-md mx-auto text-left pt-2">
               <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs space-y-1">
-                <span className="font-bold text-[#0a2540] block">
-                  1. Solicitação de Acesso (Inciso VII)
-                </span>
-                <p className="text-[11px] text-slate-500">
-                  Formulário com os 4 itens mínimos (Art. 10), emissão imediata de protocolo e
-                  contagem do SLA de 20 dias úteis.
-                </p>
-              </div>
-              <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs space-y-1">
-                <span className="font-bold text-[#0a2540] block">
-                  2. Portal do POCC (Art. 37-A)
-                </span>
+                <span className="font-bold text-[#0a2540] block">Portal do POCC (Art. 37-A)</span>
                 <p className="text-[11px] text-slate-500">
                   Manifestação de interesse não vinculante para capacidade nova e acompanhamento da
                   linha de tramitação do ciclo.
@@ -2045,7 +1936,7 @@ export function POC() {
         ) : (
           /* CASO LOGADO: DOIS SISTEMAS DENTRO DA ÁREA DO CARREGADOR */
           <div className="space-y-8">
-            {/* SISTEMA A: SOLICITAÇÃO DE ACESSO — INCISO VII (ART. 10) */}
+            {/* SISTEMA A: CONSULTA DE PROTOCOLO & SLA — INCISO VII (ART. 10) */}
             <div className="space-y-4 pt-2">
               <div className="space-y-1 pb-2 border-b border-slate-200">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2063,320 +1954,17 @@ export function POC() {
                 </div>
 
                 <h3 className="text-lg sm:text-xl font-bold text-[#0a2540]">
-                  Solicitação de Acesso à Malha (Inciso VII — Art. 10)
+                  Consulta de Solicitação de Acesso (Inciso VII — Art. 10)
                 </h3>
 
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Rito permanente para requisição de acesso à capacidade da infraestrutura TSB.
-                  Emissão de Parecer Técnico Fundamentado em até 20 dias úteis (Art. 10, §2º) e
-                  comunicação formal com cópia à ANP nos desfechos regulatórios do §3º.
+                  Rito permanente para requisição de acesso à capacidade da infraestrutura TSB. O
+                  cadastro de novas solicitações é realizado pela Gestão Interna a partir do
+                  recebimento do formulário oficial assinado por e-mail, autuando o protocolo
+                  oficial e disparando o comprovante por e-mail com SLA de 20 dias úteis (Art. 10,
+                  §2º).
                 </p>
               </div>
-
-              {/* FORMULÁRIO DE SUBMISSÃO VII */}
-              <Card
-                id="solicitacao-acesso-inciso-vii"
-                className="border border-slate-200 shadow-none bg-slate-50/40 overflow-hidden scroll-mt-6"
-              >
-                <CardHeader className="p-4 sm:p-5 bg-white border-b border-slate-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="space-y-0.5">
-                      <CardTitle className="text-base sm:text-lg font-bold text-[#0a2540] flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-[#0284c7]" />
-                        Submissão de Nova Solicitação de Acesso
-                      </CardTitle>
-                      <p className="text-xs text-slate-600">
-                        Apresente os 4 itens mínimos regulamentares do Art. 10 da Resolução ANP nº
-                        11/2016.
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Protocolo TSB-AAAA-XXXX gerado automaticamente
-                    </span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-4 sm:p-6 space-y-5">
-                  {/* CONFIRMAÇÃO VISUAL DO PROTOCOLO GERADO */}
-                  {protocoloGeradoVII && (
-                    <div className="p-4 sm:p-5 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3 animate-fade-in">
-                      <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                            <Check className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
-                              Solicitação Protocolada com Sucesso
-                            </span>
-                            <span className="font-mono text-lg sm:text-xl font-bold text-emerald-950">
-                              {protocoloGeradoVII.protocolo}
-                            </span>
-                          </div>
-                        </div>
-
-                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-semibold">
-                          Origem: Área do Carregador (autenticado)
-                        </Badge>
-                      </div>
-
-                      <p className="text-xs text-emerald-900 leading-relaxed">
-                        Sua solicitação de acesso foi autuada com sucesso no sistema da TSB sob o
-                        protocolo{' '}
-                        <strong className="font-mono">{protocoloGeradoVII.protocolo}</strong>. O
-                        prazo regulatório de <strong>20 dias úteis</strong> para emissão do Parecer
-                        Técnico Fundamentado da Transportadora (Art. 10, §2º) está em contagem a
-                        partir de hoje. O protocolo já pode ser acompanhado no campo de consulta
-                        abaixo.
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const el = document.getElementById('consulta-protocolo-vii')
-                            el?.scrollIntoView({ behavior: 'smooth' })
-                          }}
-                          className="font-semibold text-emerald-900 hover:text-emerald-950 underline inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <Search className="h-3.5 w-3.5" />
-                          Verificar na Consulta de Protocolo &amp; SLA &darr;
-                        </button>
-                        <span className="text-emerald-600">&bull;</span>
-                        <button
-                          type="button"
-                          onClick={() => setProtocoloGeradoVII(null)}
-                          className="text-emerald-800 hover:underline cursor-pointer"
-                        >
-                          Fechar aviso
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* IDENTIFICAÇÃO AUTOMÁTICA DO CARREGADOR (NÃO EDITÁVEL) */}
-                  <div className="p-3.5 bg-white border border-slate-200 rounded-lg text-xs space-y-2">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="font-bold text-[#0a2540] flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
-                        <Building2 className="h-3.5 w-3.5 text-[#0284c7]" />
-                        Identificação do Carregador Solicitante (Art. 10, caput)
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        Preenchido automaticamente a partir da conta autenticada (não editável)
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 pt-1">
-                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                          Razão Social
-                        </span>
-                        <span className="font-bold text-slate-900 truncate block">
-                          {(user as unknown as { razao_social?: string })?.razao_social ||
-                            user?.name ||
-                            'Carregador Cadastrado'}
-                        </span>
-                      </div>
-
-                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                          CNPJ
-                        </span>
-                        <span className="font-mono font-semibold text-slate-900 block">
-                          {(user as unknown as { cnpj?: string })?.cnpj || 'Cadastro ativo'}
-                        </span>
-                      </div>
-
-                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded">
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase block">
-                          E-mail Institucional do Carregador
-                        </span>
-                        <span className="text-slate-900 truncate block font-mono text-[11px]">
-                          {user?.email || 'contato@carregador.com.br'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* FORMULÁRIO COM OS 4 ITENS MÍNIMOS DA NORMA */}
-                  <form onSubmit={handleEnviarSolicitacaoVII} className="space-y-4 text-xs">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {/* (I) MODALIDADE PRETENDIDA */}
-                      <div className="space-y-1">
-                        <Label htmlFor="vii_mod" className="text-xs font-semibold text-slate-700">
-                          (I) Modalidade Pretendida *
-                        </Label>
-                        <select
-                          id="vii_mod"
-                          value={formVII.modalidade}
-                          onChange={(e) =>
-                            setFormVII({
-                              ...formVII,
-                              modalidade: e.target.value as 'Firme Ordinário' | 'Interruptível',
-                            })
-                          }
-                          className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                        >
-                          <option value="Firme Ordinário">Firme Ordinário</option>
-                          <option value="Interruptível">Interruptível</option>
-                        </select>
-                        <span className="text-[10px] text-slate-500 block">Art. 10, I</span>
-                      </div>
-
-                      {/* (II) PERÍODO DE CONTRATAÇÃO: DATA INÍCIO */}
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="vii_dt_ini"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          (II) Data Início do Período *
-                        </Label>
-                        <Input
-                          id="vii_dt_ini"
-                          type="date"
-                          required
-                          value={formVII.data_inicio}
-                          onChange={(e) => setFormVII({ ...formVII, data_inicio: e.target.value })}
-                          className="h-9 text-xs bg-white"
-                        />
-                        <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
-                      </div>
-
-                      {/* (II) PERÍODO DE CONTRATAÇÃO: DATA FIM */}
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="vii_dt_fim"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          (II) Data Término do Período *
-                        </Label>
-                        <Input
-                          id="vii_dt_fim"
-                          type="date"
-                          required
-                          value={formVII.data_fim}
-                          onChange={(e) => setFormVII({ ...formVII, data_fim: e.target.value })}
-                          className="h-9 text-xs bg-white"
-                        />
-                        <span className="text-[10px] text-slate-500 block">Art. 10, II</span>
-                      </div>
-
-                      {/* (III) CAPACIDADE PRETENDIDA EM M³/DIA */}
-                      <div className="space-y-1">
-                        <Label htmlFor="vii_cap" className="text-xs font-semibold text-slate-700">
-                          (III) Capacidade Pretendida (m³/dia) *
-                        </Label>
-                        <Input
-                          id="vii_cap"
-                          type="number"
-                          required
-                          min={1}
-                          value={formVII.capacidade}
-                          onChange={(e) =>
-                            setFormVII({ ...formVII, capacidade: Number(e.target.value) })
-                          }
-                          className="h-9 text-xs font-mono font-bold bg-white"
-                        />
-                        <span className="text-[10px] text-slate-500 block">Art. 10, III</span>
-                      </div>
-                    </div>
-
-                    {/* (IV) PONTOS DE RECEBIMENTO E ENTREGA */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2 space-y-1">
-                        <Label
-                          htmlFor="vii_ponto_sel"
-                          className="text-xs font-semibold text-slate-700"
-                        >
-                          (IV) Ponto Relevante e Rota Dutoviária (Trechos 1 e 3 da Malha TSB) *
-                        </Label>
-                        <select
-                          id="vii_ponto_sel"
-                          value={formVII.ponto_relevante_id}
-                          onChange={(e) =>
-                            setFormVII({ ...formVII, ponto_relevante_id: e.target.value })
-                          }
-                          className="w-full h-9 px-2.5 rounded border border-slate-300 text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#0a2540]"
-                        >
-                          {PONTOS_RELEVANTES_TSB.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.nome}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="text-[10px] text-slate-500 block">
-                          Art. 10, IV • Seleção entre os pontos homologados da infraestrutura TSB
-                        </span>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="vii_obs" className="text-xs font-semibold text-slate-700">
-                          Observações Técnicas (Opcional)
-                        </Label>
-                        <Input
-                          id="vii_obs"
-                          placeholder="Ex: perfil de pressão, sazonalidade..."
-                          value={formVII.observacoes}
-                          onChange={(e) => setFormVII({ ...formVII, observacoes: e.target.value })}
-                          className="h-9 text-xs bg-white"
-                        />
-                        <span className="text-[10px] text-slate-500 block">
-                          Informações complementares
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* RESUMO DOS PONTOS SELECIONADOS */}
-                    {(() => {
-                      const sel =
-                        PONTOS_RELEVANTES_TSB.find((p) => p.id === formVII.ponto_relevante_id) ||
-                        PONTOS_RELEVANTES_TSB[0]
-                      return (
-                        <div className="p-3 bg-white border border-slate-200 rounded text-[11px] text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="space-x-1">
-                            <span className="font-semibold text-slate-700">
-                              Ponto de Recebimento:
-                            </span>
-                            <strong className="text-[#0a2540]">{sel.ponto_recebimento}</strong>
-                            <span className="text-slate-400">&rarr;</span>
-                            <span className="font-semibold text-slate-700">Ponto de Entrega:</span>
-                            <strong className="text-[#0a2540]">{sel.ponto_entrega}</strong>
-                          </div>
-                          <span className="font-mono text-[10px] font-semibold text-slate-500">
-                            {sel.trecho}
-                          </span>
-                        </div>
-                      )
-                    })()}
-
-                    {/* BOTÃO DE SUBMISSÃO DA SOLICITAÇÃO VII */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-200">
-                      <span className="text-[11px] text-slate-500">
-                        A submissão autua o protocolo <strong>TSB-AAAA-XXXX</strong> com prazo de
-                        resposta de 20 dias úteis (Art. 10, §2º).
-                      </span>
-
-                      <Button
-                        type="submit"
-                        disabled={enviandoVII}
-                        className="h-10 px-6 bg-[#0a2540] hover:bg-[#13395e] text-white font-semibold text-xs cursor-pointer shadow-xs transition-colors shrink-0"
-                      >
-                        {enviandoVII ? (
-                          <>
-                            <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                            Protocolando Solicitação...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-3.5 w-3.5 mr-1.5 text-sky-400" />
-                            Submeter Solicitação de Acesso (Inciso VII)
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
 
               {/* CONSULTA DE PROTOCOLO & SLA DENTRO DO SISTEMA A */}
               <Card

@@ -85,46 +85,6 @@ export type NovaSolicitacaoInput = {
   status?: StatusSolicitacao
 }
 
-export type NovaSolicitacaoAcessoPocInput = {
-  modalidade: 'Firme Ordinário' | 'Interruptível'
-  data_inicio: string
-  data_fim: string
-  capacidade: number // m³/dia
-  ponto_relevante_id: string // Identificador do ponto relevante (ex: 'libres_uruguaiana' | 'tbg_triunfo' ...)
-  ponto_recebimento: string
-  ponto_entrega: string
-  trecho: string
-  observacoes?: string
-}
-
-export type NovaSolicitacaoWebInput = {
-  razao_social: string
-  cnpj: string
-  endereco?: string
-  representante_legal: string
-  email: string
-  telefone: string
-  modalidade: ModalidadeSolicitacao
-  trecho: string
-  ponto_recebimento: string
-  ponto_entrega: string
-  capacidade: number
-  data_inicio: string
-  prazo_vigencia: string
-  // Swap / Troca Operacional: pares cedente/receptor
-  swap_cedente_nome?: string
-  swap_receptor_nome?: string
-  swap_origem?: string
-  swap_destino?: string
-  swap_volume_cedente?: number
-  swap_volume_receptor?: number
-  garantias_seguranca_swap?: string
-  observacoes?: string
-  arquivo_formulario?: File | null
-  // Honeypot anti-bot (se preenchido, submissão é ignorada silenciosamente)
-  website_url?: string
-}
-
 // Interface para agregação pública por Ponto Relevante (SEM dados pessoais - LGPD / Art. 9º, VII)
 export interface ResumoPublicoSolicitacao {
   pontoRelevante: string
@@ -263,67 +223,6 @@ export const solicitacoesService = {
     } catch {
       return null
     }
-  },
-
-  /**
-   * Submete a Solicitação de Acesso à Malha - Inciso VII (Art. 10 da Res. ANP 11/2016)
-   * diretamente a partir da Área do Carregador (/poc, ambiente logado e autenticado).
-   * Identificação do Carregador Interessado é capturada da sessão autenticada.
-   */
-  async submeterPoc(dados: NovaSolicitacaoAcessoPocInput): Promise<SolicitacaoIncisoVII> {
-    const userRecord = pb.authStore.record
-    if (!userRecord) {
-      throw new Error(
-        'Usuário não autenticado. Identifique-se na Área do Carregador para solicitar acesso.',
-      )
-    }
-
-    const razaoSocial =
-      (userRecord as unknown as { razao_social?: string }).razao_social || userRecord.name || ''
-    const cnpj = (userRecord as unknown as { cnpj?: string }).cnpj || ''
-    const email = userRecord.email || ''
-    const representanteLegal =
-      (userRecord as unknown as { responsavel?: string }).responsavel ||
-      userRecord.name ||
-      razaoSocial
-    const telefone = (userRecord as unknown as { telefone?: string }).telefone || ''
-
-    if (!razaoSocial.trim() || !cnpj.trim()) {
-      throw new Error('Cadastro do Carregador incompleto: Razão Social e CNPJ são indispensáveis.')
-    }
-
-    const periodoFormatado = `${dados.data_inicio} a ${dados.data_fim}`
-
-    return await this.criar({
-      razao_social: razaoSocial.trim(),
-      cnpj: cnpj.trim(),
-      email: email.trim(),
-      representante_legal: representanteLegal.trim(),
-      telefone: telefone.trim(),
-      modalidade: dados.modalidade,
-      capacidade: dados.capacidade,
-      trecho: dados.trecho,
-      ponto_recebimento: dados.ponto_recebimento,
-      ponto_entrega: dados.ponto_entrega,
-      periodo: periodoFormatado,
-      origem: 'area_carregador',
-      observacoes:
-        dados.observacoes ||
-        'Submissão formal via Área do Carregador (ambiente autenticado - POCC)',
-    })
-  },
-
-  /**
-   * [LEGADO / DESATIVADO] Anteriormente permitia submissão direta pelo portal web anônimo.
-   * A submissão oficial agora é efetuada na Área do Carregador (/poc, autenticado) ou via Gestão Interna.
-   */
-  async submeterWeb(data: NovaSolicitacaoWebInput): Promise<{
-    protocolo: string
-    registro: SolicitacaoIncisoVII
-  }> {
-    throw new Error(
-      'A submissão anônima foi descontinuada. Acesse a Área do Carregador para protocolar sua solicitação com login.',
-    )
   },
 
   /**
