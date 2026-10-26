@@ -175,7 +175,7 @@ export const CABECALHOS_FALLBACK: Record<
   pocc_aprovacao_anp_oficio555: {
     titulo: 'Aprovação da ANP (Ofício nº 555/2025-SIM)',
     descricao:
-      'Aprovação da ANP que inaugura e autoriza o ciclo do POCC para prestação de serviço de transporte extraordinário (Ofício nº 555/2025/SIM-CTC/SIM/ANP-RJ-e).',
+      'Aprovação da ANP que autoriza o ciclo do POC para prestação de serviço de transporte em regime de capacidade firme (Ofício nº 555/2025/SIM-CTC/SIM/ANP-RJ-e).',
     url_externa:
       'https://www.tsb.com.br/wp-content/uploads/2026/04/OFICIO-No-555_2025_SIM-CTC_SIM_ANP-RJ-e.pdf',
     nome_arquivo_custom: 'Ofício ANP nº 555/2025-SIM (PDF)',
@@ -188,11 +188,11 @@ export const CABECALHOS_FALLBACK: Record<
     nome_arquivo_custom: 'Contrato Master Completo 2026 (PDF)',
   },
   pocc_tarifa_contrato_extraordinario: {
-    titulo: 'Tarifa do Contrato Extraordinário (T3 para 2026)',
+    titulo: 'Tarifa do Contrato de Capacidade Firme (T3 para 2026)',
     descricao:
-      'Número tarifário real homologado para o Trecho 3 (T3) no horizonte de 2026 para contratos de transporte extraordinário da malha TSB.',
+      'Tarifa homologada pela ANP para o Trecho 3 (T3) no horizonte de 2026 para contratação de capacidade firme na malha dutoviária da TSB.',
     url_externa: 'https://www.tsb.com.br/wp-content/uploads/2026/02/Tarifa-T3-para-2026-1.docx',
-    nome_arquivo_custom: 'Tarifa T3 para 2026 (.docx)',
+    nome_arquivo_custom: 'Tarifa Firme T3 para 2026 (.docx)',
   },
   pocc_calculo_capacidade: {
     titulo: 'Cálculo da Capacidade de Transporte (Item 1.7.8)',
@@ -205,18 +205,18 @@ export const CABECALHOS_FALLBACK: Record<
   pocc_cronograma_indicativo: {
     titulo: 'Cronograma Indicativo do Ciclo Regulatório 2026–2030',
     descricao:
-      'Cronograma indicativo oficial com o horizonte plurianual 2026–2030 do ciclo regulatório e etapas do POCC na infraestrutura TSB.',
+      'Cronograma indicativo oficial com o horizonte plurianual 2026–2030 do ciclo regulatório e etapas do POC na infraestrutura TSB.',
     url_externa:
       'https://www.tsb.com.br/wp-content/uploads/2026/04/Cronograma-Indicativo-Ciclo-Regulatorio-2026-2030.pdf',
     nome_arquivo_custom: 'Cronograma Indicativo 2026–2030 (PDF)',
   },
   pocc_anexo4_pocc: {
-    titulo: 'Anexo 4 — Cronograma POCC Produto Firme Anual TSB',
+    titulo: 'Anexo 4 — Cronograma POC Produto Firme Anual TSB',
     descricao:
-      'Documento oficial do Anexo 4 contendo o detalhamento de prazos e ritos do POCC para contratação de produto firme anual.',
+      'Documento oficial do Anexo 4 contendo o detalhamento de prazos e ritos do POC para contratação de produto firme anual.',
     url_externa:
       'https://www.tsb.com.br/wp-content/uploads/2025/01/ANEXO-4-Cronograma-POCC-2025-PRODUTO-FIRME-ANUAL-TSB.pdf',
-    nome_arquivo_custom: 'Anexo 4 — Cronograma POCC (PDF)',
+    nome_arquivo_custom: 'Anexo 4 — Cronograma POC (PDF)',
   },
 }
 

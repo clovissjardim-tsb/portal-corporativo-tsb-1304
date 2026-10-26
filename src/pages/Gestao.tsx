@@ -302,7 +302,7 @@ export default function Gestao() {
           </CardContent>
         </Card>
 
-        {/* CARD 2: ADMINISTRAÇÃO DO POCC */}
+        {/* CARD 2: ADMINISTRAÇÃO DO POC */}
         <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
@@ -310,12 +310,12 @@ export default function Gestao() {
                 <Briefcase className="h-4 w-4" />
               </div>
               <CardTitle className="text-sm font-bold text-[#0a2540]">
-                Administração do POCC
+                Administração do POC
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
-            Administração do POCC (Processo de Oferta e Contratação de Capacidade): acompanhamento
+            Administração do POC (Processo de Oferta e Contratação de Capacidade): acompanhamento
             das manifestações de interesse dos carregadores e condução das etapas até a contratação.
           </CardContent>
         </Card>

@@ -121,14 +121,14 @@ export default function PoccAcesso() {
               <Lock className="h-6 w-6 text-[#0284c7]" />
             </div>
             <div className="inline-block px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white tracking-wider uppercase font-display">
-              Área Restrita · POCC
+              Área Restrita · POC
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-[#0a2540] font-display">
               Acesso do Carregador
             </h1>
             <p className="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
-              Plataforma de Oferta e Contratação de Capacidade (Res. ANP nº 961/2023, Art. 37-A)
-            </p>
+              Processo de Oferta e Contratação de Capacidade (Res. ANP nº 961/2023, Art. 37-A)
+            </p>{' '}
           </div>
 
           {/* INDICATIVO DE AMBIENTE DE DEMONSTRAÇÃO */}
@@ -203,7 +203,7 @@ export default function PoccAcesso() {
                 ) : (
                   <>
                     <KeyRound className="h-3.5 w-3.5 mr-2 text-sky-300" />
-                    Entrar na Área Segura do POCC
+                    Entrar na Área Segura do POC
                   </>
                 )}
               </Button>
@@ -217,7 +217,7 @@ export default function PoccAcesso() {
               className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Voltar ao POCC Público
+              Voltar ao POC Público
             </Link>
             <span className="text-[11px] text-slate-400">TSB S.A. &bull; Res. ANP nº 961/2023</span>
           </div>
@@ -226,7 +226,7 @@ export default function PoccAcesso() {
     )
   }
 
-  // ÁREA RESERVADA DO POCC (APÓS AUTENTICAÇÃO)
+  // ÁREA RESERVADA DO POC (APÓS AUTENTICAÇÃO)
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl mx-auto pb-12">
       {/* NAVEGAÇÃO SUPERIOR DE RETORNO E CONFIRMAÇÃO DE SESSÃO */}
@@ -236,7 +236,7 @@ export default function PoccAcesso() {
           className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0a2540] font-medium transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Voltar para POCC Público (Documentos)
+          Voltar para POC Público (Documentos)
         </Link>
         <span className="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-md font-mono">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
@@ -262,12 +262,12 @@ export default function PoccAcesso() {
             Ambiente Autenticado do Carregador
           </span>
           <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-            Ciclo POCC 2025/2026
+            Ciclo POC 2025/2026
           </span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0a2540] font-display">
-          Área Restrita do Carregador · POCC
+          Área Restrita do Carregador · POC
         </h1>
 
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
@@ -435,7 +435,7 @@ export default function PoccAcesso() {
           ANP nº 11/2016
         </p>
         <p>
-          Contato do POCC:{' '}
+          Contato do POC:{' '}
           <a
             href="mailto:comercial@tsb.com.br"
             className="text-[#0284c7] hover:underline font-medium"

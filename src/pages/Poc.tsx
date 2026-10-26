@@ -192,12 +192,11 @@ interface GrupoDocsConfig {
   slots: SlotDocConfig[]
 }
 
-const GRUPOS_DOCUMENTOS_POCC: GrupoDocsConfig[] = [
+const GRUPOS_DOCUMENTOS_POC: GrupoDocsConfig[] = [
   {
     id: 'ciclo_2025_2026',
-    tituloGrupo: 'Ciclo POCC 2025/2026',
-    descricaoGrupo:
-      'POCC 2025 para prestação de serviço de transporte extraordinário em 2026 (aprovado pela ANP)',
+    tituloGrupo: 'Ciclo POC 2025/2026 — Capacidade Firme',
+    descricaoGrupo: 'POC 2025 — Contratação de Capacidade Firme para 2026 (aprovado pela ANP)',
     slots: [
       {
         chaveTransparencia: 'pocc_aprovacao_anp_oficio555',
@@ -230,7 +229,7 @@ const GRUPOS_DOCUMENTOS_POCC: GrupoDocsConfig[] = [
         chaveTransparencia: 'pocc_cronograma_indicativo',
         chavePocDoc: 'cronograma_detalhado_2026',
         titulo: 'Cronograma',
-        subtitulo: 'Cronograma indicativo do ciclo regulatório e etapas do POCC',
+        subtitulo: 'Cronograma indicativo do ciclo regulatório e etapas do POC',
         formato: 'pdf',
         rotuloArquivoPadrao: 'Cronograma Indicativo 2026–2030 (PDF)',
         urlPadrao:
@@ -238,10 +237,10 @@ const GRUPOS_DOCUMENTOS_POCC: GrupoDocsConfig[] = [
       },
       {
         chaveTransparencia: 'pocc_tarifa_contrato_extraordinario',
-        titulo: 'Tarifa Contrato Extraordinário',
+        titulo: 'Tarifa do Contrato de Capacidade Firme',
         subtitulo: 'Tarifa homologada para o Trecho 3 (T3) para o ciclo de 2026',
         formato: 'word',
-        rotuloArquivoPadrao: 'Tarifa T3 para 2026 (Word)',
+        rotuloArquivoPadrao: 'Tarifa Firme T3 para 2026 (Word)',
         urlPadrao: 'https://www.tsb.com.br/wp-content/uploads/2026/02/Tarifa-T3-para-2026-1.docx',
       },
     ],
@@ -373,10 +372,12 @@ const GRUPOS_DOCUMENTOS_POCC: GrupoDocsConfig[] = [
       },
       {
         chaveTransparencia: 'pocc_homologacao_mi',
-        titulo: 'Homologação da etapa de Manifestação de Interesse (MI)',
-        subtitulo: 'Ato de homologação da TSB e encaminhamento à ANP (Art. 37-A, §5º, II)',
+        titulo:
+          'Aprovação da ANP — Tarifas de Referência e Redistribuição de Capacidade (Art. 37-A, § 5º, II)',
+        subtitulo:
+          'Deliberação e ato formal da ANP homologando as tarifas de referência e a redistribuição preliminar de capacidade',
         formato: 'pdf',
-        rotuloArquivoPadrao: 'Homologação da Etapa de MI (PDF)',
+        rotuloArquivoPadrao: 'Aprovação ANP — Tarifas e Redistribuição (PDF)',
         urlPadrao: undefined, // Estado inicial: Ainda não publicado
       },
     ],
@@ -396,7 +397,7 @@ export default function Poc() {
       setItensTransparencia(todosTransp)
       setDocsPocBd(docsPoc)
     } catch (e) {
-      console.warn('[Poc] Usando fallbacks canônicos para documentos da POCC:', e)
+      console.warn('[Poc] Usando fallbacks canônicos para documentos da POC:', e)
     }
   }, [])
 
@@ -508,7 +509,7 @@ export default function Poc() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0a2540] font-display">
-          Processo de Oferta e Contratação de Capacidade (POCC)
+          Processo de Oferta e Contratação de Capacidade (POC)
         </h1>
 
         <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl text-justify sm:text-left">
@@ -541,7 +542,7 @@ export default function Poc() {
         </div>
 
         <div className="space-y-6">
-          {GRUPOS_DOCUMENTOS_POCC.map((grupo) => (
+          {GRUPOS_DOCUMENTOS_POC.map((grupo) => (
             <Card
               key={grupo.id}
               className="border border-slate-200 shadow-xs bg-white overflow-hidden rounded-xl"
@@ -589,7 +590,7 @@ export default function Poc() {
         </div>
       </section>
 
-      {/* SEÇÃO PÚBLICA: PARTICIPAÇÃO NO PROCESSO (INFORMATIVA, SEM FORMULÁRIOS) COM BOTÃO ACESSAR POCC */}
+      {/* SEÇÃO PÚBLICA: PARTICIPAÇÃO NO PROCESSO (INFORMATIVA, SEM FORMULÁRIOS) COM BOTÃO ACESSAR POC */}
       <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
         <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/60">
           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -632,13 +633,13 @@ export default function Poc() {
             </p>
           </div>
 
-          {/* DESTAQUE INSTITUCIONAL: BOTÃO ACESSAR POCC */}
+          {/* DESTAQUE INSTITUCIONAL: BOTÃO ACESSO ÁREA RESTRITA */}
           <div className="p-5 rounded-lg border-2 border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Lock className="h-4 w-4 text-[#0284c7]" />
                 <h3 className="text-sm font-bold text-[#0a2540] font-display uppercase tracking-wide">
-                  Área Restrita do Carregador · POCC
+                  Área Restrita do Carregador · POC
                 </h3>
               </div>
               <p className="text-xs text-slate-600 max-w-xl">
