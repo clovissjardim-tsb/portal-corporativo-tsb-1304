@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T19:13:21.167Z",
+  "generatedAt": "2026-10-26T19:27:51.476Z",
   "collections": [
     {
       "name": "users",
@@ -1445,6 +1445,243 @@
         "CREATE INDEX idx_transp_versoes_slot ON transparencia_versoes (slot_chave)",
         "CREATE INDEX idx_transp_versoes_conteudo ON transparencia_versoes (conteudo_id)",
         "CREATE INDEX idx_transp_versoes_data ON transparencia_versoes (data_versao)"
+      ]
+    },
+    {
+      "name": "poc_submissoes_completas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.role = 'admin')",
+        "view": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.role = 'admin')",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.role = 'admin')",
+        "delete": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.role = 'admin')"
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "protocolo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ciclo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "razao_social",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "responsavel_nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "autorizacao_anp",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_solicitada_manif",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_zona_manif",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_manifestacao_assinada",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dados_manifestacao",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rep_legal_nome",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rep_legal_cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "produto_proposta",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ponto_zona_proposta",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_proposta",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "tarifa_aceita",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "criterio_leilao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "capacidade_minima_leilao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantia_tipo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Fiança Bancária",
+            "Seguro Garantia",
+            "Depósito Caução",
+            "Carta de Crédito"
+          ]
+        },
+        {
+          "name": "garantia_valor",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "garantia_instituicao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_garantia",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "arquivo_proposta_assinada",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dados_proposta",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "Submetida",
+            "Recebida - Em Análise de Documentos",
+            "Garantia em Análise",
+            "Habilitada para Etapa II",
+            "Capacidade Alocada (Art. 37-A, III)",
+            "Em Ajuste Cadastral",
+            "Aguardando Assinatura de Contrato",
+            "Contrato Celebrado e Enviado à ANP",
+            "Indeferida"
+          ]
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["area_carregador", "manual_interno", "portal_web"]
+        },
+        {
+          "name": "observacoes_internas",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "parecer_fundamentado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_poc_subcompletas_protocolo ON poc_submissoes_completas (protocolo)",
+        "CREATE INDEX idx_poc_subcompletas_user ON poc_submissoes_completas (user_id)",
+        "CREATE INDEX idx_poc_subcompletas_status_created ON poc_submissoes_completas (status, created DESC)"
       ]
     }
   ]

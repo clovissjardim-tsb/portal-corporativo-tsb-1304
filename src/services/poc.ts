@@ -188,11 +188,111 @@ export interface NovaPropostaInput {
   status?: PropostaVinculantePOC['status']
 }
 
+export type StatusSubmissaoCompletaPOC =
+  | 'Submetida'
+  | 'Recebida - Em Análise de Documentos'
+  | 'Garantia em Análise'
+  | 'Habilitada para Etapa II'
+  | 'Capacidade Alocada (Art. 37-A, III)'
+  | 'Em Ajuste Cadastral'
+  | 'Aguardando Assinatura de Contrato'
+  | 'Contrato Celebrado e Enviado à ANP'
+  | 'Indeferida'
+
+export interface SubmissaoCompletaPOC extends RecordModel {
+  user_id: string
+  protocolo: string
+  ciclo: string
+  razao_social: string
+  cnpj: string
+  email: string
+  telefone?: string
+  responsavel_nome?: string
+  autorizacao_anp?: string
+  // Etapa 1: Manifestação
+  capacidade_solicitada_manif?: number
+  ponto_zona_manif?: string
+  arquivo_manifestacao_assinada?: string
+  dados_manifestacao?: any
+  // Etapa 2: Proposta
+  rep_legal_nome?: string
+  rep_legal_cpf?: string
+  produto_proposta?: string
+  ponto_zona_proposta?: string
+  capacidade_proposta?: number
+  tarifa_aceita?: number
+  criterio_leilao?: string
+  capacidade_minima_leilao?: number
+  garantia_tipo?: GarantiaTipo
+  garantia_valor?: number
+  garantia_instituicao?: string
+  arquivo_garantia?: string
+  arquivo_proposta_assinada?: string
+  dados_proposta?: any
+  // Status e parecer
+  status: StatusSubmissaoCompletaPOC
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
+  observacoes_internas?: string
+  parecer_fundamentado?: string
+}
+
+export interface NovaSubmissaoCompletaInput {
+  protocolo?: string
+  ciclo?: string
+  razao_social: string
+  cnpj: string
+  email: string
+  telefone?: string
+  responsavel_nome?: string
+  autorizacao_anp?: string
+  // Etapa 1
+  capacidade_solicitada_manif: number
+  ponto_zona_manif: string
+  arquivo_manifestacao_assinada: File
+  dados_manifestacao: any
+  // Etapa 2
+  rep_legal_nome: string
+  rep_legal_cpf: string
+  produto_proposta: string
+  ponto_zona_proposta: string
+  capacidade_proposta: number
+  tarifa_aceita: number
+  criterio_leilao: string
+  capacidade_minima_leilao?: number
+  garantia_tipo: GarantiaTipo
+  garantia_valor: number
+  garantia_instituicao: string
+  arquivo_garantia: File
+  arquivo_proposta_assinada: File
+  dados_proposta: any
+  // Origem
+  origem?: 'area_carregador' | 'manual_interno' | 'portal_web'
+}
+
+export interface ResumoPublicoProtocoloPOC {
+  tipo: 'poc_completa' | 'proposta_vinculante' | 'manifestacao_interesse'
+  protocolo: string
+  ciclo: string
+  status: string
+  created: string
+  ponto_zona_manif?: string
+  capacidade_solicitada_manif?: number
+  produto_proposta?: string
+  ponto_zona_proposta?: string
+  capacidade_proposta?: number
+  garantia_tipo?: string
+  criterio_leilao?: string
+  parecer_fundamentado?: string
+}
+
 export function gerarProtocoloPOC(
-  tipo: 'POCC' | 'PROP' | 'TSB' | 'POC-MI' | 'POC-PG' = 'TSB',
+  tipo: 'POCC' | 'PROP' | 'TSB' | 'POC-MI' | 'POC-PG' | 'POC' = 'POC',
 ): string {
   const ano = new Date().getFullYear()
   const seq4 = String(Math.floor(1000 + Math.random() * 9000))
+  if (tipo === 'POC') {
+    return `POC-${ano}-${seq4}`
+  }
   if (tipo === 'POC-MI') {
     return `POC-MI-${ano}-${seq4}`
   }
@@ -535,5 +635,132 @@ export const pocService = {
       ...(capacidadeAlocada !== undefined ? { capacidade_alocada: capacidadeAlocada } : {}),
       ...(parecerAlocacao !== undefined ? { parecer_alocacao: parecerAlocacao } : {}),
     })
+  },
+
+  // Submissão Única Sequencial Completa (Manifestação + Proposta Garantida)
+  async criarSubmissaoCompleta(input: NovaSubmissaoCompletaInput): Promise<SubmissaoCompletaPOC> {
+    const userId = pb.authStore.record?.id
+    if (!userId) {
+      throw new Error('Usuário deve estar autenticado para enviar a submissão do POC.')
+    }
+
+    const protocolo = input.protocolo || gerarProtocoloPOC('POC')
+    const ciclo = input.ciclo || '2026/2027'
+    const formData = new FormData()
+
+    formData.append('user_id', userId)
+    formData.append('protocolo', protocolo)
+    formData.append('ciclo', ciclo)
+    formData.append('razao_social', input.razao_social.trim())
+    formData.append('cnpj', input.cnpj.trim())
+    formData.append('email', input.email.trim())
+    if (input.telefone) formData.append('telefone', input.telefone.trim())
+    if (input.responsavel_nome) formData.append('responsavel_nome', input.responsavel_nome.trim())
+    if (input.autorizacao_anp) formData.append('autorizacao_anp', input.autorizacao_anp.trim())
+
+    // Etapa 1
+    formData.append('capacidade_solicitada_manif', String(input.capacidade_solicitada_manif || 0))
+    formData.append('ponto_zona_manif', input.ponto_zona_manif)
+    formData.append('arquivo_manifestacao_assinada', input.arquivo_manifestacao_assinada)
+    formData.append('dados_manifestacao', JSON.stringify(input.dados_manifestacao))
+
+    // Etapa 2
+    formData.append('rep_legal_nome', input.rep_legal_nome.trim())
+    formData.append('rep_legal_cpf', input.rep_legal_cpf.trim())
+    formData.append('produto_proposta', input.produto_proposta.trim())
+    formData.append('ponto_zona_proposta', input.ponto_zona_proposta.trim())
+    formData.append('capacidade_proposta', String(input.capacidade_proposta || 0))
+    formData.append('tarifa_aceita', String(input.tarifa_aceita || 0))
+    formData.append('criterio_leilao', input.criterio_leilao)
+    if (input.capacidade_minima_leilao !== undefined) {
+      formData.append('capacidade_minima_leilao', String(input.capacidade_minima_leilao))
+    }
+    formData.append('garantia_tipo', input.garantia_tipo)
+    formData.append('garantia_valor', String(input.garantia_valor || 0))
+    formData.append('garantia_instituicao', input.garantia_instituicao.trim())
+    formData.append('arquivo_garantia', input.arquivo_garantia)
+    formData.append('arquivo_proposta_assinada', input.arquivo_proposta_assinada)
+    formData.append('dados_proposta', JSON.stringify(input.dados_proposta))
+
+    // Metadados
+    formData.append('status', 'Submetida')
+    formData.append('origem', input.origem || 'area_carregador')
+
+    return await pb.collection<SubmissaoCompletaPOC>('poc_submissoes_completas').create(formData, {
+      requestKey: null,
+    })
+  },
+
+  async listarSubmissoesCompletasDoUsuario(userId?: string): Promise<SubmissaoCompletaPOC[]> {
+    const targetId = userId || pb.authStore.record?.id
+    if (!targetId) return []
+
+    try {
+      return await pb.collection<SubmissaoCompletaPOC>('poc_submissoes_completas').getFullList({
+        filter: `user_id = "${targetId}"`,
+        sort: '-created',
+        requestKey: null,
+      })
+    } catch {
+      return []
+    }
+  },
+
+  async listarTodasSubmissoesCompletas(): Promise<SubmissaoCompletaPOC[]> {
+    try {
+      return await pb.collection<SubmissaoCompletaPOC>('poc_submissoes_completas').getFullList({
+        sort: '-created',
+        requestKey: null,
+      })
+    } catch {
+      return []
+    }
+  },
+
+  // Consulta Pública por Protocolo (Res. ANP nº 961/2023 - LGPD Compliant)
+  async consultarProtocoloPublico(protocolo: string): Promise<ResumoPublicoProtocoloPOC | null> {
+    const limpo = protocolo.trim()
+    if (!limpo) return null
+
+    try {
+      const backendUrl = import.meta.env.VITE_POCKETBASE_URL || ''
+      const res = await fetch(
+        `${backendUrl}/backend/v1/public/poc/consulta-protocolo/${encodeURIComponent(limpo)}`,
+      )
+      if (!res.ok) {
+        return null
+      }
+      return (await res.json()) as ResumoPublicoProtocoloPOC
+    } catch (err) {
+      console.warn('Erro ao consultar protocolo público POC via hook:', err)
+      // Fallback direto via SDK caso esteja autenticado
+      try {
+        const item = await pb
+          .collection<SubmissaoCompletaPOC>('poc_submissoes_completas')
+          .getFirstListItem(`protocolo = "${limpo}"`, { requestKey: null })
+        if (item) {
+          return {
+            tipo: 'poc_completa',
+            protocolo: item.protocolo,
+            ciclo: item.ciclo || '2026/2027',
+            status: item.status || 'Submetida',
+            created: item.created,
+            ponto_zona_manif: item.ponto_zona_manif,
+            capacidade_solicitada_manif: item.capacidade_solicitada_manif,
+            produto_proposta: item.produto_proposta,
+            ponto_zona_proposta: item.ponto_zona_proposta,
+            capacidade_proposta: item.capacidade_proposta,
+            garantia_tipo: item.garantia_tipo,
+            criterio_leilao: item.criterio_leilao,
+            parecer_fundamentado:
+              item.parecer_fundamentado ||
+              'Submissão integral recebida e protocolada. Em análise técnica e de garantias.',
+          }
+        }
+      } catch {
+        /* intentionally ignored */
+      }
+      return null
+    }
   },
 }

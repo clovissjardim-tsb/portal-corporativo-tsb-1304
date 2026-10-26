@@ -661,6 +661,223 @@ onRecordCreate((e) => {
   }
 }, 'poc_propostas_vinculantes')
 
+// 1.3 Hook automático após criação de Submissão Completa Sequencial do POC (Manifestação + Proposta Garantida)
+onRecordCreate((e) => {
+  e.next()
+
+  try {
+    const record = e.record
+    const destinatario = record.getString('email') || ''
+    const protocolo = record.getString('protocolo')
+    const razaoSocial = record.getString('razao_social') || 'Carregador Habilitado'
+    const cnpj = record.getString('cnpj') || ''
+    const repLegalNome =
+      record.getString('rep_legal_nome') ||
+      record.getString('responsavel_nome') ||
+      'Representante Autorizado'
+    const ciclo = record.getString('ciclo') || '2026/2027'
+    const status = record.getString('status') || 'Submetida'
+
+    const capacidadeManif = record.getFloat('capacidade_solicitada_manif')
+      ? String(record.getFloat('capacidade_solicitada_manif'))
+      : '-'
+    const pontoManif = record.getString('ponto_zona_manif') || '-'
+
+    const produtoProp = record.getString('produto_proposta') || 'Produto Anual Firme'
+    const pontoProp = record.getString('ponto_zona_proposta') || '-'
+    const capacidadeProp = record.getFloat('capacidade_proposta')
+      ? String(record.getFloat('capacidade_proposta'))
+      : '-'
+    const tarifaProp = record.getFloat('tarifa_aceita')
+      ? String(record.getFloat('tarifa_aceita'))
+      : '-'
+    const criterioLeilao = record.getString('criterio_leilao') || 'Parcialmente'
+    const capMinima = record.getFloat('capacidade_minima_leilao')
+      ? String(record.getFloat('capacidade_minima_leilao'))
+      : null
+
+    const garantiaTipo = record.getString('garantia_tipo') || '-'
+    const garantiaValor = record.getFloat('garantia_valor')
+      ? String(record.getFloat('garantia_valor'))
+      : '-'
+    const garantiaInst = record.getString('garantia_instituicao') || '-'
+
+    let userEmail = destinatario
+    if (!userEmail) {
+      try {
+        const userId = record.getString('user_id')
+        if (userId) {
+          const userRec = e.app.findRecordById('users', userId)
+          userEmail = userRec.getString('email')
+        }
+      } catch (_) {}
+    }
+
+    if (!userEmail || !protocolo) {
+      console.warn(
+        '[SMTP TSB POC] E-mail não enviado: destinatário ou protocolo ausente no registro ' +
+          record.id,
+      )
+      return
+    }
+
+    const senderAddress =
+      $os.getenv('SMTP_FROM_ADDRESS') ||
+      $os.getenv('SMTP_SENDER') ||
+      e.app.settings().meta.senderAddress ||
+      'site@tsb.com.br'
+    const senderName =
+      $os.getenv('SMTP_FROM_NAME') ||
+      e.app.settings().meta.senderName ||
+      'TSB - Transportadora Sulbrasileira de Gás'
+
+    const htmlBody = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprovante Oficial de Protocolo - POC TSB</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background-color:#0a2540;padding:24px 32px;color:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <h1 style="margin:0;font-size:20px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">TSB</h1>
+                    <p style="margin:4px 0 0 0;font-size:12px;color:#93c5fd;">Transportadora Sulbrasileira de Gás S.A.</p>
+                  </td>
+                  <td align="right">
+                    <span style="display:inline-block;padding:4px 10px;background-color:#0284c7;color:#ffffff;font-size:11px;font-weight:bold;border-radius:4px;text-transform:uppercase;">
+                      POC Ciclo ${ciclo}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#f8fafc;padding:20px 32px;border-bottom:1px solid #e2e8f0;">
+              <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Protocolo Único Oficial de Submissão</p>
+              <h2 style="margin:6px 0 0 0;font-size:26px;color:#0284c7;font-family:'Courier New',Courier,monospace;letter-spacing:1px;font-weight:bold;">${protocolo}</h2>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px 0;font-size:14px;line-height:22px;color:#334155;">
+                Prezados representantes da <strong>${razaoSocial}</strong> (CNPJ: ${cnpj}),
+              </p>
+              <p style="margin:0 0 20px 0;font-size:14px;line-height:22px;color:#334155;">
+                Confirmamos com sucesso o recebimento e o protocolo da sua submissão sequencial completa no <strong>Processo de Oferta e Contratação de Capacidade (POC) &mdash; Ciclo ${ciclo}</strong> da TSB, regulado pelos Arts. 37-A e 38-A da Resolução ANP nº 11/2016 (Resolução ANP nº 961/2023).
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;background-color:#f0fdf4;border-left:4px solid #059669;border-radius:0 6px 6px 0;padding:14px;">
+                <tr>
+                  <td>
+                    <p style="margin:0;font-size:12px;color:#166534;font-weight:bold;text-transform:uppercase;">Status da Submissão</p>
+                    <p style="margin:4px 0 0 0;font-size:15px;color:#0f172a;font-weight:600;">${status}</p>
+                    <p style="margin:6px 0 0 0;font-size:12px;color:#334155;">Os documentos assinados e o comprovante da garantia financeira foram devidamente registrados nos sistemas corporativos da TSB.</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- RESUMO DA ETAPA 1 -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border:1px solid #e2e8f0;border-radius:6px;border-collapse:collapse;">
+                <tr style="background-color:#f8fafc;">
+                  <td colspan="2" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:bold;color:#475569;text-transform:uppercase;">
+                    Etapa 1 &bull; Manifestação de Interesse (Art. 37-A, §5º, I)
+                  </td>
+                </tr>
+                <tr>
+                  <td width="42%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Ponto / Zona de Interesse:</td>
+                  <td width="58%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${pontoManif}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Capacidade Manifestada:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${capacidadeManif} mil m³/dia</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;font-size:13px;color:#64748b;">PDF da Manifestação:</td>
+                  <td style="padding:10px 14px;font-size:13px;color:#059669;font-weight:600;">Anexado e Assinado Eletronicamente</td>
+                </tr>
+              </table>
+
+              <!-- RESUMO DA ETAPA 2 -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;border:1px solid #e2e8f0;border-radius:6px;border-collapse:collapse;">
+                <tr style="background-color:#f8fafc;">
+                  <td colspan="2" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:bold;color:#475569;text-transform:uppercase;">
+                    Etapa 2 &bull; Proposta Garantida Vinculante (Art. 37-A, §5º, III)
+                  </td>
+                </tr>
+                <tr>
+                  <td width="42%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Representante Legal:</td>
+                  <td width="58%" style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${repLegalNome}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Produto / Ponto:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${produtoProp} (${pontoProp})</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Capacidade Proposta:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${capacidadeProp} mil m³/dia</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Tarifa de Referência Aceita:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">R$ ${tarifaProp} / MMBtu</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Critério em Leilão Ascendente:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${criterioLeilao}${capMinima ? ' (Mín: ' + capMinima + ' mil m³/d)' : ''}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;">Garantia Financeira da Proposta:</td>
+                  <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">${garantiaTipo} &bull; R$ ${garantiaValor} (${garantiaInst})</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px;font-size:13px;color:#64748b;">Anexos Obrigatórios:</td>
+                  <td style="padding:10px 14px;font-size:13px;color:#059669;font-weight:600;">PDF Assinado + Comprovante de Garantia Anexados</td>
+                </tr>
+              </table>
+
+              <p style="margin:20px 0 0 0;font-size:13px;line-height:20px;color:#64748b;">
+                A qualquer momento, o andamento e o parecer da análise podem ser consultados no Portal da TSB pelo número deste protocolo, preservando o sigilo comercial e as regras da ANP e da LGPD.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#0a2540;padding:20px 32px;color:#94a3b8;font-size:11px;line-height:16px;">
+              <p style="margin:0 0 6px 0;color:#e2e8f0;font-weight:600;">Transportadora Sulbrasileira de Gás S.A. &mdash; TSB</p>
+              <p style="margin:0 0 6px 0;">Contato institucional: <a href="mailto:${senderAddress}" style="color:#38bdf8;text-decoration:none;">${senderAddress}</a> | Portal Corporativo</p>
+              <p style="margin:0;color:#64748b;">Este é um comprovante oficial automatizado emitido nos termos da Resolução ANP nº 961/2023.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+    const message = new MailerMessage({
+      from: { address: senderAddress, name: senderName },
+      to: [{ address: userEmail }],
+      subject: `[TSB - POC] Protocolo ${protocolo} - Confirmação de Submissão Oficial`,
+      html: htmlBody,
+    })
+
+    e.app.newMailClient().send(message)
+    console.log(
+      `[SMTP TSB] E-mail de protocolo POC ${protocolo} enviado com sucesso para ${userEmail}`,
+    )
+  } catch (err) {
+    const errMsg = err && err.message ? err.message : String(err)
+    console.error(`[SMTP TSB] Falha ao enviar e-mail de protocolo POC: ${errMsg}`)
+  }
+}, 'poc_submissoes_completas')
+
 // 2. Hook de atualização: Dispara e-mail de CÓPIA À ANP quando desfecho for Aprofundamento (II) ou Negativa (III) (Art. 10, §3º)
 onRecordUpdate((e) => {
   e.next()
@@ -1117,6 +1334,91 @@ routerAdd('GET', '/backend/v1/public/consulta-protocolo/{protocolo}', (c) => {
     })
   } catch (err) {
     return c.json(404, { error: 'Protocolo não localizado' })
+  }
+})
+
+// 4.5 Consulta Pública LGPD de Protocolo do POC (Res. ANP nº 961/2023, Art. 37-A)
+// Busca nas submissões completas (ou coleções legadas) e retorna apenas dados regulatórios públicos
+routerAdd('GET', '/backend/v1/public/poc/consulta-protocolo/{protocolo}', (c) => {
+  try {
+    const protocolo = c.request.pathValue('protocolo')
+    if (!protocolo) {
+      return c.json(400, { error: 'Protocolo é obrigatório' })
+    }
+
+    const protoLimpo = String(protocolo).trim()
+
+    // 1. Tenta buscar em poc_submissoes_completas
+    try {
+      const rec = c.app.findFirstRecordByData('poc_submissoes_completas', 'protocolo', protoLimpo)
+      if (rec) {
+        return c.json(200, {
+          tipo: 'poc_completa',
+          protocolo: rec.getString('protocolo'),
+          ciclo: rec.getString('ciclo') || '2026/2027',
+          status: rec.getString('status') || 'Submetida',
+          created: rec.getString('created'),
+          ponto_zona_manif: rec.getString('ponto_zona_manif') || '-',
+          capacidade_solicitada_manif: rec.getFloat('capacidade_solicitada_manif') || 0,
+          produto_proposta: rec.getString('produto_proposta') || 'Produto Anual Firme',
+          ponto_zona_proposta: rec.getString('ponto_zona_proposta') || '-',
+          capacidade_proposta: rec.getFloat('capacidade_proposta') || 0,
+          garantia_tipo: rec.getString('garantia_tipo') || '-',
+          criterio_leilao: rec.getString('criterio_leilao') || 'Parcialmente',
+          parecer_fundamentado:
+            rec.getString('parecer_fundamentado') ||
+            'Submissão integral recebida e protocolada. Em fase de conferência de garantias e conformidade documental.',
+        })
+      }
+    } catch (_) {}
+
+    // 2. Fallback: Tenta buscar em poc_propostas_vinculantes legadas
+    try {
+      const recProp = c.app.findFirstRecordByData(
+        'poc_propostas_vinculantes',
+        'protocolo',
+        protoLimpo,
+      )
+      if (recProp) {
+        return c.json(200, {
+          tipo: 'proposta_vinculante',
+          protocolo: recProp.getString('protocolo'),
+          ciclo: recProp.getString('ciclo') || '2026/2027',
+          status: recProp.getString('status') || 'Submetida',
+          created: recProp.getString('created'),
+          ponto_zona_proposta: recProp.getString('trecho') || '-',
+          capacidade_proposta: recProp.getFloat('capacidade_proposta') || 0,
+          garantia_tipo: recProp.getString('garantia_tipo') || '-',
+          criterio_leilao: recProp.getString('criterio_leilao') || 'Parcialmente',
+          parecer_fundamentado:
+            recProp.getString('parecer_alocacao') ||
+            'Proposta garantida protocolada. Garantia e documentos em análise regulatória.',
+        })
+      }
+    } catch (_) {}
+
+    // 3. Fallback: Tenta buscar em poc_manifestacoes legadas
+    try {
+      const recManif = c.app.findFirstRecordByData('poc_manifestacoes', 'protocolo', protoLimpo)
+      if (recManif) {
+        return c.json(200, {
+          tipo: 'manifestacao_interesse',
+          protocolo: recManif.getString('protocolo'),
+          ciclo: recManif.getString('ciclo') || '2026/2027',
+          status: recManif.getString('status') || 'Submetida',
+          created: recManif.getString('created'),
+          ponto_zona_manif: `${recManif.getString('ponto_recebimento') || ''} ➔ ${recManif.getString('ponto_entrega') || ''}`,
+          capacidade_solicitada_manif: recManif.getFloat('capacidade_solicitada') || 0,
+          parecer_fundamentado:
+            recManif.getString('observacoes_internas') ||
+            'Manifestação de interesse registrada formalmente no ciclo POC.',
+        })
+      }
+    } catch (_) {}
+
+    return c.json(404, { error: 'Protocolo POC não localizado' })
+  } catch (err) {
+    return c.json(404, { error: 'Protocolo POC não localizado' })
   }
 })
 
