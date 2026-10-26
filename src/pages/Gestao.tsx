@@ -263,17 +263,14 @@ export default function Gestao() {
       </div>
 
       {/* CABEÇALHO DO PAINEL */}
-      <div className="bg-white border-t-4 border-t-[#0a2540] border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs space-y-3">
+      <div className="bg-white border-t-4 border-t-[#0a2540] border-slate-200 rounded-lg p-6 sm:p-8 shadow-xs space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-[#0a2540] text-white tracking-wider uppercase font-display">
             Área Restrita TSB
           </span>
           <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-sky-50 text-[#0284c7] border border-sky-200 flex items-center gap-1">
             <ListTodo className="h-3 w-3" />
-            Roadmap Arquitetural
-          </span>
-          <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-            Versão de Planejamento Técnico
+            Roadmap
           </span>
         </div>
 
@@ -281,378 +278,136 @@ export default function Gestao() {
           Gestão Interna — Escopo a Desenvolver
         </h1>
 
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
-          Documento técnico e estrutural consolidando todos os módulos funcionais, fluxos de
-          editoria e controles regulatórios que comporão a versão final do painel administrativo
-          interno da <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong>. O escopo
-          abaixo especifica as responsabilidades operacionais, pilares de transparência segundo as
-          resoluções da ANP e governança de dados nos termos da LGPD.
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-3xl">
+          Visão consolidada dos módulos previstos para o ambiente administrativo interno da{' '}
+          <strong>Transportadora Sulbrasileira de Gás S.A. (TSB)</strong>.
         </p>
       </div>
 
-      {/* SEÇÕES DO ROADMAP (CARDS FORMATADOS) */}
-      <div className="space-y-6">
-        {/* TÓPICO 1: PORTÃO DE AUTENTICAÇÃO */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <KeyRound className="h-4 w-4 text-[#0284c7]" />
+      {/* SEÇÕES DO ROADMAP (CARDS SUCINTOS) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* CARD 1: AUTENTICAÇÃO DA EQUIPE */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <KeyRound className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  1. Portão de Autenticação da Equipe TSB
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Segurança perimetral, fatores adicionais e segmentação de privilégios de acesso
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                1. Autenticação da Equipe
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Autenticação Forte e Segura:</strong> Integração com provedor corporativo,
-                  geração de tokens temporários de sessão autenticada e previsão de camada
-                  multifator (2FA) para operadores com privilégios elevados.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Segmentação por Papéis Internos (RBAC):</strong> Perfis granulares
-                  distinguindo <em>Editor de Conteúdo</em> (alimenta Boletim e Plataforma),{' '}
-                  <em>Operador de Fila</em> (analisa solicitações do Inciso VII e cessões do Inciso
-                  VIII) e <em>Administrador do Sistema</em> (gerencia credenciais e auditoria).
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Proteção de Sessão e Timeout:</strong> Encerramento automático de
-                  inatividade, bloqueio preventivo contra força bruta e renovação segura de
-                  credenciais.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Login seguro corporativo com perfis e níveis de acesso.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 2: PAINEL INICIAL EXPLICATIVO */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <FolderGit2 className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 2: PAINEL INICIAL */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <FolderGit2 className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  2. Painel Inicial e Escopo de Gestão do Portal
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Visão executiva e delimitação clara das atribuições de cada módulo operacional
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">2. Painel Inicial</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Transparência Regulatória ANP:</strong> Manutenção centralizada das
-                  publicações obrigatórias determinadas pela Resolução ANP nº 11/2016 e Portaria ANP
-                  nº 1/2003, assegurando conformidade contínua e tempestividade das publicações.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Fila e Triagem de Solicitações VII:</strong> Recepção, qualificação
-                  jurídica e encaminhamento técnico dos pedidos de acesso formulados pelos
-                  carregadores.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Administração de Credenciais e Conteúdo Público:</strong> Manutenção do
-                  catálogo informativo, quadro de tarifas vigentes, avisos operacionais em banner e
-                  autorização de acesso às áreas autenticadas.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Visão geral do portal e dos fluxos em andamento.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 3: EDITORIA COMPLETA DA TRANSPARÊNCIA */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <Layers className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 3: EDITORIA DA TRANSPARÊNCIA */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <Layers className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  3. Editoria Completa da Transparência Separada por Pilar
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Gestão individualizada dos 3 blocos oficiais mantidos no Portal de Transparência
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                3. Editoria da Transparência
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-4 text-xs text-slate-700">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-                <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#0284c7]"></span>
-                  Pilar 1: Boletim Eletrônico
-                </div>
-                <p className="text-slate-600 leading-relaxed text-justify">
-                  Editoria das alíneas <strong>a) a j)</strong> da Portaria ANP nº 1/2003, incluindo
-                  o Item II (histórico de versões anteriores nos termos do §2º), upload de
-                  relatórios mensais aprovados, notas técnicas e detalhamento de capacidade firme
-                  com padrão NTS.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-                <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#0284c7]"></span>
-                  Pilar 2: Plataforma Eletrônica
-                </div>
-                <p className="text-slate-600 leading-relaxed text-justify">
-                  Gestão dos <strong>Incisos I a VIII</strong> do Art. 9º da Resolução ANP nº
-                  11/2016: formulários completos de inserção, edição e exclusão de textos, prévias
-                  gráficas, upload de PDFs anexos e links regulatórios para download oficial.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-                <div className="font-bold text-[#0a2540] flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#0284c7]"></span>
-                  Pilar 3: Monitoramento Art. 11
-                </div>
-                <p className="text-slate-600 leading-relaxed text-justify">
-                  Ciclo mensal de monitoramento de congestionamento: publicação em PDF do relatório
-                  homologado ou declaração formal de ausência de congestionamento contratual e
-                  físico (padrão regulatório TAG/TBG/NTS).
-                </p>
-              </div>
-            </div>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Criação, edição e exclusão de todo o conteúdo público com upload de PDFs.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 4: QUADRO DE TARIFA EM DESTAQUE */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <DollarSign className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 4: TARIFA EM DESTAQUE */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <DollarSign className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  4. Editoria do Quadro de Tarifa em Destaque
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Gerenciamento da precificação extraordinária apresentada na página inicial (/)
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                4. Tarifa em Destaque
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Parâmetros Contratuais Editáveis:</strong> Identificação do contrato
-                  (&ldquo;TARIFA CONTRATO EXTRAORDINÁRIO TRECHO T3 – 2026&rdquo;), trecho
-                  regulatório especificado, período de vigência e valor homologado em R$/m³.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Formatação Automática e Textos Explicativos:</strong> Aplicação
-                  padronizada do destaque &ldquo;ex-impostos&rdquo;, notas explicativas de base de
-                  cálculo e condições de reajuste periódico.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Suporte a Múltiplos Cards e Alternador de Destaque:</strong> Capacidade de
-                  cadastrar novos quadros para outros trechos ou contratos, alternando a exibição
-                  ativa ou inativa na vitrine pública.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Edição do quadro de tarifas apresentado na página inicial.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 5: GESTÃO DE CREDENCIAIS E ACESSOS */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <Users className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 5: CREDENCIAIS E ACESSOS */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <Users className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  5. Gestão de Credenciais, Acessos e LGPD
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Governança de contas internas e carregadores externos com trilha de auditoria
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                5. Credenciais e Acessos
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Administração da Equipe TSB:</strong> Cadastro, desativação preventiva e
-                  atribuição de papéis (Editor de Conteúdo, Operador de Fila, Administrador Geral).
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Gestão de Usuários Externos (Carregadores):</strong> Triagem de novos
-                  cadastros, verificação de dados societários (CNPJ, razão social, representante
-                  legal), bloqueio e reativação de credenciais de acesso à Área do Carregador.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Trilha de Auditoria (LGPD):</strong> Registro em log imutável de todas as
-                  consultas e modificações de dados sensíveis ou concorrenciais, garantindo
-                  rastreabilidade total perante os órgãos de fiscalização.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Gestão de contas da equipe e de usuários externos.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 6: FILA REFINADA DO INCISO VII */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <Clock className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 6: FILA DE SOLICITAÇÕES */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <Clock className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  6. Fila de Solicitações do Inciso VII Refinada
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Fluxo regulatório com controle temporal do SLA de 20 dias úteis (Art. 10, §2º)
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                6. Fila de Solicitações
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Esteira de Triagem Regulamentar:</strong> Fases padronizadas de análise:
-                  <em>Recebido</em> &rarr; <em>Em Análise Técnica</em> &rarr;{' '}
-                  <em>Concluído com Parecer Fundamentado</em>.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Formalização dos 3 Desfechos Legais:</strong> Emissão guiada dos desfechos
-                  oficiais (I - Confirmação do Atendimento com termos e condições; II -
-                  Aprofundamento da Análise com escopo, cronograma e custos; III - Negativa
-                  Fundamentada com previsão de disponibilidade).
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Gestão de Anexos e Notificação SMTP:</strong> Anexação do parecer assinado
-                  por protocolo, reenvio automatizado de comprovantes por e-mail corporativo e cópia
-                  institucional à ANP nos termos do §3º.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Monitor de SLA:</strong> Contagem regressiva em dias úteis a partir da
-                  autuação, disparando alertas operacionais para evitar ultrapassagem do prazo
-                  máximo regulamentar de 20 dias úteis.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Acompanhamento e resposta das solicitações de acesso.
           </CardContent>
         </Card>
 
-        {/* TÓPICO 7: EXTRAS REGULATÓRIOS E FERRAMENTAS */}
-        <Card className="border border-slate-200 shadow-xs bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-2 text-[#0a2540]">
-              <div className="p-1.5 bg-slate-200/70 rounded text-[#0a2540]">
-                <BookOpen className="h-4 w-4 text-[#0284c7]" />
+        {/* CARD 7: FERRAMENTAS DE APOIO */}
+        <Card className="border border-slate-200 shadow-xs bg-white hover:border-slate-300 transition-colors md:col-span-2">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg text-[#0284c7] shrink-0">
+                <BookOpen className="h-4 w-4" />
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">
-                  7. Extras Regulatórios e Ferramentas Operacionais
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-600">
-                  Base normativa de apoio, avisos gerais do portal e utilitários de exportação
-                </CardDescription>
-              </div>
+              <CardTitle className="text-sm font-bold text-[#0a2540]">
+                7. Ferramentas de Apoio
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-5 space-y-3 text-xs text-slate-700">
-            <ul className="space-y-2.5 list-none">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Papelada Normativa de Referência:</strong> Repositório consolidado com a
-                  legislação aplicável: <em>Portaria ANP nº 1/2003</em>,{' '}
-                  <em>Resolução ANP nº 11/2016</em>, <em>Resolução ANP nº 51/2013</em> e a Nova Lei
-                  do Gás (<em>Lei nº 14.134/2021</em>).
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Banner de Avisos Gerais do Portal:</strong> Módulo de edição rápida para
-                  publicar ou desativar alertas temporários, comunicados de manutenção operacional
-                  ou chamadas institucionais no topo do site.
-                </span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
-                <span>
-                  <strong>Exportação da Fila em CSV/Planilha:</strong> Utilitário para extração de
-                  relatórios gerenciais de demandas recebidas, tempo médio de resposta e
-                  consolidação estatística para prestação de contas à diretoria e à agência
-                  reguladora.
-                </span>
-              </li>
-            </ul>
+          <CardContent className="text-xs text-slate-600 leading-relaxed pt-0 pl-14">
+            Avisos do portal, documentos de referência e exportação de dados.
           </CardContent>
         </Card>
       </div>
 
       {/* RODAPÉ DO ESCOPO */}
-      <div className="text-center text-xs text-slate-500 pt-6 border-t border-slate-200 space-y-1">
-        <p className="font-semibold text-slate-700">
-          Transportadora Sulbrasileira de Gás S.A. &bull; Diretoria de Operações e Regulação
-        </p>
-        <p>
-          Escopo funcional sujeito a homologação interna conforme a Resolução ANP nº 11/2016 e
-          diretrizes de conformidade regulatória.
+      <div className="text-center text-xs text-slate-500 pt-6 border-t border-slate-200">
+        <p className="font-medium text-slate-700">
+          Transportadora Sulbrasileira de Gás S.A. &bull; Gestão Interna
         </p>
       </div>
     </div>
