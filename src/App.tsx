@@ -40,6 +40,7 @@ const App = () => (
             <Route path="/transparencia" element={<Transparencia />} />
             <Route path="/solicitacao-acesso" element={<SolicitacaoAcesso />} />
             <Route path="/gestao" element={<Gestao />} />
+            <Route path="/gestao-interna" element={<Gestao />} />
 
             {/* Rotas de Autenticação */}
             <Route path="/login" element={<Login />} />
