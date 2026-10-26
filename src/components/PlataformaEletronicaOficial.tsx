@@ -720,7 +720,7 @@ export default function PlataformaEletronica({
                               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                             >
                               <ShieldCheck className="h-3.5 w-3.5 text-sky-300" />
-                              Solicitação de Acesso
+                              Solicitação de Acesso à Capacidade de Transporte
                             </Button>
                           </div>
 

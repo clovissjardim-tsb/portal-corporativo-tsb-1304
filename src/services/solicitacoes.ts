@@ -197,6 +197,39 @@ export const solicitacoesService = {
   },
 
   /**
+   * Lista as solicitações de acesso (Inciso VII) pertencentes ao usuário autenticado,
+   * filtrando por e-mail ou CNPJ.
+   */
+  async listarDoUsuario(filtro?: {
+    email?: string
+    cnpj?: string
+  }): Promise<SolicitacaoIncisoVII[]> {
+    try {
+      const email = filtro?.email?.trim() || pb.authStore.record?.email?.trim()
+      const cnpj = filtro?.cnpj?.trim() || (pb.authStore.record as { cnpj?: string })?.cnpj?.trim()
+
+      const condicoes: string[] = []
+      if (email) {
+        condicoes.push(`email = "${email}"`)
+      }
+      if (cnpj && cnpj !== 'Não informado no cadastro') {
+        condicoes.push(`cnpj = "${cnpj}"`)
+      }
+
+      const filter = condicoes.length > 0 ? condicoes.join(' || ') : undefined
+
+      return await pb.collection<SolicitacaoIncisoVII>('solicitacoes_inciso_vii').getFullList({
+        filter,
+        sort: '-created',
+        requestKey: null,
+      })
+    } catch (err) {
+      console.warn('Erro ao listar solicitações do usuário autenticado:', err)
+      return []
+    }
+  },
+
+  /**
    * Consulta pública por protocolo (Inciso VII).
    * 100% LGPD-compliant: consome rota do backend que retorna exclusivamente os dados
    * regulatórios e o parecer fundamentado, omitindo e-mail, telefone e dados de contato.

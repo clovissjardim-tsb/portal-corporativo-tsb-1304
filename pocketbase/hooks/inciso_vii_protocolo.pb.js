@@ -346,7 +346,7 @@ onRecordCreate((e) => {
                 Prezados representantes da <strong>${razaoSocial}</strong>,
               </p>
               <p style="margin:0 0 20px 0;font-size:14px;line-height:22px;color:#334155;">
-                Confirmamos o recebimento e a autuação formal da sua <strong>Solicitação de Acesso à Capacidade de Transporte Dutoviário</strong> (Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016) no Portal Corporativo TSB.
+                Confirmamos o recebimento e a autuação formal da sua <strong>Solicitação de Acesso à Capacidade de Transporte</strong> (Art. 9º, Inciso VII e Art. 10 da Resolução ANP nº 11/2016) no Portal Corporativo TSB.
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;background-color:#f0fdf4;border-left:4px solid #059669;border-radius:0 6px 6px 0;padding:16px;">
                 <tr>

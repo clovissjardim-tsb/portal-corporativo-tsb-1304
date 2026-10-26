@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
@@ -18,11 +18,9 @@ import {
   ShieldCheck,
   CheckCircle2,
   Clock,
-  Search,
   FileText,
   AlertCircle,
   Building2,
-  ExternalLink,
   ArrowLeft,
   RefreshCw,
   Send,
@@ -31,6 +29,7 @@ import {
   Copy,
   Lock,
   KeyRound,
+  Download,
 } from 'lucide-react'
 
 export default function SolicitacaoAcesso() {
@@ -106,14 +105,34 @@ export default function SolicitacaoAcesso() {
   // Estado de sucesso da submissão
   const [solicitacaoCriada, setSolicitacaoCriada] = useState<SolicitacaoIncisoVII | null>(null)
 
-  // Estado da consulta por protocolo na mesma página
-  const [termoBusca, setTermoBusca] = useState('')
-  const [buscando, setBuscando] = useState(false)
-  const [resultadoBusca, setResultadoBusca] = useState<{
-    executado: boolean
-    encontrado: boolean
-    dados?: SolicitacaoIncisoVII
-  } | null>(null)
+  // Estado do Histórico de Protocolos do Carregador Autenticado (igual ao Meus Protocolos do POC)
+  const [historicoSolicitacoes, setHistoricoSolicitacoes] = useState<SolicitacaoIncisoVII[]>([])
+  const [carregandoHistorico, setCarregandoHistorico] = useState<boolean>(false)
+
+  // Carrega histórico de solicitações da conta autenticada
+  const carregarHistorico = useCallback(async () => {
+    setCarregandoHistorico(true)
+    try {
+      const emailFiltro = emailContato || userEmailInicial || (user?.email as string) || ''
+      const cnpjFiltro = userCnpj || (user?.cnpj as string) || ''
+      const lista = await solicitacoesService.listarDoUsuario({
+        email: emailFiltro,
+        cnpj: cnpjFiltro,
+      })
+      setHistoricoSolicitacoes(lista)
+    } catch (err) {
+      console.warn('Erro ao carregar histórico de solicitações Inciso VII:', err)
+    } finally {
+      setCarregandoHistorico(false)
+    }
+  }, [emailContato, userEmailInicial, user?.email, userCnpj, user?.cnpj])
+
+  // Dispara o carregamento do histórico assim que o acesso autenticado é liberado
+  useEffect(() => {
+    if (loginSimuladoLiberado) {
+      carregarHistorico()
+    }
+  }, [loginSimuladoLiberado, carregarHistorico])
 
   // Handlers
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,8 +184,9 @@ export default function SolicitacaoAcesso() {
       })
 
       setSolicitacaoCriada(novoRegistro)
-      // Preenche o campo de busca com o protocolo gerado para conveniência
-      setTermoBusca(novoRegistro.protocolo)
+
+      // Atualiza a listagem do histórico com a nova solicitação
+      carregarHistorico()
 
       toast({
         title: 'Solicitação Protocolada com Sucesso!',
@@ -194,37 +214,6 @@ export default function SolicitacaoAcesso() {
       })
     } finally {
       setEnviando(false)
-    }
-  }
-
-  const handleBuscarProtocolo = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const cleanProto = termoBusca.trim()
-    if (!cleanProto) return
-
-    setBuscando(true)
-    try {
-      const res = await solicitacoesService.buscarPorProtocolo(cleanProto)
-      if (res) {
-        setResultadoBusca({
-          executado: true,
-          encontrado: true,
-          dados: res,
-        })
-      } else {
-        setResultadoBusca({
-          executado: true,
-          encontrado: false,
-        })
-      }
-    } catch (err) {
-      console.error('Erro na consulta por protocolo:', err)
-      setResultadoBusca({
-        executado: true,
-        encontrado: false,
-      })
-    } finally {
-      setBuscando(false)
     }
   }
 
@@ -395,7 +384,7 @@ export default function SolicitacaoAcesso() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0a2540] font-display">
-          Solicitação de Acesso à Capacidade de Transporte Dutoviário
+          Solicitação de Acesso à Capacidade de Transporte
         </h1>
 
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl text-justify sm:text-left">
@@ -512,12 +501,12 @@ export default function SolicitacaoAcesso() {
 
               <div className="p-3.5 bg-white rounded-lg border border-emerald-200 space-y-1.5 shadow-2xs">
                 <div className="flex items-center gap-1.5 font-bold text-sky-900">
-                  <Search className="h-4 w-4 text-sky-600 shrink-0" />
-                  <span>Acompanhamento por Protocolo</span>
+                  <Clock className="h-4 w-4 text-sky-600 shrink-0" />
+                  <span>Histórico de Protocolos</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed text-justify">
-                  O andamento pode ser consultado a qualquer momento no campo de pesquisa logo
-                  abaixo nesta mesma página ou no Portal de Transparência, utilizando o número{' '}
+                  O andamento e os pareceres podem ser acompanhados na seção{' '}
+                  <strong>Meus Protocolos</strong> logo abaixo nesta página, com o protocolo{' '}
                   <strong className="font-mono text-[#0284c7]">
                     {solicitacaoCriada.protocolo}
                   </strong>
@@ -570,14 +559,14 @@ export default function SolicitacaoAcesso() {
               type="button"
               size="sm"
               onClick={() => {
-                document.getElementById('secao-consulta-protocolo')?.scrollIntoView({
+                document.getElementById('secao-historico-protocolos')?.scrollIntoView({
                   behavior: 'smooth',
                 })
               }}
               className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold"
             >
-              <Search className="h-3.5 w-3.5 mr-1" />
-              Consultar Andamento Abaixo
+              <Clock className="h-3.5 w-3.5 mr-1" />
+              Ver Meus Protocolos Abaixo
             </Button>
           </div>
         </div>
@@ -907,198 +896,223 @@ export default function SolicitacaoAcesso() {
         </CardContent>
       </Card>
 
-      {/* CAMPO DE PESQUISA POR PROTOCOLO JÁ ABERTO NA MESMA PÁGINA (CONSULTA PÚBLICA EXISTENTE) */}
-      <div id="secao-consulta-protocolo" className="space-y-4">
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/70 border-b border-slate-200 pb-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 text-[#0a2540]">
-                <Search className="h-5 w-5 text-[#0284c7]" />
-                <CardTitle className="text-base font-bold">
-                  Consulta de Solicitação por Protocolo (Art. 10 da Res. ANP 11/2016)
-                </CardTitle>
-              </div>
-              <Badge variant="outline" className="text-[10px] bg-white font-normal text-slate-500">
-                100% LGPD-Compliant
-              </Badge>
+      {/* SEÇÃO "MEUS PROTOCOLOS": HISTÓRICO DE SOLICITAÇÕES DO CARREGADOR AUTENTICADO (IGUAL AO POC) */}
+      <div id="secao-historico-protocolos" className="space-y-4">
+        <Card className="border border-slate-200 shadow-xs bg-white">
+          <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold text-[#0a2540] font-display flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#0284c7]" />
+                Meus Protocolos · Solicitação de Acesso (Inciso VII)
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500">
+                Listagem completa de solicitações e status da conta autenticada, com detalhes
+                técnicos, parecer regulatório e download do formulário anexado
+              </CardDescription>
             </div>
-            <CardDescription className="text-xs text-slate-600">
-              Acompanhe em tempo real o status, o parecer fundamentado e o SLA regulatório da sua
-              solicitação através do número do protocolo.
-            </CardDescription>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={carregarHistorico}
+              disabled={carregandoHistorico}
+              className="text-xs h-7 text-slate-600 border-slate-300"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${carregandoHistorico ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
           </CardHeader>
 
-          <CardContent className="pt-6 space-y-6">
-            <form
-              onSubmit={handleBuscarProtocolo}
-              className="flex flex-col sm:flex-row gap-2 max-w-xl"
-            >
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <Input
-                  type="text"
-                  placeholder="Ex: TSB-2026-8942"
-                  value={termoBusca}
-                  onChange={(e) => setTermoBusca(e.target.value)}
-                  className="pl-9 font-mono text-xs uppercase"
-                  disabled={buscando}
-                />
+          <CardContent className="pt-4">
+            {historicoSolicitacoes.length === 0 ? (
+              <div className="py-8 text-center space-y-2">
+                <Clock className="h-8 w-8 text-slate-300 mx-auto" />
+                <p className="text-xs font-medium text-slate-600">
+                  Nenhuma solicitação registrada por esta conta até o momento.
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Preencha o formulário eletrônico acima para protocolar sua primeira Solicitação de
+                  Acesso (Art. 10 da Resolução ANP nº 11/2016).
+                </p>
               </div>
-              <Button
-                type="submit"
-                disabled={buscando || !termoBusca.trim()}
-                className="bg-[#0a2540] hover:bg-[#143b73] text-white text-xs font-semibold px-4 cursor-pointer"
-              >
-                {buscando ? (
-                  <>
-                    <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    Consultando...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-3.5 w-3.5 mr-1.5" />
-                    Consultar Protocolo
-                  </>
-                )}
-              </Button>
-            </form>
+            ) : (
+              <div className="space-y-4 text-xs">
+                {historicoSolicitacoes.map((sub) => {
+                  const urlArquivo = solicitacoesService.obterUrlArquivo(sub)
 
-            {/* RESULTADO DA CONSULTA POR PROTOCOLO */}
-            {resultadoBusca && resultadoBusca.executado && (
-              <div className="animate-fade-in pt-2">
-                {resultadoBusca.encontrado && resultadoBusca.dados ? (
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">
-                          Protocolo Localizado
-                        </span>
-                        <span className="font-mono text-lg font-bold text-[#0284c7]">
-                          {resultadoBusca.dados.protocolo}
-                        </span>
+                  return (
+                    <div
+                      key={sub.id}
+                      className="p-4 bg-slate-50/70 border border-slate-200 rounded-lg space-y-3"
+                    >
+                      {/* CABEÇALHO DO PROTOCOLO */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono font-bold text-sm text-[#0a2540]">
+                            {sub.protocolo}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-sky-100 text-sky-900 border border-sky-300 font-semibold uppercase">
+                            Inciso VII • {sub.modalidade}
+                          </span>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded font-semibold border ${
+                              sub.status?.includes('Confirmação') || sub.status === 'Aprovada'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : sub.status?.includes('Negativa') || sub.status === 'Rejeitada'
+                                  ? 'bg-red-50 text-red-800 border-red-300'
+                                  : sub.status?.includes('Aprofundamento')
+                                    ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                    : 'bg-blue-50 text-blue-800 border-blue-300'
+                            }`}
+                          >
+                            {sub.status || 'Solicitação Recebida - Em Análise Técnica'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+                          <span>{new Date(sub.created).toLocaleString('pt-BR')}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopiarProtocolo(sub.protocolo)}
+                            className="h-6 px-1.5 text-slate-500 hover:text-[#0284c7]"
+                            title="Copiar Protocolo"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          resultadoBusca.dados.status?.includes('Confirmação') ||
-                          resultadoBusca.dados.status === 'Aprovada'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : resultadoBusca.dados.status?.includes('Negativa') ||
-                                resultadoBusca.dados.status === 'Rejeitada'
-                              ? 'bg-red-100 text-red-800 border border-red-300'
-                              : resultadoBusca.dados.status?.includes('Aprofundamento')
-                                ? 'bg-sky-100 text-sky-800 border border-sky-300'
-                                : 'bg-blue-100 text-blue-800 border border-blue-300'
-                        }`}
-                      >
-                        {resultadoBusca.dados.status}
-                      </span>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                      <div>
-                        <span className="text-slate-500 block">Modalidade:</span>
-                        <strong className="text-slate-900">
-                          {resultadoBusca.dados.modalidade}
-                        </strong>
+                      {/* DADOS SENSÍVEIS E CADASTRAIS (LGPD OK NA ÁREA AUTENTICADA) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] bg-white p-3 rounded border border-slate-200">
+                        <div>
+                          <span className="text-slate-500 block">Razão Social:</span>
+                          <strong className="text-slate-900 font-medium">{sub.razao_social}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">CNPJ / MF:</span>
+                          <strong className="text-slate-900 font-mono">{sub.cnpj}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">E-mail Cadastrado:</span>
+                          <span className="text-[#0284c7] font-mono truncate block">
+                            {sub.email}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">Representante Legal:</span>
+                          <strong className="text-slate-900">
+                            {sub.representante_legal || 'Representante Legal'}
+                          </strong>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-slate-500 block">Capacidade:</span>
-                        <strong className="text-slate-900 font-mono">
-                          {resultadoBusca.dados.capacidade?.toLocaleString('pt-BR')} m³/dia
-                        </strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Trecho:</span>
-                        <strong className="text-slate-900">{resultadoBusca.dados.trecho}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">SLA Regulatório:</span>
-                        <strong className="text-emerald-700 font-bold">
-                          {resultadoBusca.dados.sla_dias || 20} dias úteis
-                        </strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Ponto de Injeção:</span>
-                        <strong className="text-slate-900">
-                          {resultadoBusca.dados.ponto_recebimento || '-'}
-                        </strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Ponto de Entrega:</span>
-                        <strong className="text-slate-900">
-                          {resultadoBusca.dados.ponto_entrega || '-'}
-                        </strong>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <span className="text-slate-500 block">Período Demandado:</span>
-                        <strong className="text-slate-900">
-                          {resultadoBusca.dados.periodo || '-'}
-                        </strong>
-                      </div>
-                    </div>
 
-                    {/* PARECER TÉCNICO FUNDAMENTADO */}
-                    <div className="p-3.5 bg-white border border-slate-200 rounded-md space-y-1">
-                      <span className="text-xs font-bold text-[#0a2540] block">
-                        Parecer Técnico Fundamentado da TSB (Art. 10 da Res. ANP 11/2016):
-                      </span>
-                      <p className="text-xs text-slate-700 leading-relaxed italic text-justify">
-                        &quot;
-                        {resultadoBusca.dados.parecer_fundamentado ||
-                          'Solicitação em processo de análise de viabilidade técnico-operacional e verificação de capacidade ociosa.'}
-                        &quot;
-                      </p>
-                    </div>
+                      {/* DETALHAMENTO TÉCNICO E OPERACIONAL */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] bg-white p-3 rounded border border-slate-200">
+                        <div>
+                          <span className="text-slate-500 block">Capacidade Requisitada:</span>
+                          <strong className="text-slate-900 font-mono">
+                            {Number(sub.capacidade || 0).toLocaleString('pt-BR')} m³/dia
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {sub.trecho || 'Gasoduto TSB'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">Ponto de Recebimento:</span>
+                          <strong className="text-emerald-900 block truncate">
+                            {sub.ponto_recebimento || '—'}
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block">Injeção</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">Ponto de Entrega:</span>
+                          <strong className="text-sky-900 block truncate">
+                            {sub.ponto_entrega || '—'}
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block">Retirada</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block">Período / SLA Regulatório:</span>
+                          <strong className="text-slate-900 block truncate">
+                            {sub.periodo || '—'}
+                          </strong>
+                          <span className="text-[10px] text-emerald-700 font-semibold block">
+                            SLA: {sub.sla_dias || 20} dias úteis
+                          </span>
+                        </div>
+                      </div>
 
-                    {/* ELEMENTOS DE DESFECHO QUANDO HOUVER */}
-                    {resultadoBusca.dados.desfecho_tipo === 'CONFIRMACAO' &&
-                      resultadoBusca.dados.termos_condicoes && (
-                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-950">
+                      {/* SE MODALIDADE SWAP: GARANTIAS INFORMADAS */}
+                      {sub.modalidade === 'Troca Operacional' && sub.garantias_seguranca_swap && (
+                        <div className="p-2.5 bg-purple-50/70 rounded border border-purple-200 text-[11px] text-purple-950 space-y-1">
+                          <strong className="block uppercase tracking-wider text-[10px] text-purple-900">
+                            Garantias de Segurança e Confiabilidade Operacional (Swap - Art. 10,
+                            §1º):
+                          </strong>
+                          <p className="leading-relaxed">{sub.garantias_seguranca_swap}</p>
+                        </div>
+                      )}
+
+                      {/* PARECER TÉCNICO FUNDAMENTADO */}
+                      {sub.parecer_fundamentado && (
+                        <div className="p-2.5 bg-blue-50/70 rounded border border-blue-200 text-[11px] text-slate-700 space-y-1">
+                          <strong className="text-[#0a2540] block uppercase tracking-wider text-[10px]">
+                            Parecer Regulatório TSB (Art. 10 da Res. ANP 11/2016):
+                          </strong>
+                          <p className="leading-relaxed">{sub.parecer_fundamentado}</p>
+                        </div>
+                      )}
+
+                      {/* DESFECHOS REGULATÓRIOS (QUANDO HOUVER) */}
+                      {sub.desfecho_tipo === 'CONFIRMACAO' && sub.termos_condicoes && (
+                        <div className="p-2.5 bg-emerald-50 rounded border border-emerald-200 text-[11px] text-emerald-950">
                           <strong>Termos e Condições Homologados (Desfecho I):</strong>{' '}
-                          {resultadoBusca.dados.termos_condicoes}
+                          {sub.termos_condicoes}
                         </div>
                       )}
 
-                    {resultadoBusca.dados.desfecho_tipo === 'APROFUNDAMENTO' && (
-                      <div className="p-3 bg-sky-50 border border-sky-200 rounded-md text-xs text-sky-950 space-y-1">
-                        <strong>Aprofundamento da Análise Técnica (Desfecho II):</strong>
-                        {resultadoBusca.dados.aprofundamento_condicoes && (
-                          <div>
-                            &bull; Condições: {resultadoBusca.dados.aprofundamento_condicoes}
-                          </div>
-                        )}
-                        {resultadoBusca.dados.aprofundamento_escopo && (
-                          <div>&bull; Escopo: {resultadoBusca.dados.aprofundamento_escopo}</div>
-                        )}
-                        {resultadoBusca.dados.aprofundamento_cronograma && (
-                          <div>
-                            &bull; Cronograma: {resultadoBusca.dados.aprofundamento_cronograma}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      {sub.desfecho_tipo === 'APROFUNDAMENTO' && (
+                        <div className="p-2.5 bg-sky-50 rounded border border-sky-200 text-[11px] text-sky-950 space-y-0.5">
+                          <strong>Aprofundamento da Análise Técnica (Desfecho II):</strong>
+                          {sub.aprofundamento_condicoes && (
+                            <div>&bull; Condições: {sub.aprofundamento_condicoes}</div>
+                          )}
+                          {sub.aprofundamento_escopo && (
+                            <div>&bull; Escopo: {sub.aprofundamento_escopo}</div>
+                          )}
+                          {sub.aprofundamento_cronograma && (
+                            <div>&bull; Cronograma: {sub.aprofundamento_cronograma}</div>
+                          )}
+                        </div>
+                      )}
 
-                    {resultadoBusca.dados.desfecho_tipo === 'NEGATIVA' &&
-                      resultadoBusca.dados.previsao_disponibilidade && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-950">
+                      {sub.desfecho_tipo === 'NEGATIVA' && sub.previsao_disponibilidade && (
+                        <div className="p-2.5 bg-red-50 rounded border border-red-200 text-[11px] text-red-950">
                           <strong>Previsão de Disponibilidade (Desfecho III):</strong>{' '}
-                          {resultadoBusca.dados.previsao_disponibilidade}
+                          {sub.previsao_disponibilidade}
                         </div>
                       )}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-                    <div>
-                      <span className="font-semibold block">Protocolo não localizado</span>
-                      <span>
-                        Nenhum registro encontrado para o protocolo{' '}
-                        <strong className="font-mono">{termoBusca}</strong>. Verifique o número
-                        digitado (ex: TSB-2026-8942) e tente novamente.
-                      </span>
+
+                      {/* ARQUIVOS ANEXADOS (DOWNLOADS QUANDO HOUVER) */}
+                      {urlArquivo && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200">
+                          <span className="text-[11px] font-semibold text-slate-600 mr-2">
+                            Documento Anexo:
+                          </span>
+                          <a
+                            href={urlArquivo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white hover:bg-slate-100 border border-slate-300 text-[11px] text-[#0a2540] font-medium transition-colors"
+                          >
+                            <Download className="h-3 w-3 text-[#0284c7]" />
+                            Formulário / Anexo Assinado (PDF)
+                          </a>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  )
+                })}
               </div>
             )}
           </CardContent>
